@@ -1,6 +1,4 @@
-
-import './globals.css'
-export default function HomeLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
