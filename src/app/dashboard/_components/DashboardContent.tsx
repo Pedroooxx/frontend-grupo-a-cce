@@ -1,8 +1,7 @@
 
 import React from 'react';
-// TODO implement missing card component by adding shadcn/ui to project
-import { Card } from '@/components/ui/card';
 import { Trophy, Users, Calendar, TrendingUp } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 export function DashboardContent() {
   const stats = [
