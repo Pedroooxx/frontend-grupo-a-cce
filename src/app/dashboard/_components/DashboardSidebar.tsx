@@ -19,37 +19,37 @@ const menuItems = [
   {
     title: 'DASHBOARD',
     icon: LayoutDashboard,
-    href: '/'
+    href: '/dashboard'
   },
   {
     title: 'CAMPEONATOS',
     icon: Trophy,
-    href: '/campeonatos'
+    href: '/dashboard/campeonatos'
   },
   {
     title: 'INSCRIÇÕES',
     icon: UserPlus,
-    href: '/inscricoes'
+    href: '/dashboard/inscricoes'
   },
   {
     title: 'GERENCIAR EQUIPES',
     icon: Users,
-    href: '/equipes'
+    href: '/dashboard/equipes'
   },
   {
     title: 'GERENCIAR JOGADORES',
     icon: User,
-    href: '/jogadores'
+    href: '/dashboard/jogadores'
   },
   {
     title: 'GERENCIAR PARTIDAS',
     icon: Calendar,
-    href: '/partidas'
+    href: '/dashboard/partidas'
   },
   {
     title: 'ESTATÍSTICAS',
     icon: BarChart3,
-    href: '/estatisticas'
+    href: '/dashboard/estatisticas'
   }
 ];
 
