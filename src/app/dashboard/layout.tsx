@@ -1,15 +1,13 @@
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+import { DashboardContent } from "./_components/DashboardContent";
+import { DashboardLayout } from "./_components/DashboardLayout";
+
+
+const Index = () => {
   return (
-    <html lang="en">
-      <body>
-        {/* Layout UI */}
-        {/* Place children where you want to render a page or nested layout */}
-        <main>{children}</main>
-      </body>
-    </html>
-  )
-}
+    <DashboardLayout>
+      <DashboardContent />
+    </DashboardLayout>
+  );
+};
+
+export default Index;
