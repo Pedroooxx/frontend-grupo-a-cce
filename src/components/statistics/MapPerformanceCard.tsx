@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { TrendingUp } from 'lucide-react';
 import { MapData } from '@/types/statistics';
+import { Tooltip } from '../ui/Tooltip';
 
 interface MapPerformanceCardProps {
   maps: MapData[];
@@ -21,18 +22,14 @@ export const MapPerformanceCard = ({ maps }: MapPerformanceCardProps) => {
           <div key={index} className="bg-gray-800/50 rounded-lg p-6">
             <h4 className="text-lg font-semibold text-white mb-4">{mapa.nome}</h4>
             <div className="space-y-3">
-              <div className="flex justify-between">
+              <Tooltip content={`Total de partidas jogadas no mapa atual: ${mapa.partidas}`} className="flex justify-between">
                 <span className="dashboard-text-muted text-sm">Partidas</span>
                 <span className="text-white">{mapa.partidas}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="dashboard-text-muted text-sm">Win Rate</span>
-                <span className="text-green-400">{mapa.winRate}</span>
-              </div>
-              <div className="flex justify-between">
+              </Tooltip>
+              <Tooltip content={`Média de Pontuação: ${mapa.avgScore}`} className="flex justify-between">
                 <span className="dashboard-text-muted text-sm">Avg. Score</span>
                 <span className="text-blue-400">{mapa.avgScore}</span>
-              </div>
+              </Tooltip>
             </div>
           </div>
         ))}
