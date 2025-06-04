@@ -37,12 +37,12 @@ export const TeamRankingCard = ({ teams }: TeamRankingCardProps) => {
               </div>
               <div>
                 <p className="text-white font-medium">{equipe.nome}</p>
-                <p className="dashboard-text-muted text-sm">{equipe.vitorias}V - {equipe.derrotas}D</p>
+                <p className="dashboard-text-muted text-sm">{equipe.vitorias} Vitórias - {equipe.derrotas} Derrotas</p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-white font-medium">{equipe.pontos} pts</p>
-              <p className="text-green-400 text-sm">{equipe.winRate}</p>
+              <p className="text-green-400 text-sm">{equipe.winRate} Taxa de vitória</p>
             </div>
           </div>
         ))}

@@ -2,14 +2,12 @@ import { DashboardLayout } from '../_components/DashboardLayout';
 import { StatCard } from '@/components/statistics/StatCard';
 import { TopPlayersCard } from '@/components/statistics/TopPlayersCard';
 import { TeamRankingCard } from '@/components/statistics/TeamRankingCard';
-import { AgentStatsCard } from '@/components/statistics/AgentStatsCard';
 import { MapPerformanceCard } from '@/components/statistics/MapPerformanceCard';
 import {
   topJogadores,
   topEquipes,
   estatisticasGerais,
   mapasData,
-  agentesData
 } from '@/data/statistics-mock';
 
 const Estatisticas = () => {
@@ -34,7 +32,6 @@ const Estatisticas = () => {
           <TeamRankingCard teams={topEquipes} />
         </div>
 
-        <AgentStatsCard agents={agentesData} />
         <MapPerformanceCard maps={mapasData} />
       </div>
     </DashboardLayout>
