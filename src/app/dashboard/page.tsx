@@ -1,14 +1,16 @@
-import Link from "next/link";
+import { DashboardContent } from "./_components/DashboardContent";
+import { DashboardLayout } from "./_components/DashboardLayout";
 
-export default function Dashboard() {
+const DashboardPage = () => {
   return (
-    <>
-      <h1 className="my-4 text-red content container mx-auto">Dashboard!</h1>
-      <Link href="/">
-        <button>
-          <span>Voltar</span>
-        </button>
-      </Link>
-    </>
+    <DashboardLayout
+      title="DASHBOARD"
+      subtitle="PRINCIPAL"
+      breadcrumbs={[{ label: "DASHBOARD" }]}
+    >
+      <DashboardContent />
+    </DashboardLayout>
   );
-}
+};
+
+export default DashboardPage;

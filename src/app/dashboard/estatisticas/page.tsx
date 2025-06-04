@@ -1,0 +1,44 @@
+import { DashboardLayout } from '../_components/DashboardLayout';
+import { StatCard } from '@/components/statistics/StatCard';
+import { TopPlayersCard } from '@/components/statistics/TopPlayersCard';
+import { TeamRankingCard } from '@/components/statistics/TeamRankingCard';
+import { AgentStatsCard } from '@/components/statistics/AgentStatsCard';
+import { MapPerformanceCard } from '@/components/statistics/MapPerformanceCard';
+import {
+  topJogadores,
+  topEquipes,
+  estatisticasGerais,
+  mapasData,
+  agentesData
+} from '@/data/statistics-mock';
+
+const Estatisticas = () => {
+  return (
+    <DashboardLayout
+      title="ESTATÍSTICAS"
+      subtitle="E RELATÓRIOS"
+      breadcrumbs={[
+        { label: "DASHBOARD", href: "/dashboard" },
+        { label: "ESTATÍSTICAS" }
+      ]}
+    >
+      <div className="p-8 space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {estatisticasGerais.map((stat, index) => (
+            <StatCard key={index} stat={stat} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <TopPlayersCard players={topJogadores} />
+          <TeamRankingCard teams={topEquipes} />
+        </div>
+
+        <AgentStatsCard agents={agentesData} />
+        <MapPerformanceCard maps={mapasData} />
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default Estatisticas;

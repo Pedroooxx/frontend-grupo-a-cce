@@ -1,13 +1,7 @@
-import { DashboardContent } from "./_components/DashboardContent";
-import { DashboardLayout } from "./_components/DashboardLayout";
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+}
 
-
-const Index = () => {
-  return (
-    <DashboardLayout>
-      <DashboardContent />
-    </DashboardLayout>
-  );
-};
-
-export default Index;
+export default function Layout({ children }: DashboardLayoutProps) {
+  return children;
+}
