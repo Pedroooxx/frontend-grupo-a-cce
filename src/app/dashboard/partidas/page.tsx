@@ -14,9 +14,8 @@ const GerenciarPartidas = () => {
       equipeB: "Phoenix Squad",
       campeonato: "Liga de Verão 2024",
       mapa: "Haven",
-      data: "15/12/2024",
-      horario: "14:00",
-      status: "Agendada",
+      data: null,
+      status: "Pré-agendada",
       resultado: null,
       fase: "Quartas de Final",
     },
@@ -26,11 +25,9 @@ const GerenciarPartidas = () => {
       equipeB: "Viper Elite",
       campeonato: "Liga de Verão 2024",
       mapa: "Bind",
-      data: "14/12/2024",
-      horario: "16:30",
-      status: "Finalizada",
-      resultado: "13-8",
-      vencedor: "Sage Warriors",
+      data: "15/12/2024",
+      status: "Agendada",
+      resultado: null,
       fase: "Oitavas de Final",
     },
     {
@@ -39,26 +36,26 @@ const GerenciarPartidas = () => {
       equipeB: "Reyna Team",
       campeonato: "Torneio Nacional",
       mapa: "Ascent",
-      data: "16/12/2024",
-      horario: "18:00",
-      status: "Em andamento",
-      resultado: "7-5",
+      data: "14/12/2024",
+      status: "Finalizada",
+      resultado: "13-8",
+      vencedor: "Jett Squad",
       fase: "Semifinal",
     },
   ]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case "Pré-agendada":
+        return (
+          <Badge className="bg-red-500/20 text-red-500 border-red-500/30">
+            Pré-agendada
+          </Badge>
+        );
       case "Agendada":
         return (
           <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
             Agendada
-          </Badge>
-        );
-      case "Em andamento":
-        return (
-          <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-            Em andamento
           </Badge>
         );
       case "Finalizada":
@@ -74,6 +71,28 @@ const GerenciarPartidas = () => {
           </Badge>
         );
     }
+  };
+
+  const renderData = (data: string | null) => {
+    if (!data) {
+      return (
+        <div className="flex items-center space-x-1">
+          <Clock className="w-4 h-4 text-green-500" />
+          <span className="text-green-400 text-sm font-medium">
+            Necessário agendar
+          </span>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="flex items-center space-x-1">
+        <Clock className="w-4 h-4 text-blue-500" />
+        <span className="text-white text-sm">
+          {data}
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -158,13 +177,8 @@ const GerenciarPartidas = () => {
                   </div>
 
                   <div className="text-center">
-                    <p className="dashboard-text-muted text-xs">Data/Hora</p>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="w-4 h-4 text-blue-500" />
-                      <span className="text-white text-sm">
-                        {partida.data} {partida.horario}
-                      </span>
-                    </div>
+                    <p className="dashboard-text-muted text-xs">Data</p>
+                    {renderData(partida.data)}
                   </div>
 
                   <div className="text-center">
@@ -194,12 +208,12 @@ const GerenciarPartidas = () => {
                   <p className="dashboard-text-muted text-sm">
                     {partida.campeonato}
                   </p>
-                  {partida.status === "Em andamento" && (
+                  {partida.status === "Pré-agendada" && (
                     <Button
                       size="sm"
-                      className="bg-red-500 hover:bg-red-600 text-white"
+                      className="bg-yellow-500 hover:bg-yellow-600 text-black"
                     >
-                      Inserir Resultado
+                      Definir Data
                     </Button>
                   )}
                 </div>
@@ -212,22 +226,22 @@ const GerenciarPartidas = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
           <Card className="dashboard-card border-gray-700 p-6">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-blue-500/20 rounded-lg">
-                <Calendar className="w-6 h-6 text-blue-500" />
+              <div className="p-3 bg-yellow-500/20 rounded-lg">
+                <Calendar className="w-6 h-6 text-yellow-500" />
               </div>
               <div>
-                <p className="dashboard-text-muted text-sm">Agendadas</p>
+                <p className="dashboard-text-muted text-sm">Pré-agendadas</p>
                 <p className="text-2xl font-bold text-white">1</p>
               </div>
             </div>
           </Card>
           <Card className="dashboard-card border-gray-700 p-6">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-green-500/20 rounded-lg">
-                <Clock className="w-6 h-6 text-green-500" />
+              <div className="p-3 bg-blue-500/20 rounded-lg">
+                <Clock className="w-6 h-6 text-blue-500" />
               </div>
               <div>
-                <p className="dashboard-text-muted text-sm">Em Andamento</p>
+                <p className="dashboard-text-muted text-sm">Agendadas</p>
                 <p className="text-2xl font-bold text-white">1</p>
               </div>
             </div>
@@ -245,8 +259,8 @@ const GerenciarPartidas = () => {
           </Card>
           <Card className="dashboard-card border-gray-700 p-6">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-yellow-500/20 rounded-lg">
-                <Calendar className="w-6 h-6 text-yellow-500" />
+              <div className="p-3 bg-green-500/20 rounded-lg">
+                <Calendar className="w-6 h-6 text-green-500" />
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">Esta Semana</p>
