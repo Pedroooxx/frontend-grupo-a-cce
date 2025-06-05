@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Plus, Edit, Trash2, Trophy, Target } from "lucide-react";
+import { User, Plus, Edit, Trash2, Target, Skull } from "lucide-react";
 import { DashboardLayout } from "../_components/DashboardLayout";
 
 const GerenciarJogadores = () => {
@@ -13,8 +13,7 @@ const GerenciarJogadores = () => {
       nome: "João Silva",
       nickname: "King1",
       equipe: "Valorant Kings",
-      agenteMain: "Jett",
-      ranking: "Immortal 2",
+      phone: "+55 00 0 0000-0000",
       kills: 245,
       deaths: 180,
       assists: 120,
@@ -26,8 +25,7 @@ const GerenciarJogadores = () => {
       nome: "Maria Santos",
       nickname: "Phoenix1",
       equipe: "Phoenix Squad",
-      agenteMain: "Reyna",
-      ranking: "Diamond 3",
+      phone: "+55 00 0 0000-0000",
       kills: 198,
       deaths: 165,
       assists: 95,
@@ -39,8 +37,7 @@ const GerenciarJogadores = () => {
       nome: "Pedro Costa",
       nickname: "Sage_Master",
       equipe: "Valorant Kings",
-      agenteMain: "Sage",
-      ranking: "Immortal 1",
+      phone: "+55 00 0 0000-0000",
       kills: 156,
       deaths: 140,
       assists: 200,
@@ -52,8 +49,7 @@ const GerenciarJogadores = () => {
       nome: "Ana Oliveira",
       nickname: "Viper_Queen",
       equipe: "Phoenix Squad",
-      agenteMain: "Viper",
-      ranking: "Diamond 2",
+      phone: "+55 00 0 0000-0000",
       kills: 189,
       deaths: 155,
       assists: 145,
@@ -132,17 +128,9 @@ const GerenciarJogadores = () => {
               {/* Info do jogador */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="dashboard-text-muted text-sm">
-                    Agente Principal
-                  </span>
-                  <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
-                    {jogador.agenteMain}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="dashboard-text-muted text-sm">Ranking</span>
+                  <span className="dashboard-text-muted text-sm">Contato</span>
                   <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                    {jogador.ranking}
+                    {jogador.phone}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
@@ -171,7 +159,7 @@ const GerenciarJogadores = () => {
         </div>
 
         {/* Stats dos jogadores */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <Card className="dashboard-card border-gray-700 p-6">
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-blue-500/20 rounded-lg">
@@ -197,22 +185,11 @@ const GerenciarJogadores = () => {
           <Card className="dashboard-card border-gray-700 p-6">
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-yellow-500/20 rounded-lg">
-                <Trophy className="w-6 h-6 text-yellow-500" />
+                <Skull className="w-6 h-6 text-yellow-500" />
               </div>
               <div>
-                <p className="dashboard-text-muted text-sm">Win Rate Médio</p>
-                <p className="text-2xl font-bold text-white">71%</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="dashboard-card border-gray-700 p-6">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-purple-500/20 rounded-lg">
-                <User className="w-6 h-6 text-purple-500" />
-              </div>
-              <div>
-                <p className="dashboard-text-muted text-sm">Immortal+</p>
-                <p className="text-2xl font-bold text-white">2</p>
+                <p className="dashboard-text-muted text-sm">Kills Totais</p>
+                <p className="text-2xl font-bold text-white">470</p>
               </div>
             </div>
           </Card>
