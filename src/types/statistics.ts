@@ -25,6 +25,7 @@ export interface MapData {
   partidas: number;
   winRate: string;
   avgScore: string;
+  imagePath?: string; // Optional path to map image
 }
 
 export interface AgentStat {

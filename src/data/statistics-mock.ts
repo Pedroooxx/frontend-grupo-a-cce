@@ -22,7 +22,17 @@ export const estatisticasGerais: GeneralStat[] = [
 export const mapasData: MapData[] = [
   { nome: 'Haven', partidas: 28, winRate: '73%', avgScore: '13-9' },
   { nome: 'Bind', partidas: 22, winRate: '68%', avgScore: '13-11' },
-  { nome: 'Ascent', partidas: 31, winRate: '65%', avgScore: '13-10' }
+  { nome: 'Ascent', partidas: 31, winRate: '65%', avgScore: '13-10' },
+  { nome: 'Split', partidas: 25, winRate: '62%', avgScore: '13-8' },
+  { nome: 'Icebox', partidas: 19, winRate: '54%', avgScore: '13-11' },
+  { nome: 'Breeze', partidas: 17, winRate: '71%', avgScore: '13-7' },
+  { nome: 'Fracture', partidas: 20, winRate: '48%', avgScore: '13-10' },
+  { nome: 'Pearl', partidas: 24, winRate: '58%', avgScore: '13-9' },
+  { nome: 'Lotus', partidas: 15, winRate: '67%', avgScore: '13-10' },
+  { nome: 'Sunset', partidas: 12, winRate: '75%', avgScore: '13-6' },
+  { nome: 'District', partidas: 8, winRate: '63%', avgScore: '13-12' },
+  { nome: 'Kasbah', partidas: 6, winRate: '50%', avgScore: '13-11' },
+  { nome: 'Drift', partidas: 5, winRate: '60%', avgScore: '13-9' }
 ];
 
 export const agentesData = ['Jett', 'Sage', 'Phoenix', 'Reyna', 'Viper'];
