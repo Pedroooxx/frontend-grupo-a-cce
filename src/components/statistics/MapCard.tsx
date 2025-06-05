@@ -88,7 +88,7 @@ export const MapCard = ({ map, imagePath }: MapCardProps) => {
           {map.nome}
         </h4>
         <div className="space-y-3 font-extrabold text-lg">
-          <Tooltip content={`Total de partidas jogadas no mapa atual: ${map.partidas}`} className="flex justify-between">
+          <Tooltip content={`Partidas jogadas no mapa atual: ${map.partidas}`} className="flex justify-between">
             <span className="dashboard-text-muted text-lg">Partidas</span>
             <span className="text-white">{map.partidas}</span>
           </Tooltip>
