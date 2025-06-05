@@ -13,32 +13,26 @@ const GerenciarEquipes = () => {
       nome: "Valorant Kings",
       coach: "João Silva",
       membros: [
-        { nome: "Player1", nickname: "King1", agente: "Jett" },
-        { nome: "Player2", nickname: "King2", agente: "Sage" },
-        { nome: "Player3", nickname: "King3", agente: "Phoenix" },
-        { nome: "Player4", nickname: "King4", agente: "Sova" },
-        { nome: "Player5", nickname: "King5", agente: "Omen" },
+        { nome: "Player1", nickname: "King1"},
+        { nome: "Player2", nickname: "King2"},
+        { nome: "Player3", nickname: "King3"},
+        { nome: "Player4", nickname: "King4"},
+        { nome: "Player5", nickname: "King5"},
       ],
-      campeonato: "Liga de Verão 2024",
-      ranking: "Immortal",
-      vitorias: 12,
-      derrotas: 3,
+      campeonato: "Liga de Verão 2024"
     },
     {
       id: 2,
       nome: "Phoenix Squad",
       coach: "Maria Santos",
       membros: [
-        { nome: "PlayerA", nickname: "Phoenix1", agente: "Reyna" },
-        { nome: "PlayerB", nickname: "Phoenix2", agente: "Raze" },
-        { nome: "PlayerC", nickname: "Phoenix3", agente: "Breach" },
-        { nome: "PlayerD", nickname: "Phoenix4", agente: "Cypher" },
-        { nome: "PlayerE", nickname: "Phoenix5", agente: "Viper" },
+        { nome: "PlayerA", nickname: "Phoenix1"},
+        { nome: "PlayerB", nickname: "Phoenix2"},
+        { nome: "PlayerC", nickname: "Phoenix3"},
+        { nome: "PlayerD", nickname: "Phoenix4"},
+        { nome: "PlayerE", nickname: "Phoenix5"},
       ],
-      campeonato: "Torneio Nacional",
-      ranking: "Diamond",
-      vitorias: 8,
-      derrotas: 2,
+      campeonato: "Torneio Nacional"
     },
   ]);
 
@@ -87,18 +81,6 @@ const GerenciarEquipes = () => {
                 </div>
 
                 <div className="flex items-center space-x-4">
-                  <div className="text-center">
-                    <p className="dashboard-text-muted text-xs">Ranking</p>
-                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                      {equipe.ranking}
-                    </Badge>
-                  </div>
-                  <div className="text-center">
-                    <p className="dashboard-text-muted text-xs">V/D</p>
-                    <p className="text-white font-semibold">
-                      {equipe.vitorias}/{equipe.derrotas}
-                    </p>
-                  </div>
                   <div className="flex space-x-2">
                     <Button
                       size="sm"
@@ -138,9 +120,6 @@ const GerenciarEquipes = () => {
                       <p className="dashboard-text-muted text-xs">
                         {membro.nome}
                       </p>
-                      <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 text-xs mt-2">
-                        {membro.agente}
-                      </Badge>
                     </div>
                   ))}
                 </div>
@@ -168,7 +147,7 @@ const GerenciarEquipes = () => {
                 <User className="w-6 h-6 text-green-500" />
               </div>
               <div>
-                <p className="dashboard-text-muted text-sm">Jogadores Ativos</p>
+                <p className="dashboard-text-muted text-sm">Total de Jogadores</p>
                 <p className="text-2xl font-bold text-white">10</p>
               </div>
             </div>
@@ -179,7 +158,7 @@ const GerenciarEquipes = () => {
                 <Users className="w-6 h-6 text-yellow-500" />
               </div>
               <div>
-                <p className="dashboard-text-muted text-sm">Coaches</p>
+                <p className="dashboard-text-muted text-sm">Coaches (Treinadores)</p>
                 <p className="text-2xl font-bold text-white">2</p>
               </div>
             </div>
