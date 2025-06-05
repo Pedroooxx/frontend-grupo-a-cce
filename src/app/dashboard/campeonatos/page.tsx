@@ -14,17 +14,17 @@ const Campeonatos = () => {
       status: "Em andamento",
       formato: "Single Elimination",
       equipesInscritas: 16,
-      premiacao: "R$ 10.000",
+      localizacao: "Curitiba - PR",
       dataInicio: "15/12/2024",
       dataFim: "22/12/2024",
     },
     {
       id: 2,
       nome: "Torneio Nacional",
-      status: "Inscrições abertas",
+      status: "Em andamento",
       formato: "Double Elimination",
       equipesInscritas: 8,
-      premiacao: "R$ 25.000",
+      localizacao: "Londrina - PR",
       dataInicio: "01/01/2025",
       dataFim: "15/01/2025",
     },
@@ -34,7 +34,7 @@ const Campeonatos = () => {
       status: "Finalizado",
       formato: "Single Elimination",
       equipesInscritas: 24,
-      premiacao: "R$ 5.000",
+      localizacao: "Cornélio Procópio - PR",
       dataInicio: "01/11/2024",
       dataFim: "30/11/2024",
     },
@@ -48,15 +48,9 @@ const Campeonatos = () => {
             Em andamento
           </Badge>
         );
-      case "Inscrições abertas":
-        return (
-          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-            Inscrições abertas
-          </Badge>
-        );
       case "Finalizado":
         return (
-          <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">
+          <Badge className="bg-red-500/20 text-red-500 border-red-500/30">
             Finalizado
           </Badge>
         );
@@ -120,11 +114,9 @@ const Campeonatos = () => {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="dashboard-text-muted text-sm">
-                    Premiação
-                  </span>
+                  <span className="dashboard-text-muted text-sm">Local</span>
                   <span className="text-green-400 font-medium">
-                    {campeonato.premiacao}
+                    {campeonato.localizacao}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -189,8 +181,8 @@ const Campeonatos = () => {
                 <Calendar className="w-6 h-6 text-yellow-500" />
               </div>
               <div>
-                <p className="dashboard-text-muted text-sm">Próximo Evento</p>
-                <p className="text-2xl font-bold text-white">01/01</p>
+                <p className="dashboard-text-muted text-sm">Último Evento</p>
+                <p className="text-2xl font-bold text-white">Copa Regional</p>
               </div>
             </div>
           </Card>
