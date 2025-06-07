@@ -93,7 +93,6 @@ export interface ChampionshipParticipation {
   championship_id: number;
   championship_name: string;
   status: string;
-  placement: number;
   matches_played: number;
 }
 

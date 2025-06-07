@@ -144,14 +144,12 @@ export const championshipParticipations: ChampionshipParticipation[] = [
     championship_id: 1,
     championship_name: "Liga de Verão 2024",
     status: "Em andamento",
-    placement: 2,
     matches_played: 12
   },
   {
     championship_id: 2,
     championship_name: "Copa Regional",
     status: "Finalizado",
-    placement: 1,
     matches_played: 8
   }
 ];
