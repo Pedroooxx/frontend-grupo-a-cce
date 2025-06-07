@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react'; // Added useCallback
 import { useRouter } from 'next/navigation';
 import { Search, Trophy, Users, Calendar, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -18,14 +18,18 @@ interface PublicSearchBarProps {
   onResultClick?: (result: SearchResult) => void;
   placeholder?: string;
   className?: string;
+  searchTypes?: ('championship' | 'team' | 'match')[]; // New prop
+  onQueryChange?: (query: string) => void; // New prop
 }
 
 export const PublicSearchBar = ({ 
   onResultClick, 
   placeholder = "Buscar campeonatos, equipes ou partidas...",
-  className = "max-w-2xl"
+  className, // Use default from component if not provided by specific instance
+  searchTypes,
+  onQueryChange
 }: PublicSearchBarProps) => {
-  const [query, setQuery] = useState('');
+  const [query, _setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -33,56 +37,69 @@ export const PublicSearchBar = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  const searchAll = (searchQuery: string): SearchResult[] => {
-    if (!searchQuery.trim()) return [];
+  const setQuery = (newQuery: string) => {
+    _setQuery(newQuery);
+    if (onQueryChange) {
+      onQueryChange(newQuery);
+    }
+  };
 
-    const results: SearchResult[] = [];
+  const searchAll = useCallback((searchQuery: string): SearchResult[] => {
+    if (!searchQuery.trim()) return [];
+    const allPossibleResults: SearchResult[] = [];
 
     // Search championships
-    const championshipResults = publicChampionships
-      .filter(championship =>
-        championship.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        championship.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        championship.location.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .map(championship => ({
-        id: championship.championship_id,
-        name: championship.name,
-        type: 'championship' as const,
-        subtitle: `${championship.location} - ${championship.status === 'ongoing' ? 'Em andamento' : championship.status === 'completed' ? 'Finalizado' : 'Próximo'}`
-      }));
+    if (!searchTypes || searchTypes.includes('championship')) {
+      const championshipResults = publicChampionships
+        .filter(championship =>
+          championship.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          championship.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          championship.location.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .map(championship => ({
+          id: championship.championship_id,
+          name: championship.name,
+          type: 'championship' as const,
+          subtitle: `${championship.location} - ${championship.status === 'ongoing' ? 'Em andamento' : championship.status === 'completed' ? 'Finalizado' : 'Próximo'}`
+        }));
+      allPossibleResults.push(...championshipResults);
+    }
 
     // Search teams
-    const teamResults = publicTeams
-      .filter(team =>
-        team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        team.manager_name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .map(team => ({
-        id: team.team_id,
-        name: team.name,
-        type: 'team' as const,
-        subtitle: `Gerenciado por ${team.manager_name} - ${Math.round(team.win_rate * 100)}% win rate`
-      }));
+    if (!searchTypes || searchTypes.includes('team')) {
+      const teamResults = publicTeams
+        .filter(team =>
+          team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          team.manager_name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .map(team => ({
+          id: team.team_id,
+          name: team.name,
+          type: 'team' as const,
+          subtitle: `Gerenciado por ${team.manager_name} - ${Math.round(team.win_rate * 100)}% win rate`
+        }));
+      allPossibleResults.push(...teamResults);
+    }
 
     // Search matches
-    const matchResults = publicMatches
-      .filter(match =>
-        match.teamA.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        match.teamB.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        match.map.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        match.stage.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .map(match => ({
-        id: match.match_id,
-        name: `${match.teamA.name} vs ${match.teamB.name}`,
-        type: 'match' as const,
-        subtitle: `${match.stage} - ${match.map} - ${match.status === 'completed' ? 'Finalizada' : match.status === 'live' ? 'Ao Vivo' : 'Agendada'}`
-      }));
-
-    results.push(...championshipResults, ...teamResults, ...matchResults);
-    return results.slice(0, 8); // Limit to 8 results
-  };
+    if (!searchTypes || searchTypes.includes('match')) {
+      const matchResults = publicMatches
+        .filter(match =>
+          match.teamA.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          match.teamB.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          match.map.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          match.stage.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .map(match => ({
+          id: match.match_id,
+          name: `${match.teamA.name} vs ${match.teamB.name}`,
+          type: 'match' as const,
+          subtitle: `${match.stage} - ${match.map} - ${match.status === 'completed' ? 'Finalizada' : match.status === 'live' ? 'Ao Vivo' : 'Agendada'}`
+        }));
+      allPossibleResults.push(...matchResults);
+    }
+    return allPossibleResults.slice(0, 8);
+  }, [searchTypes]); // Added searchTypes to useCallback dependency array
 
   useEffect(() => {
     if (query.trim()) {
@@ -94,7 +111,7 @@ export const PublicSearchBar = ({
       setResults([]);
       setIsOpen(false);
     }
-  }, [query]);
+  }, [query, searchAll]); // Added searchAll to useEffect dependency array
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -166,7 +183,7 @@ export const PublicSearchBar = ({
   };
 
   const clearSearch = () => {
-    setQuery('');
+    setQuery(''); // Uses the wrapper to also call onQueryChange
     setResults([]);
     setIsOpen(false);
     inputRef.current?.focus();
@@ -212,14 +229,14 @@ export const PublicSearchBar = ({
   };
 
   return (
-    <div ref={searchRef} className={`relative w-full ${className}`}>
+    <div ref={searchRef} className={`relative w-full ${className || 'max-w-2xl'}`}> {/* Ensure className prop is used, provide a default if needed */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
         <input
           ref={inputRef}
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => setQuery(e.target.value)} // Uses the wrapper
           onKeyDown={handleKeyDown}
           onFocus={() => query.trim() && setIsOpen(results.length > 0)}
           placeholder={placeholder}

@@ -1,8 +1,12 @@
 'use client'
 import React, { useState } from "react";
-import { Search, Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, Menu, X, MapPin, Crown, Play, CheckCircle, Circle } from "lucide-react";
+// import { Search, Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, Menu, X, MapPin, Crown, Play, CheckCircle, Circle } from "lucide-react";
+// Assuming Search was only for the removed input. If other components on this page use it, it should remain.
+// PublicSearchBar imports its own Search icon.
+import { Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, Menu, X, MapPin, Crown, Play, CheckCircle, Circle } from "lucide-react"; // Search removed
 import Link from "next/link";
 import { publicChampionships, publicMatches } from '@/data/public-mock';
+import { PublicSearchBar } from '@/components/public/PublicSearchBar'; // Added
 
 export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -181,6 +185,7 @@ export default function HomePage() {
           </div>
 
           <div className="max-w-2xl mx-auto mb-8 md:mb-12 px-4">            
+            {/* 
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input 
@@ -191,6 +196,14 @@ export default function HomePage() {
                 Buscar
               </button>
             </div>
+            */}
+            <PublicSearchBar
+              searchTypes={['championship']}
+              placeholder="Buscar campeonatos..."
+              // className prop will use PublicSearchBar's default "max-w-2xl" which fits this parent div.
+              // Or pass "w-full" if PublicSearchBar's default is removed/changed.
+              // Given parent is "max-w-2xl mx-auto", PublicSearchBar's default "max-w-2xl" is fine.
+            />
           </div>          {/* Featured Championships */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md">

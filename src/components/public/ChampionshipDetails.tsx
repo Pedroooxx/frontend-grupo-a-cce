@@ -5,7 +5,6 @@ import { Calendar, MapPin, Trophy, Users, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PublicSearchBar } from '@/components/public/PublicSearchBar';
 import { useRouter } from 'next/navigation';
 
 interface Match {
@@ -75,30 +74,8 @@ export function ChampionshipDetails({
     });
   };
 
-  const handleSearchResult = (result: any) => {
-    switch (result.type) {
-      case 'match':
-        router.push(`/campeonatos/${championshipId}/partidas/${result.id}`);
-        break;
-      case 'team':
-        router.push(`/campeonatos/${championshipId}/equipes/${result.id}`);
-        break;
-      case 'championship':
-        router.push(`/campeonatos/${result.id}`);
-        break;
-    }
-  };
-
   return (
     <div className="space-y-8">
-      {/* Search Bar */}
-      <div className="max-w-2xl mx-auto">
-        <PublicSearchBar 
-          placeholder="Buscar partidas, equipes ou outros campeonatos..."
-          onResultClick={handleSearchResult}
-        />
-      </div>
-
       {/* Navigation Tabs */}
       <div className="border-b border-slate-700">
         <nav className="flex space-x-8">

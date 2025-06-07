@@ -1,9 +1,10 @@
 'use client'
 import Link from 'next/link';
-import { Calendar, MapPin, Trophy, Users, Target, Crown, Search } from 'lucide-react';
+import { Calendar, MapPin, Trophy, Users, Target, Crown } from 'lucide-react';
 import { publicChampionships } from '@/data/public-mock';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { useState } from 'react';
+import { PublicSearchBar } from '@/components/public/PublicSearchBar';
 
 export default function ChampionshipsListPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,13 +64,11 @@ export default function ChampionshipsListPage() {
           <div className="flex flex-col md:flex-row gap-4 mb-8">
             {/* Search */}
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <input
-                type="text"
+              <PublicSearchBar
+                searchTypes={['championship']}
                 placeholder="Buscar campeonatos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+                onQueryChange={setSearchQuery}
+                className="w-full" 
               />
             </div>
 
