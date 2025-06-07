@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { DashboardSidebar } from './DashboardSidebar';
@@ -183,6 +183,7 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const handleSignOut = useCallback(async () => {
     await signOut({ 
@@ -199,13 +200,37 @@ export function DashboardLayout({
     }
   }, [router]);
 
-  // Show loading state while session is being fetched
-  if (status === 'loading') {
+  // Track if this is the initial load or a navigation
+  useEffect(() => {
+    if (status !== 'loading') {
+      setIsInitialLoad(false);
+    }
+  }, [status]);
+
+  // Only show loading screen on initial load when there's no session data
+  const shouldShowLoading = status === 'loading' && isInitialLoad && !session;
+
+  // If user is not authenticated and not loading, redirect to signin
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+    }
+  }, [status, router]);
+
+  if (shouldShowLoading) {
     return (
       <div className="min-h-screen dashboard-bg flex items-center justify-center">
-        <div className="text-white">Carregando...</div>
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-lg">Carregando...</p>
+        </div>
       </div>
     );
+  }
+
+  // Don't render anything if user is not authenticated
+  if (status === 'unauthenticated' || (!session && !isInitialLoad)) {
+    return null;
   }
 
   return (

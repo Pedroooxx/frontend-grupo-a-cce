@@ -1,6 +1,8 @@
 'use client'
 
 import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut, useSession } from 'next-auth/react';
 import { 
@@ -57,11 +59,19 @@ const menuItems = [
 ];
 
 export function DashboardSidebar({ className }: SidebarProps) {
-  const { data: session } = useSession()
+  const { data: session } = useSession();
+  const pathname = usePathname();
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: '/' })
-  }
+    signOut({ callbackUrl: '/' });
+  };
+
+  const isActiveRoute = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/dashboard';
+    }
+    return pathname.startsWith(href);
+  };
 
   return (
     <div className={cn("w-64 dashboard-sidebar border-r dashboard-border flex flex-col", className)}>
@@ -83,16 +93,18 @@ export function DashboardSidebar({ className }: SidebarProps) {
         <ul className="space-y-2">
           {menuItems.map((item) => (
             <li key={item.title}>
-              <a
+              <Link
                 href={item.href}
                 className={cn(
                   "flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                  "dashboard-text-muted hover:bg-gray-800 hover:text-white"
+                  isActiveRoute(item.href)
+                    ? "bg-red-500/20 text-red-400 border-red-500/30"
+                    : "dashboard-text-muted hover:bg-gray-800 hover:text-white"
                 )}
               >
                 <item.icon className="w-5 h-5" />
                 <span>{item.title}</span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

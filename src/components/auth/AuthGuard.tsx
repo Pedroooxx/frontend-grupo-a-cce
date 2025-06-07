@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -17,6 +17,13 @@ export function AuthGuard({
 }: AuthGuardProps) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+
+  useEffect(() => {
+    if (status !== 'loading') {
+      setIsInitialLoad(false)
+    }
+  }, [status])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -32,18 +39,21 @@ export function AuthGuard({
     }
   }, [session, status, router, requireAuth, roles])
 
-  if (status === 'loading') {
+  // Only show loading on initial load when there's no session data
+  const shouldShowLoading = status === 'loading' && isInitialLoad && !session
+
+  if (shouldShowLoading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-500 mx-auto mb-4"></div>
-          <p className="text-xl">Carregando...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-lg">Carregando...</p>
         </div>
       </div>
     )
   }
 
-  if (requireAuth && !session) {
+  if (requireAuth && !session && status !== 'loading') {
     return null
   }
 
