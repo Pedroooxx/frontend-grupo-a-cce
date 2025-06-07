@@ -61,10 +61,10 @@ function UserProfile({ session, onSignOut }: UserProfileProps) {
   const closeMenu = () => setShowUserMenu(false);
 
   return (
-    <div className="relative">
+    <div className="relative z-50">
       <button
         onClick={() => setShowUserMenu(!showUserMenu)}
-        className="flex items-center space-x-3 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-all duration-200 border border-gray-700 hover:border-gray-600"
+        className="flex items-center space-x-3 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-all duration-200 border border-gray-700 hover:border-gray-600 relative z-50"
       >
         <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
           <span className="text-white font-bold text-sm">
@@ -82,12 +82,12 @@ function UserProfile({ session, onSignOut }: UserProfileProps) {
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 z-40" 
+            className="fixed inset-0 z-[100]" 
             onClick={closeMenu}
           />
           
           {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
+          <div className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-[110]">
             <div className="p-4 border-b border-gray-700">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center">
@@ -135,7 +135,7 @@ interface HeaderProps {
 
 function Header({ title, subtitle, breadcrumbs, session, onSignOut, onBack }: HeaderProps) {
   return (
-    <header className="p-6 border-b dashboard-border bg-gray-900/50 backdrop-blur-sm relative">
+    <header className="p-6 border-b dashboard-border bg-gray-900/50 backdrop-blur-sm relative z-40">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <Breadcrumbs items={breadcrumbs} />
@@ -149,7 +149,7 @@ function Header({ title, subtitle, breadcrumbs, session, onSignOut, onBack }: He
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 relative z-50">
           <button 
             onClick={onBack}
             className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800/50"
