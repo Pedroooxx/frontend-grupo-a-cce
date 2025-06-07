@@ -2,6 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users } from 'lucide-react';
 import { Team } from '@/types/statistics';
+import { Tooltip } from '../ui/Tooltip';
 
 interface TeamRankingCardProps {
   teams: Team[];
@@ -37,7 +38,9 @@ export const TeamRankingCard = ({ teams }: TeamRankingCardProps) => {
               </div>
               <div>
                 <p className="text-white font-medium">{equipe.nome}</p>
-                <p className="dashboard-text-muted text-sm">{equipe.vitorias} Vitórias - {equipe.derrotas} Derrotas</p>
+                <Tooltip content={<p className="dashboard-text-muted text-sm">{equipe.vitorias} Vitórias - {equipe.derrotas} Derrotas</p>}>
+                  <p className="dashboard-text-muted text-sm">{equipe.vitorias} V x {equipe.derrotas} D</p>
+                </Tooltip>
               </div>
             </div>
             <div className="text-right">
