@@ -1193,3 +1193,55 @@ export const getTeamMatchesInChampionship = (championshipId: number, teamId: num
     (match.teamA.team_id === teamId || match.teamB.team_id === teamId)
   );
 };
+
+export const getTeamsByChampionshipId = (championshipId: number): PublicTeam[] => {
+  // Simulating teams based on the matches
+  return publicTeams.filter(team => {
+    // Check if team participated in this championship
+    return publicMatches.some(match => 
+      match.championship_id === championshipId && 
+      (match.teamA.team_id === team.team_id || match.teamB.team_id === team.team_id)
+    );
+  });
+};
+
+export interface PublicChampionship {
+  championship_id: number;
+  name: string;
+  description: string;
+  format: string;
+  start_date: string;
+  end_date: string;
+  location: string;
+  status: string;
+  teams_count: number;
+  matches_count: number;
+  prize_pool?: string;
+  banner_image?: string;
+}
+
+export interface PublicMatch {
+  match_id: number;
+  championship_id: number;
+  teamA: { team_id: number; name: string };
+  teamB: { team_id: number; name: string };
+  date: string;
+  stage: string;
+  bracket: string;
+  map: string;
+  status: string;
+  score?: { teamA: number; teamB: number };
+  winner_team_id?: number;
+}
+
+export interface PublicTeam {
+  team_id: number;
+  name: string;
+  manager_name: string;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  participants_count: number;
+  championships_participated: number;
+  championships_won: number;
+}

@@ -1,12 +1,17 @@
 'use client';
 import React, { useState } from 'react';
-import { Search, Filter, Calendar, MapPin, Users } from 'lucide-react';
+import { Filter, Calendar, MapPin, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { PublicSearchBar } from '@/components/public/PublicSearchBar';
+import { useRouter } from 'next/navigation';
 
 export function ChampionshipSearch() {
   const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+  
+  // Mock data baseado no que existe no DER
   
   // Mock data baseado no que existe no DER
   const campeonatos = [
@@ -73,20 +78,11 @@ export function ChampionshipSearch() {
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             Descubra torneios de Valorant em andamento ou com inscrições abertas
           </p>
-        </div>
-
-        {/* Search Bar */}
+        </div>        {/* Search Bar */}
         <div className="max-w-2xl mx-auto mb-12">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Buscar por nome do campeonato ou localização..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-            />
-          </div>
+          <PublicSearchBar 
+            placeholder="Buscar por nome do campeonato ou localização..."
+          />
         </div>
 
         {/* Championships Grid */}
@@ -125,10 +121,10 @@ export function ChampionshipSearch() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-700">
-                  <Button 
+                <div className="pt-4 border-t border-gray-700">                  <Button 
                     className="w-full bg-red-500 hover:bg-red-600 text-white"
                     disabled={campeonato.status === "Finalizado"}
+                    onClick={() => router.push(`/campeonatos/${campeonato.id}`)}
                   >
                     {campeonato.status === "Finalizado" ? "Ver Resultados" : "Ver Detalhes"}
                   </Button>
