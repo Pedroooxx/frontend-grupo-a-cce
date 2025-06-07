@@ -1,16 +1,23 @@
-
 import './globals.css'
-export default function HomeLayout({
+import { SessionProvider } from '@/components/auth/SessionProvider'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Esports League',
+  description: 'Sistema de gerenciamento de campeonatos de esports',
+}
+
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body>
-        {/* Layout UI */}
-        {/* Place children where you want to render a page or nested layout */}
-        <main>{children}</main>
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </body>
     </html>
   )

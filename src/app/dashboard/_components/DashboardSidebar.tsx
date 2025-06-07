@@ -1,5 +1,8 @@
+'use client'
+
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { signOut, useSession } from 'next-auth/react';
 import { 
   LayoutDashboard, 
   Trophy, 
@@ -54,6 +57,12 @@ const menuItems = [
 ];
 
 export function DashboardSidebar({ className }: SidebarProps) {
+  const { data: session } = useSession()
+
+  const handleSignOut = () => {
+    signOut({ callbackUrl: '/' })
+  }
+
   return (
     <div className={cn("w-64 dashboard-sidebar border-r dashboard-border flex flex-col", className)}>
       {/* Logo/Header */}
@@ -67,6 +76,12 @@ export function DashboardSidebar({ className }: SidebarProps) {
             <div className="text-red-500 font-bold text-sm">LEAGUE</div>
           </div>
         </div>
+        {session && (
+          <div className="mt-3 pt-3 border-t border-gray-700">
+            <p className="text-gray-300 text-sm">Bem-vindo,</p>
+            <p className="text-white text-sm font-medium">{session.user.name}</p>
+          </div>
+        )}
       </div>
 
       {/* Navigation Menu */}
@@ -91,7 +106,10 @@ export function DashboardSidebar({ className }: SidebarProps) {
 
       {/* Bottom Action */}
       <div className="p-4 border-t dashboard-border">
-        <button className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors w-full">
+        <button 
+          onClick={handleSignOut}
+          className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors w-full"
+        >
           <ArrowLeft className="w-5 h-5" />
           <span>Sair</span>
         </button>
