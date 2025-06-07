@@ -92,23 +92,6 @@ export default function MatchPublicPage({ params }: PageProps) {
     return deaths === 0 ? kills + assists : ((kills + assists) / deaths).toFixed(2);
   };
 
-  const getMapBackground = (mapName: string) => {
-    const mapImages: { [key: string]: string } = {
-      'Haven': '/images/maps/haven.jpg',
-      'Bind': '/images/maps/bind.jpg',
-      'Split': '/images/maps/split.jpg',
-      'Ascent': '/images/maps/ascent.jpg',
-      'Icebox': '/images/maps/icebox.jpg',
-      'Breeze': '/images/maps/breeze.jpg',
-      'Fracture': '/images/maps/fracture.jpg',
-      'Pearl': '/images/maps/pearl.jpg',
-      'Lotus': '/images/maps/lotus.jpg',
-      'Sunset': '/images/maps/sunset.jpg'
-    };
-    
-    return mapImages[mapName] || '/images/maps/default.jpg';
-  };
-
   return (
     <PublicLayout title={`${match.teamA.name} vs ${match.teamB.name}`}>
       {/* Back Navigation */}
@@ -123,15 +106,7 @@ export default function MatchPublicPage({ params }: PageProps) {
           </Link>
         </div>
       </div>      {/* Match Banner */}
-      <section 
-        className="relative py-12"
-        style={{
-          backgroundImage: `linear-gradient(rgba(30, 41, 59, 0.85), rgba(51, 65, 85, 0.85)), url("${getMapBackground(match.map)}")`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      >
+      <section className="relative bg-gradient-to-r from-slate-800 to-slate-700 py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center">
