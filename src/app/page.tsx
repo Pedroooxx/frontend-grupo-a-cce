@@ -206,73 +206,67 @@ export default function HomePage() {
             />
           </div>          {/* Featured Championships */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col">
-              <div className="flex-grow">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-white">Liga de Verão 2024</h3>
-                  <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">
-                    Em andamento
-                  </span>
-                </div>
-                <p className="text-slate-400 mb-4 min-h-[3rem]">
-                  Campeonato principal da temporada com 32 equipes participantes
-                </p>
-                <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
-                  <span><Users className="w-4 h-4 inline mr-1" />32 equipes</span>
-                  <span><Calendar className="w-4 h-4 inline mr-1" />12 partidas</span>
-                </div>
+            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-white">Liga de Verão 2024</h3>
+                <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">
+                  Em andamento
+                </span>
+              </div>
+              <p className="text-slate-400 mb-4">
+                Campeonato principal da temporada com 32 equipes participantes
+              </p>
+              <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
+                <span><Users className="w-4 h-4 inline mr-1" />32 equipes</span>
+                <span><Calendar className="w-4 h-4 inline mr-1" />12 partidas</span>
               </div>
               <Link 
                 href="/campeonatos/1"
-                className="w-full mt-auto border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
+                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
               >
                 Ver Detalhes <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </div>
 
-            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col">
-              <div className="flex-grow">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-white">Copa Regional</h3>
-                  <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
-                    Finalizado
-                  </span>
-                </div>
-                <p className="text-slate-400 mb-4 min-h-[3rem]">
-                  Torneio regional com foco em equipes emergentes
-                </p>
-                <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
-                  <span><Users className="w-4 h-4 inline mr-1" />16 equipes</span>
-                  <span><Calendar className="w-4 h-4 inline mr-1" />8 partidas</span>
-                </div>
+            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-white">Copa Regional</h3>
+                <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
+                  Finalizado
+                </span>
+              </div>
+              <p className="text-slate-400 mb-4">
+                Torneio regional com foco em equipes emergentes
+              </p>
+              <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
+                <span><Users className="w-4 h-4 inline mr-1" />16 equipes</span>
+                <span><Calendar className="w-4 h-4 inline mr-1" />8 partidas</span>
               </div>
               <Link 
                 href="/campeonatos/2"
-                className="w-full mt-auto border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
+                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
               >
                 Ver Resultados <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </div>
 
-            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col">
-              <div className="flex-grow">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-white">Torneio Universitário</h3>
-                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
-                    Inscrições Abertas
-                  </span>
-                </div>
-                <p className="text-slate-400 mb-4 min-h-[3rem]">
-                  Competição exclusiva para equipes universitárias
-                </p>
-                <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
-                  <span><Users className="w-4 h-4 inline mr-1" />24 vagas</span>
-                  <span><Calendar className="w-4 h-4 inline mr-1" />Início em breve</span>
-                </div>
+            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-white">Torneio Universitário</h3>
+                <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
+                  Inscrições Abertas
+                </span>
+              </div>
+              <p className="text-slate-400 mb-4">
+                Competição exclusiva para equipes universitárias
+              </p>
+              <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
+                <span><Users className="w-4 h-4 inline mr-1" />24 vagas</span>
+                <span><Calendar className="w-4 h-4 inline mr-1" />Início em breve</span>
               </div>
               <Link 
                 href="/campeonatos/3"
-                className="w-full mt-auto border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
+                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
               >
                 Inscrever-se <ArrowRight className="w-4 h-4 ml-2" />              </Link>
             </div>
@@ -359,9 +353,9 @@ export default function HomePage() {
       </section>      {/* Featured Section */}
       <section className="py-16 bg-slate-900">
         <div className="container mx-auto px-4">
-          <div className="flex justify-center"> {/* Changed from grid to flex justify-center */}
+          <div className="grid md:grid-cols-2 gap-8">
             {/* Live Matches */}
-            <div className="bg-slate-800 border border-slate-700 rounded-md p-6 w-full"> {/* Added w-full max-w-xl */}
+            <div className="bg-slate-800 border border-slate-700 rounded-md p-6">
               <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
                 <div className="w-3 h-3 bg-red-500 rounded-full mr-3 animate-pulse"></div>
                 Partidas em Destaque
@@ -418,7 +412,7 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Top Teams - This section is removed
+            {/* Top Teams */}
             <div className="bg-slate-800 border border-slate-700 rounded-md p-6">
               <h3 className="text-xl font-semibold text-white mb-4">Equipes em Destaque</h3>
               <div className="space-y-4">
@@ -470,7 +464,6 @@ export default function HomePage() {
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </div>
-            */}
           </div>
         </div>
       </section>      {/* Footer */}
