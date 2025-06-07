@@ -39,10 +39,12 @@ export interface DetailedPlayerStats {
   participant_id: number;
   name: string;
   nickname: string;
-  team_name: string;
   birth_date: string;
   phone: string;
-  is_coach: boolean;
+  team_id: number; // Add team_id reference
+  team_name: string;
+  is_coach: boolean; // Fix typo from is_COACH
+  user_id: number; // Add user reference
   // Aggregated statistics
   total_matches: number;
   total_kills: number;
@@ -62,6 +64,7 @@ export interface DetailedPlayerStats {
 export interface DetailedTeamStats {
   team_id: number;
   name: string;
+  user_id: number; // Add user reference for team manager
   manager_name: string;
   // Team aggregated statistics
   total_matches: number;
@@ -114,4 +117,174 @@ export interface MapPerformance {
   avg_score: number;
   total_kills: number;
   total_deaths: number;
+}
+
+export interface SearchResult {
+  id: number;
+  name: string;
+  type: 'player' | 'team';
+  subtitle?: string;
+  avatar?: string;
+}
+
+export interface SearchFilters {
+  type: 'all' | 'player' | 'team';
+  query: string;
+}
+
+// Add missing core entity types
+export interface User {
+  user_id: number;
+  name: string;
+  email: string;
+  // password omitted for security
+}
+
+export interface Championship {
+  championship_id: number;
+  name: string;
+  description: string;
+  format: 'single_elimination' | 'double_elimination' | 'round_robin' | 'swiss';
+  start_date: string;
+  end_date: string;
+  location: string;
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  user_id: number; // creator
+}
+
+export interface Match {
+  match_id: number;
+  championship_id: number;
+  teamA_id: number;
+  teamB_id: number;
+  date: string;
+  stage: string;
+  winner_team_id?: number;
+  score: Record<string, number>; // e.g., {"teamA": 13, "teamB": 8}
+  map: string;
+}
+
+export interface Subscription {
+  subscription_id: number;
+  championship_id: number;
+  team_id: number;
+  subscription_date: string;
+  status: 'pending' | 'confirmed' | 'rejected';
+  switching_code: number;
+  score: number;
+}
+
+export interface ParticipantStatistics {
+  statistic_id: number;
+  match_id: number;
+  participant_id: number;
+  agent_id: number;
+  kills: number;
+  assists: number;
+  deaths: number;
+  spike_plants: number;
+  spike_defuses: number;
+  MVP: boolean;
+  first_kill: number;
+  total_score: number;
+}
+
+export interface Agent {
+  agent_id: number;
+  name: string;
+}
+
+export interface ChampionshipStatistics {
+  statistic_id: number;
+  championship_id: number;
+  participant_id: number;
+  team_id: number;
+  kills: number;
+  assists: number;
+  deaths: number;
+  spike_plants: number;
+  spike_defuses: number;
+  MVPs: number;
+  first_kills: number;
+}
+
+// Update existing types to match ERD
+export interface DetailedPlayerStats {
+  participant_id: number;
+  name: string;
+  nickname: string;
+  birth_date: string;
+  phone: string;
+  team_id: number; // Add team_id reference
+  team_name: string;
+  is_coach: boolean; // Fix typo from is_COACH
+  user_id: number; // Add user reference
+  // Aggregated statistics
+  total_matches: number;
+  total_kills: number;
+  total_assists: number;
+  total_deaths: number;
+  total_spike_plants: number;
+  total_spike_defuses: number;
+  total_mvps: number;
+  total_first_kills: number;
+  kda_ratio: number;
+  avg_score: number;
+  win_rate: number;
+  favorite_agent: string;
+  favorite_map: string;
+}
+
+export interface DetailedTeamStats {
+  team_id: number;
+  name: string;
+  user_id: number; // Add user reference for team manager
+  manager_name: string;
+  // Team aggregated statistics
+  total_matches: number;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  total_kills: number;
+  total_assists: number;
+  total_deaths: number;
+  team_kda: number;
+  avg_match_score: number;
+  championships_participated: number;
+  championships_won: number;
+  // Player count
+  active_players: number;
+  coaches: number;
+  // Performance metrics
+  avg_spike_plants: number;
+  avg_spike_defuses: number;
+  total_mvps: number;
+  best_map: string;
+  worst_map: string;
+}
+
+// Add types for complex queries that need backend support
+export interface MatchResult {
+  match: Match;
+  teamA_name: string;
+  teamB_name: string;
+  winner_name?: string;
+  participant_stats: ParticipantStatistics[];
+}
+
+export interface LeaderboardEntry {
+  participant_id: number;
+  participant_name: string;
+  team_name: string;
+  metric_value: number;
+  rank: number;
+}
+
+export interface TeamMatchHistory {
+  match: Match;
+  opponent_name: string;
+  result: 'win' | 'loss';
+  score_for: number;
+  score_against: number;
+  map: string;
 }

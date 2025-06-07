@@ -1,4 +1,4 @@
-import { Player, Team, GeneralStat, MapData, DetailedPlayerStats, DetailedTeamStats, ChampionshipParticipation, AgentUsage, MapPerformance } from '@/types/statistics';
+import { Player, Team, GeneralStat, MapData, DetailedPlayerStats, DetailedTeamStats, ChampionshipParticipation, AgentUsage, MapPerformance, SearchResult } from '@/types/statistics';
 
 export const topJogadores: Player[] = [
   { nome: 'King1', equipe: 'Valorant Kings', kda: '1.45', kills: 245, winRate: '78%' },
@@ -58,7 +58,9 @@ export const detailedPlayersStats: DetailedPlayerStats[] = [
     avg_score: 245.8,
     win_rate: 0.78,
     favorite_agent: "Jett",
-    favorite_map: "Haven"
+    favorite_map: "Haven",
+    team_id: 0,
+    user_id: 0
   },
   {
     participant_id: 2,
@@ -80,7 +82,9 @@ export const detailedPlayersStats: DetailedPlayerStats[] = [
     avg_score: 198.5,
     win_rate: 0.75,
     favorite_agent: "Reyna",
-    favorite_map: "Bind"
+    favorite_map: "Bind",
+    team_id: 0,
+    user_id: 0
   }
 ];
 
@@ -106,7 +110,8 @@ export const detailedTeamsStats: DetailedTeamStats[] = [
     avg_spike_defuses: 8.3,
     total_mvps: 28,
     best_map: "Haven",
-    worst_map: "Icebox"
+    worst_map: "Icebox",
+    user_id: 0
   },
   {
     team_id: 2,
@@ -129,7 +134,8 @@ export const detailedTeamsStats: DetailedTeamStats[] = [
     avg_spike_defuses: 7.8,
     total_mvps: 22,
     best_map: "Ascent",
-    worst_map: "Fracture"
+    worst_map: "Fracture",
+    user_id: 0
   }
 ];
 
@@ -195,3 +201,49 @@ export const mapPerformanceStats: MapPerformance[] = [
     total_deaths: 143
   }
 ];
+
+export const searchPlayers = (query: string): SearchResult[] => {
+  if (!query.trim()) return [];
+  
+  const playerResults = detailedPlayersStats
+    .filter(player => 
+      player.name.toLowerCase().includes(query.toLowerCase()) ||
+      player.nickname.toLowerCase().includes(query.toLowerCase()) ||
+      player.team_name.toLowerCase().includes(query.toLowerCase())
+    )
+    .map(player => ({
+      id: player.participant_id,
+      name: player.nickname,
+      type: 'player' as const,
+      subtitle: `${player.name} - ${player.team_name}`
+    }));
+
+  return playerResults;
+};
+
+export const searchTeams = (query: string): SearchResult[] => {
+  if (!query.trim()) return [];
+  
+  const teamResults = detailedTeamsStats
+    .filter(team => 
+      team.name.toLowerCase().includes(query.toLowerCase()) ||
+      team.manager_name.toLowerCase().includes(query.toLowerCase())
+    )
+    .map(team => ({
+      id: team.team_id,
+      name: team.name,
+      type: 'team' as const,
+      subtitle: `Gerenciado por ${team.manager_name} - ${team.active_players} jogadores`
+    }));
+
+  return teamResults;
+};
+
+export const searchAll = (query: string): SearchResult[] => {
+  if (!query.trim()) return [];
+  
+  const players = searchPlayers(query);
+  const teams = searchTeams(query);
+  
+  return [...teams, ...players].slice(0, 8); // Limit to 8 results
+};
