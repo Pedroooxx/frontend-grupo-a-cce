@@ -268,10 +268,8 @@ const TeamStatistics = () => {
                           ? 'bg-gray-500/20 text-gray-400 border-gray-500/30'
                           : 'bg-green-500/20 text-green-400 border-green-500/30'
                       }`}>
-                        {championship.status}
-                      </Badge>
+                        {championship.status}                      </Badge>
                       <p className="text-white font-medium">#{championship.placement}º Lugar</p>
-                      <p className="dashboard-text-muted text-sm">{championship.score} pontos</p>
                     </div>
                   </div>
                 </Card>

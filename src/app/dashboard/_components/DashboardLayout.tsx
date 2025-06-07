@@ -1,7 +1,6 @@
-
-import React from 'react';
-import { DashboardSidebar } from './DashboardSidebar';
-import { ArrowLeft } from 'lucide-react';
+import React from "react";
+import { DashboardSidebar } from "./DashboardSidebar";
+import { ArrowLeft } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -10,20 +9,17 @@ interface DashboardLayoutProps {
   breadcrumbs?: Array<{ label: string; href?: string }>;
 }
 
-export function DashboardLayout({ 
-  children, 
+export function DashboardLayout({
+  children,
   title = "GERENCIE SEUS",
   subtitle = "CAMPEONATOS",
-  breadcrumbs = [
-    { label: "DASHBOARD", href: "/dashboard" },
-    { label: "HOME" }
-  ]
+  breadcrumbs = [{ label: "DASHBOARD", href: "/dashboard" }, { label: "HOME" }],
 }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen dashboard-bg flex">
       {/* Sidebar */}
       <DashboardSidebar />
-      
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
@@ -49,7 +45,7 @@ export function DashboardLayout({
                   </React.Fragment>
                 ))}
               </nav>
-              
+
               {/* Title */}
               <div>
                 <h1 className="text-3xl font-light dashboard-text-muted">
@@ -60,7 +56,7 @@ export function DashboardLayout({
                 </h2>
               </div>
             </div>
-            
+
             {/* Back Button */}
             <button className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors">
               <ArrowLeft className="w-5 h-5" />
@@ -68,7 +64,7 @@ export function DashboardLayout({
             </button>
           </div>
         </header>
-        
+
         {/* Main Content Area */}
         <main className="flex-1 p-6">
           <div className="dashboard-card border dashboard-border rounded-lg min-h-[600px] border-red-500/20">
@@ -81,5 +77,5 @@ export function DashboardLayout({
 }
 
 function cn(...classes: (string | undefined)[]): string {
-  return classes.filter(Boolean).join(' ');
+  return classes.filter(Boolean).join(" ");
 }

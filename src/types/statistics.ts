@@ -95,7 +95,6 @@ export interface ChampionshipParticipation {
   status: string;
   placement: number;
   matches_played: number;
-  score: number;
 }
 
 export interface AgentUsage {

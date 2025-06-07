@@ -145,16 +145,14 @@ export const championshipParticipations: ChampionshipParticipation[] = [
     championship_name: "Liga de Verão 2024",
     status: "Em andamento",
     placement: 2,
-    matches_played: 12,
-    score: 89
+    matches_played: 12
   },
   {
     championship_id: 2,
     championship_name: "Copa Regional",
     status: "Finalizado",
     placement: 1,
-    matches_played: 8,
-    score: 124
+    matches_played: 8
   }
 ];
 
@@ -204,9 +202,9 @@ export const mapPerformanceStats: MapPerformance[] = [
 
 export const searchPlayers = (query: string): SearchResult[] => {
   if (!query.trim()) return [];
-  
+
   const playerResults = detailedPlayersStats
-    .filter(player => 
+    .filter(player =>
       player.name.toLowerCase().includes(query.toLowerCase()) ||
       player.nickname.toLowerCase().includes(query.toLowerCase()) ||
       player.team_name.toLowerCase().includes(query.toLowerCase())
@@ -223,9 +221,9 @@ export const searchPlayers = (query: string): SearchResult[] => {
 
 export const searchTeams = (query: string): SearchResult[] => {
   if (!query.trim()) return [];
-  
+
   const teamResults = detailedTeamsStats
-    .filter(team => 
+    .filter(team =>
       team.name.toLowerCase().includes(query.toLowerCase()) ||
       team.manager_name.toLowerCase().includes(query.toLowerCase())
     )
@@ -241,9 +239,9 @@ export const searchTeams = (query: string): SearchResult[] => {
 
 export const searchAll = (query: string): SearchResult[] => {
   if (!query.trim()) return [];
-  
+
   const players = searchPlayers(query);
   const teams = searchTeams(query);
-  
+
   return [...teams, ...players].slice(0, 8); // Limit to 8 results
 };
