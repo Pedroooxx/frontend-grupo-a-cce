@@ -1,15 +1,16 @@
 'use client'
 import React, { useState } from "react";
-import { Trophy, UserPlus, LogIn, Menu, X } from "lucide-react";
+import { Trophy, UserPlus, LogIn, Menu, X, Home } from "lucide-react";
 import Link from "next/link";
 import Head from "next/head";
 
 interface PublicLayoutProps {
   title: string;
   children: React.ReactNode;
+  showBackToHome?: boolean;
 }
 
-export default function PublicLayout({ title, children }: PublicLayoutProps) {
+export default function PublicLayout({ title, children, showBackToHome = true }: PublicLayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -36,12 +37,6 @@ export default function PublicLayout({ title, children }: PublicLayoutProps) {
               <nav className="hidden md:flex items-center space-x-6">
                 <Link href="/campeonatos" className="text-slate-300 hover:text-white transition-colors">
                   Campeonatos
-                </Link>
-                <Link href="/equipes" className="text-slate-300 hover:text-white transition-colors">
-                  Equipes
-                </Link>
-                <Link href="/partidas" className="text-slate-300 hover:text-white transition-colors">
-                  Partidas
                 </Link>
                 <Link href="/#sobre" className="text-slate-300 hover:text-white transition-colors">
                   Sobre
@@ -105,20 +100,6 @@ export default function PublicLayout({ title, children }: PublicLayoutProps) {
                   Campeonatos
                 </Link>
                 <Link 
-                  href="/equipes" 
-                  className="block text-slate-300 hover:text-white text-lg py-2 border-b border-slate-700"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Equipes
-                </Link>
-                <Link 
-                  href="/partidas" 
-                  className="block text-slate-300 hover:text-white text-lg py-2 border-b border-slate-700"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Partidas
-                </Link>
-                <Link 
                   href="/#sobre" 
                   className="block text-slate-300 hover:text-white text-lg py-2 border-b border-slate-700"
                   onClick={() => setIsMenuOpen(false)}
@@ -149,6 +130,15 @@ export default function PublicLayout({ title, children }: PublicLayoutProps) {
           </div>
         </div>
 
+        {/* Page Title */}
+        {title && (
+          <div className="bg-slate-800 py-2">
+            <div className="container mx-auto px-4">
+              <h1 className="text-lg text-white font-medium">{title}</h1>
+            </div>
+          </div>
+        )}
+
         {/* Main Content */}
         <main>
           {children}
@@ -159,7 +149,7 @@ export default function PublicLayout({ title, children }: PublicLayoutProps) {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
               <div className="md:col-span-1">
-                <Link href="/" className="flex items-center space-x-2 mb-4">
+                <div className="flex items-center space-x-2 mb-4">
                   <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                     <Trophy className="w-5 h-5 text-black" />
                   </div>
@@ -167,7 +157,7 @@ export default function PublicLayout({ title, children }: PublicLayoutProps) {
                     <div className="text-white font-bold text-lg">ESPORTS</div>
                     <div className="text-red-500 font-bold text-lg leading-none">LEAGUE</div>
                   </div>
-                </Link>
+                </div>
                 <p className="text-slate-400 text-sm max-w-xs">
                   A plataforma definitiva para campeonatos de Valorant profissionais e organizados.
                 </p>
@@ -177,9 +167,9 @@ export default function PublicLayout({ title, children }: PublicLayoutProps) {
                 <h4 className="text-white font-semibold mb-3 md:mb-4">Plataforma</h4>
                 <ul className="space-y-2 text-slate-400 text-sm">
                   <li><Link href="/campeonatos" className="hover:text-white transition-colors">Campeonatos</Link></li>
-                  <li><Link href="/equipes" className="hover:text-white transition-colors">Equipes</Link></li>
-                  <li><Link href="/partidas" className="hover:text-white transition-colors">Partidas</Link></li>
-                  <li><Link href="/#estatisticas" className="hover:text-white transition-colors">Estatísticas</Link></li>
+                  <li><Link href="#" className="hover:text-white transition-colors">Equipes</Link></li>
+                  <li><Link href="#" className="hover:text-white transition-colors">Estatísticas</Link></li>
+                  <li><Link href="#" className="hover:text-white transition-colors">Ranking</Link></li>
                 </ul>
               </div>
 

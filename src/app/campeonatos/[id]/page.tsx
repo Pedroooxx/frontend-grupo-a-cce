@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { 
   Calendar, 
   MapPin, 
@@ -318,9 +319,13 @@ export default function ChampionshipPublicPage({ params }: PageProps) {
                               {team.position}
                             </span>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-white font-medium">{team.team_name}</div>
+                        </td>                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Link 
+                            href={`/campeonatos/${championship.championship_id}/equipes/${team.team_id}`}
+                            className="text-white font-medium hover:text-red-400 transition-colors"
+                          >
+                            {team.team_name}
+                          </Link>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center text-slate-300">
                           {team.matches_played}

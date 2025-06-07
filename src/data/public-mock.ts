@@ -146,11 +146,13 @@ export const publicTeams: PublicTeam[] = [
 
 // Dados de participantes públicos
 export const publicParticipants: PublicParticipant[] = [
+  // Valorant Kings
   {
     participant_id: 1,
     name: "João Silva",
     nickname: "KingJoao",
     birth_date: "1998-05-15",
+    team_id: 1,
     team_name: "Valorant Kings",
     is_coach: false,
     kda_ratio: 1.45,
@@ -159,13 +161,50 @@ export const publicParticipants: PublicParticipant[] = [
     total_assists: 134,
     win_rate: 0.83,
     favorite_agent: "Jett",
-    mvp_count: 8
+    mvp_count: 8,
+    phone: "11987654321"
   },
   {
     participant_id: 2,
+    name: "Maria Santos",
+    nickname: "MariaCoach",
+    birth_date: "1995-03-10",
+    team_id: 1,
+    team_name: "Valorant Kings",
+    is_coach: true,
+    kda_ratio: 0,
+    total_kills: 0,
+    total_deaths: 0,
+    total_assists: 0,
+    win_rate: 0.83,
+    favorite_agent: undefined,
+    mvp_count: 0,
+    phone: "11987654322"
+  },
+  {
+    participant_id: 3,
+    name: "Pedro Lima",
+    nickname: "PedroFlash",
+    birth_date: "1999-11-22",
+    team_id: 1,
+    team_name: "Valorant Kings",
+    is_coach: false,
+    kda_ratio: 1.28,
+    total_kills: 189,
+    total_deaths: 148,
+    total_assists: 95,
+    win_rate: 0.83,
+    favorite_agent: "Phoenix",
+    mvp_count: 4,
+    phone: "11987654323"
+  },
+  // Phoenix Squad
+  {
+    participant_id: 4,
     name: "Gabriel Costa",
     nickname: "PhoenixGab",
     birth_date: "1999-08-22",
+    team_id: 2,
     team_name: "Phoenix Squad",
     is_coach: false,
     kda_ratio: 1.32,
@@ -174,13 +213,33 @@ export const publicParticipants: PublicParticipant[] = [
     total_assists: 89,
     win_rate: 0.67,
     favorite_agent: "Phoenix",
-    mvp_count: 5
+    mvp_count: 5,
+    phone: "21987654324"
   },
   {
-    participant_id: 3,
+    participant_id: 5,
+    name: "Ana Costa",
+    nickname: "AnaCoach",
+    birth_date: "1992-06-15",
+    team_id: 2,
+    team_name: "Phoenix Squad",
+    is_coach: true,
+    kda_ratio: 0,
+    total_kills: 0,
+    total_deaths: 0,
+    total_assists: 0,
+    win_rate: 0.67,
+    favorite_agent: undefined,
+    mvp_count: 0,
+    phone: "21987654325"
+  },
+  // Sage Warriors
+  {
+    participant_id: 6,
     name: "Lucas Santos",
     nickname: "SageGuard",
     birth_date: "1997-12-10",
+    team_id: 3,
     team_name: "Sage Warriors",
     is_coach: false,
     kda_ratio: 0.98,
@@ -189,7 +248,25 @@ export const publicParticipants: PublicParticipant[] = [
     total_assists: 201,
     win_rate: 0.50,
     favorite_agent: "Sage",
-    mvp_count: 2
+    mvp_count: 2,
+    phone: "31987654326"
+  },
+  {
+    participant_id: 7,
+    name: "Pedro Santos",
+    nickname: "PedroCoach",
+    birth_date: "1990-04-05",
+    team_id: 3,
+    team_name: "Sage Warriors",
+    is_coach: true,
+    kda_ratio: 0,
+    total_kills: 0,
+    total_deaths: 0,
+    total_assists: 0,
+    win_rate: 0.50,
+    favorite_agent: undefined,
+    mvp_count: 0,
+    phone: "31987654327"
   }
 ];
 
@@ -314,11 +391,30 @@ export const getMatchById = (id: number): PublicMatch | undefined => {
 };
 
 export const getParticipantsByTeamId = (teamId: number): PublicParticipant[] => {
-  return publicParticipants.filter(participant => 
-    publicTeams.find(team => team.team_id === teamId && team.name === participant.team_name)
-  );
+  return publicParticipants.filter(participant => participant.team_id === teamId);
 };
 
 export const getStatisticsByMatchId = (matchId: number): ParticipantStatistics[] => {
   return participantStatistics.filter(stat => stat.match_id === matchId);
+};
+
+export const getTeamByChampionshipAndTeamId = (championshipId: number, teamId: number): PublicTeam | undefined => {
+  // Verifica se a equipe participa do campeonato através das partidas
+  const teamParticipatesInChampionship = publicMatches.some(match => 
+    match.championship_id === championshipId && 
+    (match.teamA.team_id === teamId || match.teamB.team_id === teamId)
+  );
+  
+  if (teamParticipatesInChampionship) {
+    return publicTeams.find(team => team.team_id === teamId);
+  }
+  
+  return undefined;
+};
+
+export const getTeamMatchesInChampionship = (championshipId: number, teamId: number): PublicMatch[] => {
+  return publicMatches.filter(match => 
+    match.championship_id === championshipId && 
+    (match.teamA.team_id === teamId || match.teamB.team_id === teamId)
+  );
 };

@@ -56,6 +56,7 @@ export interface PublicParticipant {
   name: string;
   nickname: string;
   birth_date: string;
+  team_id: number;
   team_name: string;
   is_coach: boolean;
   kda_ratio: number;
@@ -65,6 +66,7 @@ export interface PublicParticipant {
   win_rate: number;
   favorite_agent?: string;
   mvp_count: number;
+  phone: string;
 }
 
 export interface ChampionshipStandings {
