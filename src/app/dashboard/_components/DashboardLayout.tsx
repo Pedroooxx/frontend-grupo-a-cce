@@ -1,28 +1,29 @@
-'use client'
-import React, { useState } from "react";
-import { DashboardSidebar } from "./DashboardSidebar";
+'use client';
+
+import React, { useCallback, useState } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { DashboardSidebar } from './DashboardSidebar';
 import { ArrowLeft, LogOut } from "lucide-react";
-import { useSession, signOut } from "next-auth/react";
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
+
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
-  breadcrumbs?: Array<{ label: string; href?: string }>;
-}
-
-interface BreadcrumbsProps {
-  items: Array<{ label: string; href?: string }>;
-}
-
-interface UserProfileProps {
-  session: any;
-  onSignOut: () => void;
+  breadcrumbs?: BreadcrumbItem[];
+  showBackButton?: boolean;
+  customSignOutCallback?: string;
+  className?: string;
 }
 
 // Breadcrumbs Component
-function Breadcrumbs({ items }: BreadcrumbsProps) {
+function Breadcrumbs({ items }: { items: Array<{ label: string; href?: string }> }) {
   return (
     <nav className="flex items-center space-x-2 text-sm mb-4">
       {items.map((crumb, index) => (
@@ -46,7 +47,7 @@ function Breadcrumbs({ items }: BreadcrumbsProps) {
 }
 
 // User Profile Component
-function UserProfile({ session, onSignOut }: UserProfileProps) {
+function UserProfile({ session, onSignOut }: { session: any; onSignOut: () => void }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const getUserInitials = (name: string) => {
@@ -172,20 +173,43 @@ export function DashboardLayout({
   children,
   title = "GERENCIE SEUS",
   subtitle = "CAMPEONATOS",
-  breadcrumbs = [{ label: "DASHBOARD", href: "/dashboard" }, { label: "HOME" }],
+  breadcrumbs = [
+    { label: "DASHBOARD", href: "/dashboard" }, 
+    { label: "HOME" }
+  ],
+  showBackButton = true,
+  customSignOutCallback,
+  className
 }: DashboardLayoutProps) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  const handleSignOut = () => {
-    signOut({ callbackUrl: '/' });
-  };
+  const handleSignOut = useCallback(async () => {
+    await signOut({ 
+      callbackUrl: customSignOutCallback || '/',
+      redirect: true 
+    });
+  }, [customSignOutCallback]);
 
-  const handleBack = () => {
-    window.history.back();
-  };
+  const handleBack = useCallback(() => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
+  // Show loading state while session is being fetched
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen dashboard-bg flex items-center justify-center">
+        <div className="text-white">Carregando...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen dashboard-bg flex">
+    <div className={`min-h-screen dashboard-bg flex ${className}`}>
       <DashboardSidebar />
       
       <div className="flex-1 flex flex-col">
@@ -195,7 +219,7 @@ export function DashboardLayout({
           breadcrumbs={breadcrumbs}
           session={session}
           onSignOut={handleSignOut}
-          onBack={handleBack}
+          onBack={showBackButton ? handleBack : undefined}
         />
 
         <main className="flex-1 p-6">
