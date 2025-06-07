@@ -23,9 +23,7 @@ export const PlayerStatsDisplay = ({ kda, kills, winRate }: PlayerStatsDisplayPr
         <p className="dashboard-text-muted text-sm">{kills} kills</p>
       </Tooltip>
 
-      <Tooltip content={<span className='text-green-400'>Taxa de vitória</span>}>
-        <p className="text-green-400 text-sm">{winRate}</p>
-      </Tooltip>
+      <p className="text-green-400 text-sm">{winRate} Taxa de vitória</p>
     </div >
   );
 };
