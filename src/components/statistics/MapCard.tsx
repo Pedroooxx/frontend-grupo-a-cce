@@ -18,7 +18,7 @@ export const MapCard = ({ map, imagePath }: MapCardProps) => {
 
   return (
     <div
-      className="bg-gray-800/50 rounded-lg p-6 relative overflow-hidden min-h-[200px] 
+      className="bg-gray-800/50 rounded-2xl p-6 relative overflow-hidden min-h-[200px] 
                  transition-all duration-300 ease-in-out transform hover:scale-[1.05] hover:z-10
                  hover:-translate-y-1 cursor-pointer"
       style={{

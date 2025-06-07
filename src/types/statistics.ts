@@ -122,7 +122,7 @@ export interface MapPerformance {
 export interface SearchResult {
   id: number;
   name: string;
-  type: 'player' | 'team';
+  type: 'player' | 'team' | 'championship';
   subtitle?: string;
   avatar?: string;
 }
@@ -149,7 +149,7 @@ export interface Championship {
   end_date: string;
   location: string;
   status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
-  user_id: number; // creator
+  user_id: number;
 }
 
 export interface Match {
@@ -206,6 +206,56 @@ export interface ChampionshipStatistics {
   spike_defuses: number;
   MVPs: number;
   first_kills: number;
+}
+
+export interface DetailedChampionshipStats {
+  championship_id: number;
+  name: string;
+  description: string;
+  format: string;
+  start_date: string;
+  end_date: string;
+  location: string;
+  status: string;
+  organizer_name: string;
+  // Statistics
+  total_teams: number;
+  total_players: number;
+  total_matches: number;
+  matches_completed: number;
+  total_kills: number;
+  total_deaths: number;
+  avg_match_duration: number;
+  prize_pool?: string;
+  // Performance metrics
+  most_kills_player: string;
+  most_mvps_player: string;
+  best_team: string;
+  most_popular_agent: string;
+  most_played_map: string;
+}
+
+export interface ChampionshipTeamRanking {
+  rank: number;
+  team_id: number;
+  team_name: string;
+  wins: number;
+  losses: number;
+  points: number;
+  matches_played: number;
+  win_rate: number;
+}
+
+export interface ChampionshipPlayerRanking {
+  rank: number;
+  participant_id: number;
+  player_name: string;
+  team_name: string;
+  kills: number;
+  deaths: number;
+  assists: number;
+  kda_ratio: number;
+  mvps: number;
 }
 
 // Update existing types to match ERD

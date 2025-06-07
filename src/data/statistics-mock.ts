@@ -1,4 +1,4 @@
-import { Player, Team, GeneralStat, MapData, DetailedPlayerStats, DetailedTeamStats, ChampionshipParticipation, AgentUsage, MapPerformance, SearchResult } from '@/types/statistics';
+import { Player, Team, GeneralStat, MapData, DetailedPlayerStats, DetailedTeamStats, ChampionshipParticipation, AgentUsage, MapPerformance, SearchResult, DetailedChampionshipStats, ChampionshipTeamRanking, ChampionshipPlayerRanking } from '@/types/statistics';
 
 export const topJogadores: Player[] = [
   { nome: 'King1', equipe: 'Valorant Kings', kda: '1.45', kills: 245, winRate: '78%' },
@@ -202,6 +202,71 @@ export const mapPerformanceStats: MapPerformance[] = [
   }
 ];
 
+export const detailedChampionshipsStats: DetailedChampionshipStats[] = [
+  {
+    championship_id: 1,
+    name: "Liga de Verão 2024",
+    description: "Campeonato regional de Valorant com as melhores equipes da temporada",
+    format: "double_elimination",
+    start_date: "2024-06-15",
+    end_date: "2024-07-20",
+    location: "São Paulo, SP",
+    status: "ongoing",
+    organizer_name: "ESports Brasil",
+    total_teams: 16,
+    total_players: 80,
+    total_matches: 45,
+    matches_completed: 32,
+    total_kills: 8945,
+    total_deaths: 8234,
+    avg_match_duration: 28.5,
+    prize_pool: "R$ 50.000",
+    most_kills_player: "King1",
+    most_mvps_player: "Phoenix1",
+    best_team: "Valorant Kings",
+    most_popular_agent: "Jett",
+    most_played_map: "Haven"
+  },
+  {
+    championship_id: 2,
+    name: "Copa Regional",
+    description: "Torneio eliminatório regional com formato suíço",
+    format: "swiss",
+    start_date: "2024-04-10",
+    end_date: "2024-05-15",
+    location: "Rio de Janeiro, RJ",
+    status: "completed",
+    organizer_name: "Gaming Rio",
+    total_teams: 12,
+    total_players: 60,
+    total_matches: 28,
+    matches_completed: 28,
+    total_kills: 6789,
+    total_deaths: 6234,
+    avg_match_duration: 26.8,
+    prize_pool: "R$ 25.000",
+    most_kills_player: "Phoenix1",
+    most_mvps_player: "King1",
+    best_team: "Phoenix Squad",
+    most_popular_agent: "Reyna",
+    most_played_map: "Bind"
+  }
+];
+
+export const championshipTeamRankings: ChampionshipTeamRanking[] = [
+  { rank: 1, team_id: 1, team_name: "Valorant Kings", wins: 12, losses: 2, points: 36, matches_played: 14, win_rate: 0.86 },
+  { rank: 2, team_id: 2, team_name: "Phoenix Squad", wins: 10, losses: 4, points: 30, matches_played: 14, win_rate: 0.71 },
+  { rank: 3, team_id: 3, team_name: "Sage Warriors", wins: 8, losses: 6, points: 24, matches_played: 14, win_rate: 0.57 },
+  { rank: 4, team_id: 4, team_name: "Viper Elite", wins: 6, losses: 8, points: 18, matches_played: 14, win_rate: 0.43 }
+];
+
+export const championshipPlayerRankings: ChampionshipPlayerRanking[] = [
+  { rank: 1, participant_id: 1, player_name: "King1", team_name: "Valorant Kings", kills: 324, deaths: 189, assists: 156, kda_ratio: 2.54, mvps: 8 },
+  { rank: 2, participant_id: 2, player_name: "Phoenix1", team_name: "Phoenix Squad", kills: 298, deaths: 203, assists: 142, kda_ratio: 2.17, mvps: 6 },
+  { rank: 3, participant_id: 3, player_name: "Sage_Master", team_name: "Valorant Kings", kills: 276, deaths: 198, assists: 187, kda_ratio: 2.34, mvps: 5 },
+  { rank: 4, participant_id: 4, player_name: "Viper_Queen", team_name: "Phoenix Squad", kills: 254, deaths: 176, assists: 134, kda_ratio: 2.20, mvps: 4 }
+];
+
 export const searchPlayers = (query: string): SearchResult[] => {
   if (!query.trim()) return [];
   
@@ -239,11 +304,31 @@ export const searchTeams = (query: string): SearchResult[] => {
   return teamResults;
 };
 
+export const searchChampionships = (query: string): SearchResult[] => {
+  if (!query.trim()) return [];
+  
+  const championshipResults = detailedChampionshipsStats
+    .filter(championship => 
+      championship.name.toLowerCase().includes(query.toLowerCase()) ||
+      championship.location.toLowerCase().includes(query.toLowerCase()) ||
+      championship.organizer_name.toLowerCase().includes(query.toLowerCase())
+    )
+    .map(championship => ({
+      id: championship.championship_id,
+      name: championship.name,
+      type: 'championship' as const,
+      subtitle: `${championship.location} - ${championship.status} - ${championship.total_teams} equipes`
+    }));
+
+  return championshipResults;
+};
+
 export const searchAll = (query: string): SearchResult[] => {
   if (!query.trim()) return [];
   
   const players = searchPlayers(query);
   const teams = searchTeams(query);
+  const championships = searchChampionships(query);
   
-  return [...teams, ...players].slice(0, 8); // Limit to 8 results
+  return [...championships, ...teams, ...players].slice(0, 8);
 };
