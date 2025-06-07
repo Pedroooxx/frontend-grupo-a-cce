@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./dashboard.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -150,4 +151,40 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Global styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dashboard specific classes with slate color scheme */
+.dashboard-card {
+  @apply bg-slate-800/50 backdrop-blur-sm;
+}
+
+.dashboard-text-muted {
+  @apply text-slate-400;
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-600;
+}
+
+/* Button hover effects */
+.hover\:bg-slate-750:hover {
+  background-color: rgb(41 50 65);
 }
