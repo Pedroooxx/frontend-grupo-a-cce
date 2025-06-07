@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, User, Users, X } from 'lucide-react';
+import { Search, User, Users, Trophy, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { SearchResult } from '@/types/statistics';
@@ -66,7 +66,18 @@ export const SearchBar = () => {
   };
 
   const handleResultClick = (result: SearchResult) => {
-    const basePath = result.type === 'player' ? '/dashboard/estatisticas/jogador' : '/dashboard/estatisticas/equipe';
+    let basePath = '';
+    switch (result.type) {
+      case 'player':
+        basePath = '/dashboard/estatisticas/jogador';
+        break;
+      case 'team':
+        basePath = '/dashboard/estatisticas/equipe';
+        break;
+      case 'championship':
+        basePath = '/dashboard/estatisticas/campeonato';
+        break;
+    }
     router.push(`${basePath}/${result.id}`);
     setQuery('');
     setIsOpen(false);
@@ -119,12 +130,16 @@ export const SearchBar = () => {
                 <div className={`p-2 rounded-lg ${
                   result.type === 'player' 
                     ? 'bg-blue-500/20' 
-                    : 'bg-green-500/20'
+                    : result.type === 'team'
+                    ? 'bg-green-500/20'
+                    : 'bg-purple-500/20'
                 }`}>
                   {result.type === 'player' ? (
                     <User className="w-4 h-4 text-blue-400" />
-                  ) : (
+                  ) : result.type === 'team' ? (
                     <Users className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <Trophy className="w-4 h-4 text-purple-400" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -133,9 +148,11 @@ export const SearchBar = () => {
                     <Badge className={`${
                       result.type === 'player'
                         ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                        : 'bg-green-500/20 text-green-400 border-green-500/30'
+                        : result.type === 'team'
+                        ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                        : 'bg-purple-500/20 text-purple-400 border-purple-500/30'
                     }`}>
-                      {result.type === 'player' ? 'Jogador' : 'Equipe'}
+                      {result.type === 'player' ? 'Jogador' : result.type === 'team' ? 'Equipe' : 'Campeonato'}
                     </Badge>
                   </div>
                   {result.subtitle && (
