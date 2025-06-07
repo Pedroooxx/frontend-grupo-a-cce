@@ -1,7 +1,8 @@
 'use client'
 import React, { useState } from "react";
-import { Search, Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, Menu, X } from "lucide-react";
+import { Search, Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, Menu, X, MapPin, Crown, Play, CheckCircle, Circle } from "lucide-react";
 import Link from "next/link";
+import { publicChampionships, publicMatches } from '@/data/public-mock';
 
 export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -334,6 +335,122 @@ export default function HomePage() {
               <LogIn className="w-5 h-5 mr-2" />
               Fazer Login
             </button>
+          </div>
+        </div>
+      </section>      {/* Featured Section */}
+      <section className="py-16 bg-slate-900">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Live Matches */}
+            <div className="bg-slate-800 border border-slate-700 rounded-md p-6">
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                <div className="w-3 h-3 bg-red-500 rounded-full mr-3 animate-pulse"></div>
+                Partidas em Destaque
+              </h3>
+              <div className="space-y-4">                <Link href="/campeonatos/1/partidas/3" className="block bg-slate-700 rounded-md p-4 hover:bg-slate-600 transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-slate-400 text-sm">Final - Liga de Verão</span>
+                    <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">Finalizada</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-white">
+                      <span>Valorant Kings</span>
+                      <span className="ml-2 text-red-500 font-semibold">13</span>
+                    </div>
+                    <div className="text-slate-400 text-sm">VS</div>
+                    <div className="text-white text-right">
+                      <span className="mr-2 text-red-500 font-semibold">9</span>
+                      <span>Sage Warriors</span>
+                    </div>
+                  </div>
+                  <div className="text-slate-400 text-sm mt-2">
+                    Ascent • 18/02 19:00
+                  </div>
+                </Link>
+
+                <Link href="/campeonatos/1/partidas/1" className="block bg-slate-700 rounded-md p-4 hover:bg-slate-600 transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-slate-400 text-sm">Semifinal - Liga de Verão</span>
+                    <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">Finalizada</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-white">
+                      <span>Valorant Kings</span>
+                      <span className="ml-2 text-red-500 font-semibold">13</span>
+                    </div>
+                    <div className="text-slate-400 text-sm">VS</div>
+                    <div className="text-white text-right">
+                      <span className="mr-2 text-red-500 font-semibold">11</span>
+                      <span>Phoenix Squad</span>
+                    </div>
+                  </div>
+                  <div className="text-slate-400 text-sm mt-2">
+                    Haven • 15/02 19:00
+                  </div>
+                </Link>
+              </div>
+              
+              <Link 
+                href="/campeonatos" 
+                className="inline-flex items-center mt-4 text-red-500 hover:text-red-400 transition-colors"
+              >
+                Ver todos os campeonatos
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </div>
+
+            {/* Top Teams */}
+            <div className="bg-slate-800 border border-slate-700 rounded-md p-6">
+              <h3 className="text-xl font-semibold text-white mb-4">Equipes em Destaque</h3>
+              <div className="space-y-4">
+                <Link href="/campeonatos/1/equipes/1" className="flex items-center justify-between p-3 bg-slate-700 rounded-md hover:bg-slate-600 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                      <Trophy className="w-4 h-4 text-yellow-500" />
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">Valorant Kings</div>
+                      <div className="text-slate-400 text-sm">15V - 3D • 83% WR</div>
+                    </div>
+                  </div>
+                  <div className="text-yellow-500 font-semibold">#1</div>
+                </Link>
+
+                <Link href="/campeonatos/1/equipes/2" className="flex items-center justify-between p-3 bg-slate-700 rounded-md hover:bg-slate-600 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-slate-500/20 rounded-full flex items-center justify-center">
+                      <Trophy className="w-4 h-4 text-slate-400" />
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">Phoenix Squad</div>
+                      <div className="text-slate-400 text-sm">12V - 6D • 67% WR</div>
+                    </div>
+                  </div>
+                  <div className="text-slate-400 font-semibold">#2</div>
+                </Link>
+
+                <Link href="/campeonatos/1/equipes/3" className="flex items-center justify-between p-3 bg-slate-700 rounded-md hover:bg-slate-600 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-orange-600/20 rounded-full flex items-center justify-center">
+                      <Trophy className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">Sage Warriors</div>
+                      <div className="text-slate-400 text-sm">8V - 8D • 50% WR</div>
+                    </div>
+                  </div>
+                  <div className="text-orange-600 font-semibold">#3</div>
+                </Link>
+              </div>
+              
+              <Link 
+                href="/campeonatos/1" 
+                className="inline-flex items-center mt-4 text-red-500 hover:text-red-400 transition-colors"
+              >
+                Ver classificação completa
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>      {/* Footer */}

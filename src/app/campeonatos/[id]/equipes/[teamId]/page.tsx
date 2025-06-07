@@ -225,16 +225,18 @@ export default function TeamPublicPage({ params }: PageProps) {
                   <p className="text-yellow-500 font-semibold">{team.championships_won}</p>
                 </div>
               </div>
-            </div>
-
-            {/* Recent Matches */}
+            </div>            {/* Recent Matches */}
             <div className="bg-slate-800 border border-slate-700 rounded-md p-6">
               <h3 className="text-xl font-semibold text-white mb-4">Partidas Recentes</h3>
               <div className="space-y-3">
                 {teamMatches.slice(0, 3).map((match) => {
                   const result = getMatchResult(match);
                   return (
-                    <div key={match.match_id} className="bg-slate-700 rounded-md p-4">
+                    <Link
+                      key={match.match_id}
+                      href={`/campeonatos/${championshipId}/partidas/${match.match_id}`}
+                      className="block bg-slate-700 rounded-md p-4 hover:bg-slate-600 transition-colors"
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-slate-400 text-sm">{match.stage}</span>
                         {getMatchStatusIcon(match.status)}
@@ -259,7 +261,7 @@ export default function TeamPublicPage({ params }: PageProps) {
                       <div className="text-slate-400 text-sm mt-2">
                         {match.map} • {formatDateTime(match.date)}
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -344,66 +346,66 @@ export default function TeamPublicPage({ params }: PageProps) {
               </div>
             </div>
           </div>
-        )}
-
-        {activeTab === 'matches' && (
+        )}        {activeTab === 'matches' && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-white mb-6">Histórico de Partidas</h2>
-            {teamMatches.map((match) => {
-              const result = getMatchResult(match);
-              const isTeamA = match.teamA.team_id === teamId;
-              const opponent = isTeamA ? match.teamB : match.teamA;
-              
-              return (
-                <div key={match.match_id} className="bg-slate-800 border border-slate-700 rounded-md p-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-full text-sm">
-                          {match.stage}
-                        </span>
-                        {getMatchStatusIcon(match.status)}
-                        <span className="text-slate-400 text-sm capitalize">{match.status}</span>
-                        {result && (
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            result.won ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                          }`}>
-                            {result.won ? 'Vitória' : 'Derrota'}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center justify-between md:justify-start md:gap-8">
-                        <div className="text-center">
-                          <div className="text-white font-semibold">{team.name}</div>
-                          {match.score && (
-                            <div className="text-2xl font-bold text-red-500 mt-1">
-                              {isTeamA ? match.score.teamA : match.score.teamB}
+            <h3 className="text-xl font-semibold text-white mb-6">Partidas no Campeonato</h3>
+            {teamMatches.length === 0 ? (
+              <div className="text-center py-8 text-slate-400">
+                Nenhuma partida encontrada para esta equipe no campeonato.
+              </div>
+            ) : (
+              teamMatches.map((match) => {
+                const result = getMatchResult(match);
+                const isTeamA = match.teamA.team_id === teamId;
+                const opponent = isTeamA ? match.teamB.name : match.teamA.name;
+                
+                return (
+                  <Link 
+                    key={match.match_id}
+                    href={`/campeonatos/${championshipId}/partidas/${match.match_id}`}
+                    className="block"
+                  >
+                    <div className="bg-slate-800 border border-slate-700 rounded-md p-6 hover:bg-slate-750 transition-colors cursor-pointer">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center space-x-4">
+                          {getMatchStatusIcon(match.status)}
+                          <div>
+                            <div className="flex items-center space-x-4 text-white">
+                              <span className="font-medium">{match.teamA.name}</span>
+                              <span className="text-slate-400">vs</span>
+                              <span className="font-medium">{match.teamB.name}</span>
                             </div>
-                          )}
+                            <div className="flex items-center space-x-2 text-slate-400 text-sm mt-1">
+                              <span>{match.stage}</span>
+                              <span>•</span>
+                              <span>{match.map}</span>
+                            </div>
+                          </div>
                         </div>
                         
-                        <div className="text-slate-400 text-sm px-4">VS</div>
-                        
-                        <div className="text-center">
-                          <div className="text-white font-semibold">{opponent.name}</div>
+                        <div className="flex items-center space-x-4">
                           {match.score && (
-                            <div className="text-2xl font-bold text-red-500 mt-1">
-                              {isTeamA ? match.score.teamB : match.score.teamA}
+                            <div className="text-white font-mono">
+                              {match.score.teamA} - {match.score.teamB}
                             </div>
                           )}
+                          {result && (
+                            <div className={`px-2 py-1 rounded text-sm ${
+                              result.won ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                            }`}>
+                              {result.won ? 'Vitória' : 'Derrota'}
+                            </div>
+                          )}
+                          <div className="text-slate-400 text-sm">
+                            {formatDateTime(match.date)}
+                          </div>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="text-right">
-                      <div className="text-slate-400 text-sm">{match.map}</div>
-                      <div className="text-slate-300">{formatDateTime(match.date)}</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                  </Link>
+                );
+              })
+            )}
           </div>
         )}
 

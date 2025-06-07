@@ -183,13 +183,15 @@ export default function ChampionshipPublicPage({ params }: PageProps) {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Recent Matches */}
+            </div>            {/* Recent Matches */}
             <div className="bg-slate-800 border border-slate-700 rounded-md p-6">
               <h3 className="text-xl font-semibold text-white mb-4">Partidas Recentes</h3>              <div className="space-y-3">
                 {matches.slice(0, 3).map((match) => (
-                  <div key={match.match_id} className="bg-slate-700 rounded-md p-4">
+                  <Link 
+                    key={match.match_id} 
+                    href={`/campeonatos/${championship.championship_id}/partidas/${match.match_id}`}
+                    className="block bg-slate-700 rounded-md p-4 hover:bg-slate-600 transition-colors"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-slate-400 text-sm">{match.stage}</span>
                       {getMatchStatusIcon(match.status)}
@@ -216,57 +218,61 @@ export default function ChampionshipPublicPage({ params }: PageProps) {
                     <div className="text-slate-400 text-sm mt-2">
                       {match.map} • {formatDateTime(match.date)}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
           </div>
-        )}
-
-        {activeTab === 'matches' && (
+        )}        {activeTab === 'matches' && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-white mb-6">Todas as Partidas</h2>
             {matches.map((match) => (
-              <div key={match.match_id} className="bg-slate-800 border border-slate-700 rounded-md p-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-full text-sm">
-                        {match.stage}
-                      </span>
-                      {getMatchStatusIcon(match.status)}
-                      <span className="text-slate-400 text-sm capitalize">{match.status}</span>
+              <Link 
+                key={match.match_id} 
+                href={`/campeonatos/${championship.championship_id}/partidas/${match.match_id}`}
+                className="block"
+              >
+                <div className="bg-slate-800 border border-slate-700 rounded-md p-6 hover:bg-slate-750 transition-colors cursor-pointer">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-full text-sm">
+                          {match.stage}
+                        </span>
+                        {getMatchStatusIcon(match.status)}
+                        <span className="text-slate-400 text-sm capitalize">{match.status}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between md:justify-start md:gap-8">
+                        <div className="text-center">
+                          <div className="text-white font-semibold">{match.teamA.name}</div>
+                          {match.score && (
+                            <div className="text-2xl font-bold text-red-500 mt-1">
+                              {match.score.teamA}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="text-slate-400 text-sm px-4">VS</div>
+                        
+                        <div className="text-center">
+                          <div className="text-white font-semibold">{match.teamB.name}</div>
+                          {match.score && (
+                            <div className="text-2xl font-bold text-red-500 mt-1">
+                              {match.score.teamB}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     
-                    <div className="flex items-center justify-between md:justify-start md:gap-8">
-                      <div className="text-center">
-                        <div className="text-white font-semibold">{match.teamA.name}</div>
-                        {match.score && (
-                          <div className="text-2xl font-bold text-red-500 mt-1">
-                            {match.score.teamA}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="text-slate-400 text-sm px-4">VS</div>
-                      
-                      <div className="text-center">
-                        <div className="text-white font-semibold">{match.teamB.name}</div>
-                        {match.score && (
-                          <div className="text-2xl font-bold text-red-500 mt-1">
-                            {match.score.teamB}
-                          </div>
-                        )}
-                      </div>
+                    <div className="text-right">
+                      <div className="text-slate-400 text-sm">{match.map}</div>
+                      <div className="text-slate-300">{formatDateTime(match.date)}</div>
                     </div>
                   </div>
-                  
-                  <div className="text-right">
-                    <div className="text-slate-400 text-sm">{match.map}</div>
-                    <div className="text-slate-300">{formatDateTime(match.date)}</div>
-                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
