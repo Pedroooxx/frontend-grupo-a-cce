@@ -32,7 +32,6 @@ export const mapasData: MapData[] = [
   { nome: 'Sunset', partidas: 12, winRate: '75%', avgScore: '13-6' },
   { nome: 'District', partidas: 8, winRate: '63%', avgScore: '13-12' },
   { nome: 'Kasbah', partidas: 6, winRate: '50%', avgScore: '13-11' },
-  { nome: 'Drift', partidas: 5, winRate: '60%', avgScore: '13-9' }
 ];
 
 export const agentesData = ['Jett', 'Sage', 'Phoenix', 'Reyna', 'Viper'];
