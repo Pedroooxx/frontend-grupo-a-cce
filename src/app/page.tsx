@@ -202,8 +202,16 @@ export default function HomePage() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             {session && (
-              <div className="mb-6 p-4 bg-green-500/20 border border-green-500/30 text-green-400 rounded-lg">
-                Bem-vindo de volta, {session.user.name}!
+              <div className="mb-8 p-6 bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/30 text-green-400 rounded-lg backdrop-blur-sm">
+                <div className="flex items-center justify-center space-x-3 mb-2">
+                  <div className="w-8 h-8 bg-green-500/30 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-green-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold">Bem-vindo de volta!</h3>
+                </div>
+                <p className="text-green-300">
+                  Olá, <span className="font-bold">{session.user.name}</span>! Pronto para gerenciar seus campeonatos?
+                </p>
               </div>
             )}
             

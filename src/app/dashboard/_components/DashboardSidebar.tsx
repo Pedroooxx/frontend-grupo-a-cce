@@ -76,12 +76,6 @@ export function DashboardSidebar({ className }: SidebarProps) {
             <div className="text-red-500 font-bold text-sm">LEAGUE</div>
           </div>
         </div>
-        {session && (
-          <div className="mt-3 pt-3 border-t border-gray-700">
-            <p className="text-gray-300 text-sm">Bem-vindo,</p>
-            <p className="text-white text-sm font-medium">{session.user.name}</p>
-          </div>
-        )}
       </div>
 
       {/* Navigation Menu */}

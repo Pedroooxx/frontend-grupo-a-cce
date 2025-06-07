@@ -21,6 +21,18 @@
   color: rgba(156, 163, 175, 1);
 }
 
+/* User profile enhancements */
+.user-avatar {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.user-menu {
+  background: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
 /* Home page animations */
 @keyframes fadeInUp {
   from {
@@ -53,4 +65,21 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(239, 68, 68, 0.8);
+}
+
+/* User status indicators */
+.status-online {
+  position: relative;
+}
+
+.status-online::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: #10b981;
+  border: 2px solid #1f2937;
+  border-radius: 50%;
 }
