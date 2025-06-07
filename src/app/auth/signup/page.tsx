@@ -1,0 +1,172 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Trophy, Eye, EyeOff } from 'lucide-react'
+import Link from 'next/link'
+
+export default function SignUp() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const router = useRouter()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('As senhas não coincidem')
+      setIsLoading(false)
+      return
+    }
+
+    // TODO: Implement actual registration logic
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // For demo, just redirect to signin
+      router.push('/auth/signin?message=Conta criada com sucesso!')
+    } catch (error) {
+      setError('Erro ao criar conta')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+      <Card className="w-full max-w-md bg-gray-800 border-gray-700 p-8">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-white rounded flex items-center justify-center">
+              <Trophy className="w-8 h-8 text-black" />
+            </div>
+            <div>
+              <div className="text-white font-bold text-xl">ESPORTS</div>
+              <div className="text-red-500 font-bold text-xl">LEAGUE</div>
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Criar Conta</h1>
+          <p className="text-gray-400">Cadastre-se para gerenciar campeonatos</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+              Nome Completo
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              placeholder="Seu nome completo"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              placeholder="seu@email.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              Senha
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent pr-10"
+                placeholder="Mínimo 8 caracteres"
+                required
+                minLength={8}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+              Confirmar Senha
+            </label>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              placeholder="Confirme sua senha"
+              required
+            />
+          </div>
+
+          {error && (
+            <div className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-2 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-red-500 hover:bg-red-600 text-white"
+          >
+            {isLoading ? 'Criando conta...' : 'Criar Conta'}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-gray-400 text-sm">
+            Já tem uma conta?{' '}
+            <Link href="/auth/signin" className="text-red-400 hover:text-red-300">
+              Faça login
+            </Link>
+          </p>
+        </div>
+      </Card>
+    </div>
+  )
+}
