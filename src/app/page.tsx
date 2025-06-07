@@ -19,7 +19,7 @@ export default function HomePage() {
                 <div className="text-red-500 font-bold text-lg leading-none">LEAGUE</div>
               </div>
             </div>            <nav className="hidden md:flex items-center space-x-6">
-              <Link href="#campeonatos" className="text-slate-300 hover:text-white transition-colors">
+              <Link href="/campeonatos" className="text-slate-300 hover:text-white transition-colors">
                 Campeonatos
               </Link>
               <Link href="#sobre" className="text-slate-300 hover:text-white transition-colors">
@@ -71,12 +71,10 @@ export default function HomePage() {
               >
                 <X className="w-6 h-6" />
               </button>
-            </div>
-
-            {/* Navigation Links */}
+            </div>            {/* Navigation Links */}
             <nav className="space-y-4 mb-8">
               <Link 
-                href="#campeonatos" 
+                href="/campeonatos" 
                 className="block text-slate-300 hover:text-white text-lg py-2 border-b border-slate-700"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -192,7 +190,7 @@ export default function HomePage() {
                 Buscar
               </button>
             </div>
-          </div>{/* Featured Championships */}
+          </div>          {/* Featured Championships */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md">
               <div className="flex items-center justify-between mb-4">
@@ -208,9 +206,12 @@ export default function HomePage() {
                 <span><Users className="w-4 h-4 inline mr-1" />32 equipes</span>
                 <span><Calendar className="w-4 h-4 inline mr-1" />12 partidas</span>
               </div>
-              <button className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center">
+              <Link 
+                href="/campeonatos/1"
+                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
+              >
                 Ver Detalhes <ArrowRight className="w-4 h-4 ml-2" />
-              </button>
+              </Link>
             </div>
 
             <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md">
@@ -227,9 +228,12 @@ export default function HomePage() {
                 <span><Users className="w-4 h-4 inline mr-1" />16 equipes</span>
                 <span><Calendar className="w-4 h-4 inline mr-1" />8 partidas</span>
               </div>
-              <button className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center">
+              <Link 
+                href="/campeonatos/2"
+                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
+              >
                 Ver Resultados <ArrowRight className="w-4 h-4 ml-2" />
-              </button>
+              </Link>
             </div>
 
             <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md">
@@ -246,13 +250,26 @@ export default function HomePage() {
                 <span><Users className="w-4 h-4 inline mr-1" />24 vagas</span>
                 <span><Calendar className="w-4 h-4 inline mr-1" />Início em breve</span>
               </div>
-              <button className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center">
-                Inscrever-se <ArrowRight className="w-4 h-4 ml-2" />
-              </button>
+              <Link 
+                href="/campeonatos/3"
+                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
+              >
+                Inscrever-se <ArrowRight className="w-4 h-4 ml-2" />              </Link>
             </div>
           </div>
+          
+          {/* View All Link */}
+          <div className="text-center mt-8">
+            <Link 
+              href="/campeonatos"
+              className="inline-flex items-center px-6 py-3 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors rounded-md"
+            >
+              Ver Todos os Campeonatos
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </div>
         </div>
-      </section>      {/* Features Section */}
+      </section>{/* Features Section */}
       <section className="py-12 md:py-16 bg-slate-800">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 md:mb-12">
