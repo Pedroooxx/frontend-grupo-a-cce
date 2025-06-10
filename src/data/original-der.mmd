@@ -1,0 +1,106 @@
+erDiagram
+    USER ||--o{ CHAMPIONSHIP : creates
+    USER ||--o{ TEAM : manages
+    USER ||--o{ PARTICIPANT : creates
+    TEAM ||--o{ PARTICIPANT : has
+    CHAMPIONSHIP ||--o{ MATCH : has
+    CHAMPIONSHIP ||--o{ SUBSCRIPTION : receives
+    TEAM ||--o{ SUBSCRIPTION : makes
+    MATCH ||--o{ PARTICIPANT_STATISTICS : generates
+    PARTICIPANT ||--o{ PARTICIPANT_STATISTICS : participates_in
+    AGENT ||--o{ PARTICIPANT_STATISTICS : used_in
+    CHAMPIONSHIP ||--o{ CHAMPIONSHIP_STATISTICS : generates
+
+    USER {
+        int user_id
+        string name
+        string email
+        string password
+    }
+
+    TEAM {
+        int team_id
+        string name
+        int user_id
+    }
+
+    PARTICIPANT {
+        int participant_id
+        string name
+        string nickname
+        datetime birth_date
+        int phone
+        int team_id
+        boolean is_COACH
+        int user_id
+    }
+
+    CHAMPIONSHIP {
+        int championship_id
+        string name
+        string description
+        enum format
+        date start_date
+        date end_date
+        string location
+        string status
+        int user_id
+    }
+
+    MATCH {
+        int match_id
+        int championship_id
+        int teamA_id
+        int teamB_id
+        datetime date
+        string stage
+        enum bracket
+        int winner_team_id
+        dict score
+        string map
+    }
+
+    SUBSCRIPTION {
+        int subscription_id
+        int championship_id
+        int team_id
+        date subscription_date
+        %%string status
+        int switching_code
+        int score
+    }
+
+    PARTICIPANT_STATISTICS {
+        int statistic_id
+        int match_id
+        int participant_id
+        int agent_id
+        int kills
+        int assists
+        int deaths
+        int spike_plants
+        int spike_defuses
+        boolean MVP
+        int first_kill
+        %%boolean first_defuse
+        int total_score
+    }
+
+    AGENT {
+        int agent_id
+        string name
+    }
+
+    CHAMPIONSHIP_STATISTICS {
+        int statistic_id
+        int championship_id
+        int participant_id
+        int team_id
+        int kills
+        int assists
+        int deaths
+        int spike_plants
+        int spike_defuses
+        int MVPs
+        int first_kills
+    }

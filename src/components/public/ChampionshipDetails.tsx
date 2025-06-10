@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, MapPin, Trophy, Users, Clock } from 'lucide-react';
+import { Calendar, MapPin, Trophy, Users, Clock, Star, Target, Crown, Zap, BarChart3 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PublicSearchBar } from '@/components/public/PublicSearchBar';
 import { useRouter } from 'next/navigation';
+import { getStandingsByChampionshipId, getChampionshipById } from '@/data/public-mock';
 
 interface Match {
   match_id: number;
@@ -45,8 +45,11 @@ export function ChampionshipDetails({
   matches, 
   teams 
 }: ChampionshipDetailsProps) {
-  const [activeTab, setActiveTab] = useState<'matches' | 'teams'>('matches');
+  const [activeTab, setActiveTab] = useState<'overview' | 'matches' | 'teams'>('overview');
   const router = useRouter();
+  
+  const championship = getChampionshipById(championshipId);
+  const standings = getStandingsByChampionshipId(championshipId);
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -54,7 +57,9 @@ export function ChampionshipDetails({
       live: { color: 'bg-red-500/20 text-red-400', label: 'Ao Vivo' },
       completed: { color: 'bg-green-500/20 text-green-400', label: 'Finalizada' },
       postponed: { color: 'bg-orange-500/20 text-orange-400', label: 'Adiada' },
-      cancelled: { color: 'bg-gray-500/20 text-gray-400', label: 'Cancelada' }
+      cancelled: { color: 'bg-gray-500/20 text-gray-400', label: 'Cancelada' },
+      upcoming: { color: 'bg-yellow-500/20 text-yellow-400', label: 'Em Breve' },
+      ongoing: { color: 'bg-green-500/20 text-green-400', label: 'Em Andamento' }
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || { color: 'bg-gray-500/20 text-gray-400', label: status };
@@ -75,34 +80,12 @@ export function ChampionshipDetails({
     });
   };
 
-  const handleSearchResult = (result: any) => {
-    switch (result.type) {
-      case 'match':
-        router.push(`/campeonatos/${championshipId}/partidas/${result.id}`);
-        break;
-      case 'team':
-        router.push(`/campeonatos/${championshipId}/equipes/${result.id}`);
-        break;
-      case 'championship':
-        router.push(`/campeonatos/${result.id}`);
-        break;
-    }
-  };
-
   return (
-    <div className="space-y-8">
-      {/* Search Bar */}
-      <div className="max-w-2xl mx-auto">
-        <PublicSearchBar 
-          placeholder="Buscar partidas, equipes ou outros campeonatos..."
-          onResultClick={handleSearchResult}
-        />
-      </div>
-
-      {/* Navigation Tabs */}
+    <div className="space-y-8">      {/* Navigation Tabs */}
       <div className="border-b border-slate-700">
         <nav className="flex space-x-8">
           {[
+            { id: 'overview', label: 'Visão Geral' },
             { id: 'matches', label: 'Partidas', count: matches.length },
             { id: 'teams', label: 'Equipes', count: teams.length }
           ].map((tab) => (
@@ -115,13 +98,209 @@ export function ChampionshipDetails({
                   : 'border-transparent text-slate-400 hover:text-white'
               }`}
             >
-              {tab.label} ({tab.count})
+              {tab.label} {tab.count ? `(${tab.count})` : ''}
             </button>
           ))}
         </nav>
-      </div>
+      </div>      {/* Content */}
+      {activeTab === 'overview' && (
+        <div className="space-y-8">
+          {/* Championship Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="bg-slate-800 border-slate-700 p-6 text-center">
+              <Users className="w-8 h-8 text-blue-500 mx-auto mb-3" />
+              <div className="text-2xl font-bold text-white mb-1">{teams.length}</div>
+              <div className="text-slate-400 text-sm">Equipes Participantes</div>
+            </Card>
+            
+            <Card className="bg-slate-800 border-slate-700 p-6 text-center">
+              <Trophy className="w-8 h-8 text-green-500 mx-auto mb-3" />
+              <div className="text-2xl font-bold text-white mb-1">{matches.length}</div>
+              <div className="text-slate-400 text-sm">Partidas Totais</div>
+            </Card>
+            
+            <Card className="bg-slate-800 border-slate-700 p-6 text-center">
+              <BarChart3 className="w-8 h-8 text-purple-500 mx-auto mb-3" />
+              <div className="text-2xl font-bold text-white mb-1">{matches.filter(m => m.status === 'completed').length}</div>
+              <div className="text-slate-400 text-sm">Partidas Finalizadas</div>
+            </Card>
+            
+            <Card className="bg-slate-800 border-slate-700 p-6 text-center">
+              <Clock className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
+              <div className="text-2xl font-bold text-white mb-1">{matches.filter(m => m.status === 'scheduled').length}</div>
+              <div className="text-slate-400 text-sm">Partidas Agendadas</div>
+            </Card>
+          </div>
 
-      {/* Content */}
+          {championship && (
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Championship Information */}
+              <Card className="bg-slate-800 border-slate-700 p-6">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <Trophy className="w-5 h-5 text-yellow-500 mr-2" />
+                  Informações do Campeonato
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-slate-400 text-sm">Formato</label>
+                    <p className="text-white font-medium capitalize">{championship.format.replace('_', ' ')}</p>
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-sm">Período</label>
+                    <p className="text-white">
+                      {new Date(championship.start_date).toLocaleDateString('pt-BR')} - {new Date(championship.end_date).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-sm">Local</label>
+                    <p className="text-white flex items-center">
+                      <MapPin className="w-4 h-4 text-red-500 mr-1" />
+                      {championship.location}
+                    </p>
+                  </div>
+                  {championship.prize_pool && (
+                    <div>
+                      <label className="text-slate-400 text-sm">Premiação</label>
+                      <p className="text-yellow-500 font-semibold flex items-center">
+                        <Crown className="w-4 h-4 mr-1" />
+                        {championship.prize_pool}
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-slate-400 text-sm">Status</label>
+                    <div className="mt-1">
+                      {getStatusBadge(championship.status)}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Current Standings */}
+              <Card className="bg-slate-800 border-slate-700 p-6">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <Target className="w-5 h-5 text-green-500 mr-2" />
+                  Classificação Atual
+                </h3>
+                <div className="space-y-3">
+                  {standings.slice(0, 5).map((standing, index) => (
+                    <div key={standing.team_id} className="flex items-center justify-between p-3 bg-slate-700 rounded-md">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                          index === 0 ? 'bg-yellow-500 text-black' :
+                          index === 1 ? 'bg-gray-400 text-black' :
+                          index === 2 ? 'bg-amber-600 text-black' :
+                          'bg-slate-600 text-white'
+                        }`}>
+                          {standing.position}
+                        </div>
+                        <span className="text-white font-medium">{standing.team_name}</span>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <span className="text-slate-400 text-sm">
+                          {standing.wins}V - {standing.losses}D
+                        </span>
+                        <span className="text-green-400 font-semibold">
+                          {Math.round(standing.win_rate * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Recent Matches */}
+          <Card className="bg-slate-800 border-slate-700 p-6">
+            <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+              <Zap className="w-5 h-5 text-red-500 mr-2" />
+              Partidas Recentes
+            </h3>
+            <div className="space-y-4">
+              {matches.filter(m => m.status === 'completed').slice(0, 3).map((match) => (
+                <div key={match.match_id} className="bg-slate-700 rounded-md p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="text-center">
+                        <div className="text-white font-medium">{match.teamA.name}</div>
+                        {match.score && (
+                          <div className="text-red-500 font-bold text-lg">{match.score.teamA}</div>
+                        )}
+                      </div>
+                      <span className="text-slate-400">vs</span>
+                      <div className="text-center">
+                        <div className="text-white font-medium">{match.teamB.name}</div>
+                        {match.score && (
+                          <div className="text-red-500 font-bold text-lg">{match.score.teamB}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-slate-400 text-sm">{match.stage}</div>
+                      <div className="text-slate-400 text-sm">{match.map}</div>
+                      <Badge className="bg-green-500/20 text-green-400 mt-1">
+                        Finalizada
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                className="w-full border-slate-600 text-slate-300 hover:text-white"
+                onClick={() => setActiveTab('matches')}
+              >
+                Ver Todas as Partidas
+              </Button>
+            </div>
+          </Card>
+
+          {/* Top Teams Preview */}
+          <Card className="bg-slate-800 border-slate-700 p-6">
+            <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+              <Star className="w-5 h-5 text-yellow-500 mr-2" />
+              Principais Equipes
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {teams.slice(0, 3).map((team) => (
+                <div key={team.team_id} className="bg-slate-700 rounded-md p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-white font-semibold">{team.name}</h4>
+                    <Badge className="bg-blue-500/20 text-blue-400">
+                      {Math.round(team.win_rate * 100)}% WR
+                    </Badge>
+                  </div>
+                  <p className="text-slate-400 text-sm mb-3">{team.manager_name}</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-400">{team.wins} vitórias</span>
+                    <span className="text-red-400">{team.losses} derrotas</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="w-full mt-3 bg-red-500 hover:bg-red-600 text-white"
+                    onClick={() => router.push(`/campeonatos/${championshipId}/equipes/${team.team_id}`)}
+                  >
+                    Ver Equipe
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                className="w-full border-slate-600 text-slate-300 hover:text-white"
+                onClick={() => setActiveTab('teams')}
+              >
+                Ver Todas as Equipes
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {activeTab === 'matches' && (
         <div className="space-y-6">
           <div className="grid gap-6">

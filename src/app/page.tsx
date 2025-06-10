@@ -1,8 +1,9 @@
 'use client'
-
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Search, Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, Menu, X, MapPin, Crown, Play, CheckCircle, Circle, User } from "lucide-react";
 import Link from "next/link";
+import { publicChampionships, publicMatches } from '@/data/public-mock';
+import { PublicSearchBar } from "@/components/public/PublicSearchBar";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -301,6 +302,7 @@ export default function HomePage() {
           </div>
 
           <div className="max-w-2xl mx-auto mb-8 md:mb-12 px-4">            
+            {/* 
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input 
@@ -311,69 +313,77 @@ export default function HomePage() {
                 Buscar
               </button>
             </div>
+            */}
+            <PublicSearchBar
+              searchTypes={['championship']}
+              placeholder="Buscar campeonatos..."
+              // className prop will use PublicSearchBar's default "max-w-2xl" which fits this parent div.
+              // Or pass "w-full" if PublicSearchBar's default is removed/changed.
+              // Given parent is "max-w-2xl mx-auto", PublicSearchBar's default "max-w-2xl" is fine.
+            />
           </div>          {/* Featured Championships */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md">
+            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col min-h-[280px]">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold text-white">Liga de Verão 2024</h3>
                 <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">
                   Em andamento
                 </span>
               </div>
-              <p className="text-slate-400 mb-4">
+              <p className="text-slate-400 mb-6 flex-1">
                 Campeonato principal da temporada com 32 equipes participantes
               </p>
-              <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
+              <div className="flex items-center justify-between text-sm text-slate-400 mb-6">
                 <span><Users className="w-4 h-4 inline mr-1" />32 equipes</span>
                 <span><Calendar className="w-4 h-4 inline mr-1" />12 partidas</span>
               </div>
               <Link 
                 href="/campeonatos/1"
-                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
+                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-3 rounded-md flex items-center justify-center mt-auto"
               >
                 Ver Detalhes <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </div>
 
-            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md">
+            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col min-h-[280px]">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold text-white">Copa Regional</h3>
                 <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
                   Finalizado
                 </span>
               </div>
-              <p className="text-slate-400 mb-4">
+              <p className="text-slate-400 mb-6 flex-1">
                 Torneio regional com foco em equipes emergentes
               </p>
-              <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
+              <div className="flex items-center justify-between text-sm text-slate-400 mb-6">
                 <span><Users className="w-4 h-4 inline mr-1" />16 equipes</span>
                 <span><Calendar className="w-4 h-4 inline mr-1" />8 partidas</span>
               </div>
               <Link 
                 href="/campeonatos/2"
-                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
+                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-3 rounded-md flex items-center justify-center mt-auto"
               >
                 Ver Resultados <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </div>
 
-            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md">
+            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col min-h-[280px]">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold text-white">Torneio Universitário</h3>
                 <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
                   Inscrições Abertas
                 </span>
               </div>
-              <p className="text-slate-400 mb-4">
+              <p className="text-slate-400 mb-6 flex-1">
                 Competição exclusiva para equipes universitárias
               </p>
-              <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
+              <div className="flex items-center justify-between text-sm text-slate-400 mb-6">
                 <span><Users className="w-4 h-4 inline mr-1" />24 vagas</span>
                 <span><Calendar className="w-4 h-4 inline mr-1" />Início em breve</span>
               </div>
               <Link 
                 href="/campeonatos/3"
-                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center"
+                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-3 rounded-md flex items-center justify-center mt-auto"
               >
                 Inscrever-se <ArrowRight className="w-4 h-4 ml-2" />              </Link>
             </div>
@@ -483,8 +493,8 @@ export default function HomePage() {
       {/* Featured Section */}
       <section className="py-16 bg-slate-900">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Live Matches */}
+          <div className="max-w-4xl mx-auto">
+            {/* Live Matches - Single Container */}
             <div className="bg-slate-800 border border-slate-700 rounded-md p-6">
               <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
                 <div className="w-3 h-3 bg-red-500 rounded-full mr-3 animate-pulse"></div>
@@ -527,8 +537,7 @@ export default function HomePage() {
                       <span className="mr-2 text-red-500 font-semibold">11</span>
                       <span>Phoenix Squad</span>
                     </div>
-                  </div>
-                  <div className="text-slate-400 text-sm mt-2">
+                  </div>                  <div className="text-slate-400 text-sm mt-2">
                     Haven • 15/02 19:00
                   </div>
                 </Link>
@@ -536,70 +545,15 @@ export default function HomePage() {
               
               <Link 
                 href="/campeonatos" 
-                className="inline-flex items-center mt-4 text-red-500 hover:text-red-400 transition-colors"
+                className="inline-flex items-center mt-6 text-red-500 hover:text-red-400 transition-colors"
               >
                 Ver todos os campeonatos
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </div>
-
-            {/* Top Teams */}
-            <div className="bg-slate-800 border border-slate-700 rounded-md p-6">
-              <h3 className="text-xl font-semibold text-white mb-4">Equipes em Destaque</h3>
-              <div className="space-y-4">
-                <Link href="/campeonatos/1/equipes/1" className="flex items-center justify-between p-3 bg-slate-700 rounded-md hover:bg-slate-600 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                      <Trophy className="w-4 h-4 text-yellow-500" />
-                    </div>
-                    <div>
-                      <div className="text-white font-medium">Valorant Kings</div>
-                      <div className="text-slate-400 text-sm">15V - 3D • 83% WR</div>
-                    </div>
-                  </div>
-                  <div className="text-yellow-500 font-semibold">#1</div>
-                </Link>
-
-                <Link href="/campeonatos/1/equipes/2" className="flex items-center justify-between p-3 bg-slate-700 rounded-md hover:bg-slate-600 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-slate-500/20 rounded-full flex items-center justify-center">
-                      <Trophy className="w-4 h-4 text-slate-400" />
-                    </div>
-                    <div>
-                      <div className="text-white font-medium">Phoenix Squad</div>
-                      <div className="text-slate-400 text-sm">12V - 6D • 67% WR</div>
-                    </div>
-                  </div>
-                  <div className="text-slate-400 font-semibold">#2</div>
-                </Link>
-
-                <Link href="/campeonatos/1/equipes/3" className="flex items-center justify-between p-3 bg-slate-700 rounded-md hover:bg-slate-600 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-orange-600/20 rounded-full flex items-center justify-center">
-                      <Trophy className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <div>
-                      <div className="text-white font-medium">Sage Warriors</div>
-                      <div className="text-slate-400 text-sm">8V - 8D • 50% WR</div>
-                    </div>
-                  </div>
-                  <div className="text-orange-600 font-semibold">#3</div>
-                </Link>
-              </div>
-              
-              <Link 
-                href="/campeonatos/1" 
-                className="inline-flex items-center mt-4 text-red-500 hover:text-red-400 transition-colors"
-              >
-                Ver classificação completa
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Link>
-            </div>
           </div>
         </div>
-      </section>
-
-      {/* Footer */}
+      </section>      {/* Footer */}
       <footer className="bg-slate-900 border-t border-slate-800 py-8 md:py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
