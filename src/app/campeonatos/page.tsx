@@ -62,11 +62,10 @@ export default function ChampionshipsListPage() {
       <section className="py-8 bg-slate-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row gap-4 mb-8">
-            {/* Search */}
-            <div className="flex-1 relative">
+            {/* Search */}            <div className="flex-1 relative">
               <PublicSearchBar
-                searchTypes={['championship']}
-                placeholder="Buscar campeonatos..."
+                searchTypes={['championship', 'team', 'match']}
+                placeholder="Buscar campeonatos, equipes ou partidas..."
                 onQueryChange={setSearchQuery}
                 className="w-full" 
               />

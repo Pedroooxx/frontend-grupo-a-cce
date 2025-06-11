@@ -1,3 +1,5 @@
+'use client';
+
 import { DashboardLayout } from '../_components/DashboardLayout';
 import { StatCard } from '@/components/statistics/StatCard';
 import { TopPlayersCard } from '@/components/statistics/TopPlayersCard';
