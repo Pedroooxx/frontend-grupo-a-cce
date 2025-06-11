@@ -3,11 +3,18 @@ import { SessionProvider } from '@/components/auth/SessionProvider'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Esports League',
-  description: 'Sistema de gerenciamento de campeonatos de esports',
-  icons: {
-    icon: '/images/favicon.png',
-  },
+  title: 'Spike League - Gerencie seu próprio campeonato de Valorant',
+  description: 'Sistema de gerenciamento de campeonatos amadores de Valorant',
+  icons: [
+    {
+      rel: 'icon',
+      url: '/images/favicon.png',
+    },
+    {
+      rel: 'shortcut icon',
+      url: '/images/favicon.png',
+    },
+  ],
 }
 
 export default function RootLayout({
