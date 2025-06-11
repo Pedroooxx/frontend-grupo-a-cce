@@ -5,8 +5,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Plus, Edit, Clock, MapPin, Trophy } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
+import { searchMatches } from "@/data/search-functions";
+import { SearchResult } from "@/hooks/useSearch";
 
 const GerenciarPartidas = () => {
+  const router = useRouter();
   const [partidas] = useState([
     {
       id: 1,
@@ -84,15 +89,19 @@ const GerenciarPartidas = () => {
         </div>
       );
     }
-    
+
     return (
       <div className="flex items-center space-x-1">
         <Clock className="w-4 h-4 text-blue-500" />
-        <span className="text-white text-sm">
-          {data}
-        </span>
+        <span className="text-white text-sm">{data}</span>
       </div>
     );
+  };
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    if (result.type === "match") {
+      router.push(`/dashboard/partidas/${result.id}`);
+    }
   };
 
   return (
@@ -100,7 +109,7 @@ const GerenciarPartidas = () => {
       title="GERENCIAR"
       subtitle="PARTIDAS"
       breadcrumbs={[
-        { label: "DASHBOARD", href: "/" },
+        { label: "DASHBOARD", href: "/dashboard" },
         { label: "GERENCIAR PARTIDAS" },
       ]}
     >
@@ -117,6 +126,22 @@ const GerenciarPartidas = () => {
               Agendar Partida
             </Button>
           </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="flex justify-center my-6">
+          <UniversalSearchBar
+            searchFunction={searchMatches}
+            config={{
+              searchTypes: ["match"],
+              placeholder: "Buscar partidas por time, torneio ou mapa...",
+              maxResults: 6,
+              minQueryLength: 1,
+              debounceMs: 300,
+            }}
+            onResultClick={handleSearchResultClick}
+            className="max-w-xl"
+          />
         </div>
 
         {/* Lista de partidas */}
@@ -144,9 +169,7 @@ const GerenciarPartidas = () => {
                     </div>
 
                     <div className="text-center">
-                      <span className="text-2xl font-bold text-red-500">
-                        VS
-                      </span>
+                      <span className="text-2xl font-bold text-red-500">VS</span>
                       {partida.resultado && (
                         <p className="text-xl font-bold text-white mt-1">
                           {partida.resultado}

@@ -5,6 +5,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Plus, Edit, Trash2, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
+import { searchTeams } from "@/data/search-functions";
+import { SearchResult } from "@/hooks/useSearch";
 
 const GerenciarEquipes = () => {
   const [equipes] = useState([
@@ -35,6 +39,13 @@ const GerenciarEquipes = () => {
       campeonato: "Torneio Nacional"
     },
   ]);
+  const router = useRouter();
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    if (result.type === 'team') {
+      router.push(`/dashboard/equipes/${result.id}`);
+    }
+  };
 
   return (
     <DashboardLayout
@@ -53,6 +64,22 @@ const GerenciarEquipes = () => {
             <Plus className="w-4 h-4 mr-2" />
             Criar Equipe
           </Button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="flex justify-center my-6">
+          <UniversalSearchBar
+            searchFunction={searchTeams}
+            config={{
+              searchTypes: ['team'],
+              placeholder: "Buscar equipes por nome ou gerente...",
+              maxResults: 6,
+              minQueryLength: 1,
+              debounceMs: 300
+            }}
+            onResultClick={handleSearchResultClick}
+            className="max-w-xl"
+          />
         </div>
 
         {/* Lista de equipes */}

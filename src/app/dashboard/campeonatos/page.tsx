@@ -5,8 +5,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Plus, Eye, Edit, Calendar, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
+import { searchChampionships } from "@/data/search-functions";
+import { SearchResult } from "@/hooks/useSearch";
 
 const Campeonatos = () => {
+  const router = useRouter();
   const [campeonatos] = useState([
     {
       id: 1,
@@ -63,6 +68,12 @@ const Campeonatos = () => {
     }
   };
 
+  const handleSearchResultClick = (result: SearchResult) => {
+    if (result.type === "championship") {
+      router.push(`/dashboard/campeonatos/${result.id}`);
+    }
+  };
+
   return (
     <DashboardLayout
       title="GERENCIAR"
@@ -80,6 +91,23 @@ const Campeonatos = () => {
             <Plus className="w-4 h-4 mr-2" />
             Criar Campeonato
           </Button>
+        </div>
+
+        {/* Barra de busca */}
+        <div className="flex justify-center my-6">
+          <UniversalSearchBar
+            searchFunction={searchChampionships}
+            config={{
+              searchTypes: ["championship"],
+              placeholder:
+                "Buscar campeonatos por nome, local ou organizador...",
+              maxResults: 6,
+              minQueryLength: 1,
+              debounceMs: 300,
+            }}
+            onResultClick={handleSearchResultClick}
+            className="max-w-xl"
+          />
         </div>
 
         {/* Grid de campeonatos */}

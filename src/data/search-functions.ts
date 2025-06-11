@@ -3,7 +3,8 @@ import {
   detailedPlayersStats, 
   detailedTeamsStats, 
   detailedChampionshipsStats,
-  championshipParticipations 
+  championshipParticipations,
+  recentMatches // Added recentMatches
 } from './statistics-mock';
 
 // Busca geral (estatísticas) - jogadores, equipes e campeonatos
@@ -224,6 +225,37 @@ export const searchChampionshipParticipations = (query: string): SearchResult[] 
       subtitle: `${participation.matches_played} partidas - ${participation.status}`,      metadata: {
         status: participation.status,
         matchesPlayed: participation.matches_played
+      }
+    }));
+};
+
+// Busca específica para partidas
+export const searchMatches = (query: string, types: string[] = ['match']): SearchResult[] => {
+  if (!query.trim() || !types.includes('match')) return [];
+
+  const searchQuery = query.toLowerCase();
+
+  return recentMatches
+    .filter(match =>
+      match.team_a.toLowerCase().includes(searchQuery) ||
+      match.team_b.toLowerCase().includes(searchQuery) ||
+      match.tournament.toLowerCase().includes(searchQuery) ||
+      match.map.toLowerCase().includes(searchQuery)
+    )
+    .map(match => ({
+      id: match.match_id,
+      name: `${match.team_a} vs ${match.team_b}`,
+      type: 'match',
+      subtitle: `${match.tournament} - ${match.map} (${match.date})`,
+      metadata: {
+        team_a: match.team_a,
+        team_b: match.team_b,
+        score_a: match.score_a,
+        score_b: match.score_b,
+        map: match.map,
+        date: match.date,
+        tournament: match.tournament,
+        winner: match.winner
       }
     }));
 };
