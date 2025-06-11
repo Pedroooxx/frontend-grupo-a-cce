@@ -5,58 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User, Plus, Edit, Trash2, Target, Skull } from "lucide-react";
 import { DashboardLayout } from "../_components/DashboardLayout";
+import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
+import { searchPlayers } from "@/data/search-functions";
+import { SearchResult } from "@/hooks/useSearch";
+import { detailedPlayersStats } from "@/data/statistics-mock";
 
 const GerenciarJogadores = () => {
-  const [jogadores] = useState([
-    {
-      id: 1,
-      nome: "João Silva",
-      nickname: "King1",
-      equipe: "Valorant Kings",
-      phone: "+55 00 0 0000-0000",
-      kills: 245,
-      deaths: 180,
-      assists: 120,
-      kda: "1.36",
-      winRate: "75%",
-    },
-    {
-      id: 2,
-      nome: "Maria Santos",
-      nickname: "Phoenix1",
-      equipe: "Phoenix Squad",
-      phone: "+55 00 0 0000-0000",
-      kills: 198,
-      deaths: 165,
-      assists: 95,
-      kda: "1.20",
-      winRate: "68%",
-    },
-    {
-      id: 3,
-      nome: "Pedro Costa",
-      nickname: "Sage_Master",
-      equipe: "Valorant Kings",
-      phone: "+55 00 0 0000-0000",
-      kills: 156,
-      deaths: 140,
-      assists: 200,
-      kda: "1.11",
-      winRate: "72%",
-    },
-    {
-      id: 4,
-      nome: "Ana Oliveira",
-      nickname: "Viper_Queen",
-      equipe: "Phoenix Squad",
-      phone: "+55 00 0 0000-0000",
-      kills: 189,
-      deaths: 155,
-      assists: 145,
-      kda: "1.22",
-      winRate: "70%",
-    },
-  ]);
+  const [jogadores] = useState(detailedPlayersStats.slice(0, 4)); // Usar dados reais
+
+  const handlePlayerSearch = (result: SearchResult) => {
+    // Aqui você pode implementar a navegação para detalhes do jogador
+    // ou filtrar a lista atual baseado no resultado
+    console.log('Jogador selecionado:', result);
+    // Exemplo: navegar para detalhes do jogador
+    // router.push(`/dashboard/jogadores/${result.id}`);
+  };
 
   return (
     <DashboardLayout
@@ -82,11 +45,27 @@ const GerenciarJogadores = () => {
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div className="flex justify-center mb-6">
+          <UniversalSearchBar
+            searchFunction={searchPlayers}
+            config={{
+              searchTypes: ['player'],
+              placeholder: "Buscar jogadores por nome, nickname, equipe ou telefone...",
+              maxResults: 6,
+              minQueryLength: 1,
+              debounceMs: 300
+            }}
+            onResultClick={handlePlayerSearch}
+            className="max-w-xl"
+          />
+        </div>
+
         {/* Grid de jogadores */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {jogadores.map((jogador) => (
             <Card
-              key={jogador.id}
+              key={jogador.participant_id}
               className="dashboard-card border-gray-700 p-6"
             >
               <div className="flex items-start justify-between mb-4">
@@ -99,10 +78,10 @@ const GerenciarJogadores = () => {
                       {jogador.nickname}
                     </h3>
                     <p className="dashboard-text-muted text-sm">
-                      {jogador.nome}
+                      {jogador.name}
                     </p>
                     <p className="dashboard-text-muted text-xs">
-                      {jogador.equipe}
+                      {jogador.team_name}
                     </p>
                   </div>
                 </div>
@@ -136,7 +115,7 @@ const GerenciarJogadores = () => {
                 <div className="flex items-center justify-between">
                   <span className="dashboard-text-muted text-sm">K/D/A</span>
                   <span className="text-white font-medium">
-                    {jogador.kills}/{jogador.deaths}/{jogador.assists}
+                    {jogador.total_kills}/{jogador.total_deaths}/{jogador.total_assists}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -144,13 +123,13 @@ const GerenciarJogadores = () => {
                     KDA Ratio
                   </span>
                   <span className="text-green-400 font-medium">
-                    {jogador.kda}
+                    {jogador.kda_ratio}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="dashboard-text-muted text-sm">Win Rate</span>
                   <span className="text-blue-400 font-medium">
-                    {jogador.winRate}
+                    {Math.round(jogador.win_rate * 100)}%
                   </span>
                 </div>
               </div>
@@ -167,7 +146,7 @@ const GerenciarJogadores = () => {
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">Total Jogadores</p>
-                <p className="text-2xl font-bold text-white">4</p>
+                <p className="text-2xl font-bold text-white">{jogadores.length}</p>
               </div>
             </div>
           </Card>
@@ -178,7 +157,9 @@ const GerenciarJogadores = () => {
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">KDA Médio</p>
-                <p className="text-2xl font-bold text-white">1.22</p>
+                <p className="text-2xl font-bold text-white">
+                  {(jogadores.reduce((acc, p) => acc + p.kda_ratio, 0) / jogadores.length).toFixed(2)}
+                </p>
               </div>
             </div>
           </Card>
@@ -189,7 +170,9 @@ const GerenciarJogadores = () => {
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">Kills Totais</p>
-                <p className="text-2xl font-bold text-white">470</p>
+                <p className="text-2xl font-bold text-white">
+                  {jogadores.reduce((acc, p) => acc + p.total_kills, 0)}
+                </p>
               </div>
             </div>
           </Card>
