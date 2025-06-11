@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User, Plus, Edit, Trash2, Target, Skull } from "lucide-react";
 import { DashboardLayout } from "../_components/DashboardLayout";
+import { AddParticipantModal } from "@/components/modals/AddParticipantModal";
 
 const GerenciarJogadores = () => {
-  const [jogadores] = useState([
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [jogadores, setJogadores] = useState([
     {
       id: 1,
       nome: "João Silva",
@@ -58,6 +60,36 @@ const GerenciarJogadores = () => {
     },
   ]);
 
+  // Mock teams data for the form
+  const teams = [
+    { team_id: 1, name: "Valorant Kings" },
+    { team_id: 2, name: "Phoenix Squad" },
+    { team_id: 3, name: "Sage Warriors" },
+    { team_id: 4, name: "Viper Elite" },
+  ];
+
+  const handleAddParticipant = async (data: any) => {
+    // Criar um novo jogador com os dados do formulário
+    const novoJogador = {
+      id: jogadores.length + 1, // Gerar um ID simples
+      nome: data.nome,
+      nickname: data.nickname,
+      equipe: teams.find((t) => t.team_id === data.team_id)?.name || "",
+      phone: data.phone,
+      kills: 0, // Valores iniciais para estatísticas
+      deaths: 0,
+      assists: 0,
+      kda: "0",
+      winRate: "0%",
+    };
+
+    // Adicionar o novo jogador à lista
+    setJogadores([...jogadores, novoJogador]);
+
+    // Em uma aplicação real, você faria uma chamada de API aqui
+    console.log("Jogador adicionado:", novoJogador);
+  };
+
   return (
     <DashboardLayout
       title="GERENCIAR"
@@ -75,7 +107,10 @@ const GerenciarJogadores = () => {
             <Button variant="outline" className="border-gray-600 text-gray-300">
               Filtrar por Equipe
             </Button>
-            <Button className="bg-red-500 hover:bg-red-600 text-white">
+            <Button
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Adicionar Jogador
             </Button>
@@ -167,7 +202,9 @@ const GerenciarJogadores = () => {
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">Total Jogadores</p>
-                <p className="text-2xl font-bold text-white">4</p>
+                <p className="text-2xl font-bold text-white">
+                  {jogadores.length}
+                </p>
               </div>
             </div>
           </Card>
@@ -189,11 +226,21 @@ const GerenciarJogadores = () => {
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">Kills Totais</p>
-                <p className="text-2xl font-bold text-white">470</p>
+                <p className="text-2xl font-bold text-white">
+                  {jogadores.reduce((acc, j) => acc + j.kills, 0)}
+                </p>
               </div>
             </div>
           </Card>
         </div>
+
+        {/* Add Participant Modal */}
+        <AddParticipantModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSubmit={handleAddParticipant}
+          teams={teams}
+        />
       </div>
     </DashboardLayout>
   );
