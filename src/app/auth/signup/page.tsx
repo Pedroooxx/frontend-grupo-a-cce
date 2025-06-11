@@ -52,8 +52,29 @@ export default function SignUp() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-      <Card className="w-full max-w-md bg-gray-800 border-gray-700 p-8">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Background Video */}
+      <div className="absolute inset-0 w-full h-full z-0">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+        >
+          <source src="/videos/registerBGvideo.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/95 to-gray-900/80 backdrop-blur-sm"></div>
+      </div>
+      
+      {/* Animated Particles */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-[15%] right-[10%] w-28 h-28 bg-blue-500/30 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute top-[60%] left-[15%] w-36 h-36 bg-red-600/20 rounded-full blur-3xl animate-float-delay"></div>
+        <div className="absolute bottom-[20%] right-[25%] w-32 h-32 bg-green-500/20 rounded-full blur-3xl animate-float-slow"></div>
+      </div>
+
+      <Card className="w-full max-w-md bg-gray-800/80 border-gray-700 p-8 backdrop-blur-md relative z-10 animate-fade-in-up shadow-2xl">
         <div className="text-center mb-8">          <div className="flex items-center justify-center mb-4">
             <img src="/images/logo.png" alt="Esports League" className="h-16" />
           </div>
@@ -160,6 +181,13 @@ export default function SignUp() {
           </p>
         </div>
       </Card>
+
+      {/* Animated stripes */}
+      <div className="absolute bottom-0 left-0 right-0 h-1/2 z-0 opacity-30" 
+           style={{ 
+             background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(30, 64, 175, 0.1) 10px, rgba(30, 64, 175, 0.1) 20px)'
+           }}>
+      </div>
     </div>
   )
 }
