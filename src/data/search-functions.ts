@@ -4,7 +4,9 @@ import {
   detailedTeamsStats, 
   detailedChampionshipsStats,
   championshipParticipations,
-  recentMatches // Added recentMatches
+  recentMatches, 
+  detailedInscriptionsStats, // Import detailedInscriptionsStats
+  DetailedInscriptionStats // Import the type DetailedInscriptionStats
 } from './statistics-mock';
 
 // Busca geral (estatísticas) - jogadores, equipes e campeonatos
@@ -256,6 +258,33 @@ export const searchMatches = (query: string, types: string[] = ['match']): Searc
         date: match.date,
         tournament: match.tournament,
         winner: match.winner
+      }
+    }));
+};
+
+// Busca específica para inscrições
+export const searchInscriptions = (query: string, types: string[] = ['inscription']): SearchResult[] => {
+  if (!query.trim() || !types.includes('inscription')) return [];
+
+  const searchQuery = query.toLowerCase();
+
+  return detailedInscriptionsStats
+    .filter((inscription: DetailedInscriptionStats) => 
+      inscription.team_name.toLowerCase().includes(searchQuery) ||
+      inscription.championship_name.toLowerCase().includes(searchQuery) ||
+      inscription.coach_name.toLowerCase().includes(searchQuery)
+    )
+    .map((inscription: DetailedInscriptionStats) => ({
+      id: inscription.inscription_id,
+      name: `Inscrição: ${inscription.team_name} - ${inscription.championship_name}`,
+      type: 'inscription',
+      subtitle: `Coach: ${inscription.coach_name} - Data: ${inscription.inscription_date} - Status: ${inscription.status}`,
+      metadata: {
+        team_name: inscription.team_name,
+        championship_name: inscription.championship_name,
+        inscription_date: inscription.inscription_date,
+        status: inscription.status,
+        coach_name: inscription.coach_name,
       }
     }));
 };

@@ -994,3 +994,58 @@ export const topPerformers = [
     recent_form: "average"
   }
 ];
+
+export interface DetailedInscriptionStats {
+  inscription_id: number;
+  team_id: number;
+  team_name: string;
+  championship_id: number;
+  championship_name: string;
+  inscription_date: string; // "YYYY-MM-DD"
+  status: 'pending' | 'confirmed' | 'cancelled';
+  coach_name: string;
+  team_logo?: string;
+}
+
+export const detailedInscriptionsStats: DetailedInscriptionStats[] = [
+  {
+    inscription_id: 1,
+    team_id: 1, // Corresponds to Valorant Kings in publicTeams/detailedTeamsStats
+    team_name: "Valorant Kings",
+    championship_id: 1, // Corresponds to Liga de Verão 2024
+    championship_name: "Liga de Verão 2024",
+    inscription_date: "2024-01-10",
+    status: 'confirmed',
+    coach_name: "Carlos Silva", // Manager of Valorant Kings
+  },
+  {
+    inscription_id: 2,
+    team_id: 2, // Corresponds to Phoenix Squad
+    team_name: "Phoenix Squad",
+    championship_id: 1, // Liga de Verão 2024
+    championship_name: "Liga de Verão 2024",
+    inscription_date: "2024-01-08",
+    status: 'confirmed',
+    coach_name: "Ana Costa", // Manager of Phoenix Squad
+  },
+  {
+    inscription_id: 3,
+    team_id: 5, // Corresponds to Thunder Bolts in publicTeams
+    team_name: "Thunder Bolts", 
+    championship_id: 2, // Copa Regional
+    championship_name: "Copa Regional",
+    inscription_date: "2023-10-05",
+    status: 'pending',
+    coach_name: "João Thunder", // Manager of Thunder Bolts
+  },
+  {
+    inscription_id: 4,
+    team_id: 3, // Corresponds to Sage Warriors
+    team_name: "Sage Warriors", 
+    championship_id: 3, // Torneio Universitário
+    championship_name: "Torneio Universitário",
+    inscription_date: "2024-03-15",
+    status: 'confirmed',
+    coach_name: "Pedro Santos", // Manager of Sage Warriors
+  }
+];
