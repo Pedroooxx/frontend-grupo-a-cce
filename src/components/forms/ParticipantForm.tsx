@@ -2,31 +2,17 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-
-// Schema de validação com Zod
-const participantSchema = z.object({
-  nome: z.string().min(1, 'Nome é obrigatório'),
-  nickname: z.string().min(1, 'Nickname é obrigatório'),
-  birth_date: z.string().min(1, 'Data de nascimento é obrigatória'),
-  phone: z.string()
-    .min(10, 'Telefone deve ter pelo menos 10 dígitos')
-    .regex(/^\+?[0-9\s\-()]+$/, 'Formato de telefone inválido'),
-  team_id: z.string().min(1, 'Selecione uma equipe'),
-  is_coach: z.boolean().default(false)
-});
-
-type ParticipantFormValues = z.infer<typeof participantSchema>;
+import { participantSchema, type ParticipantFormValues, type Team } from '@/types/participant';
 
 interface ParticipantFormProps {
-  onSubmit: (data: ParticipantFormValues) => void;
-  teams: { team_id: number; name: string }[];
+  onSubmit: (data: ParticipantFormValues) => Promise<void>;
+  teams: Team[];
   isLoading?: boolean;
   defaultValues?: Partial<ParticipantFormValues>;
   onCancel?: () => void;
@@ -40,7 +26,7 @@ export function ParticipantForm({
   onCancel,
 }: ParticipantFormProps) {
   const [submitting, setSubmitting] = useState(false);
-  
+
   const {
     register,
     handleSubmit,
@@ -55,24 +41,21 @@ export function ParticipantForm({
       nickname: '',
       birth_date: '',
       phone: '',
-      team_id: '',
+      team_id: '', // ✅ Keep as string for form compatibility
       is_coach: false,
       ...defaultValues,
     }
   });
-  
-  // Observer o valor do campo is_coach
+
   const isCoach = watch('is_coach');
-  
+
   const onSubmitForm = async (data: ParticipantFormValues) => {
     try {
       setSubmitting(true);
-      await onSubmit({
-        ...data,
-        team_id: parseInt(data.team_id, 10) // Converte string para number
-      });
+      await onSubmit(data);
       reset();
-      toast.success('Jogador adicionado com sucesso!');
+      // ✅ ISSUE: Don't show success toast here - let parent handle it
+      // toast.success('Jogador adicionado com sucesso!');
     } catch (error) {
       toast.error('Erro ao adicionar jogador');
       console.error(error);
@@ -80,6 +63,27 @@ export function ParticipantForm({
       setSubmitting(false);
     }
   };
+
+  // ✅ ADD: Custom select component for better styling
+  const SelectField = ({ label, id, error, children, ...props }) => (
+    <div>
+      <Label htmlFor={id}>{label}</Label>
+      <select
+        id={id}
+        className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-md p-2 text-white focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:outline-none"
+        aria-required="true"
+        aria-describedby={error ? `${id}-error` : undefined}
+        {...props}
+      >
+        {children}
+      </select>
+      {error && (
+        <p id={`${id}-error`} className="text-red-500 text-sm mt-1" role="alert">
+          {error.message}
+        </p>
+      )}
+    </div>
+  );
 
   return (
     <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
@@ -90,10 +94,16 @@ export function ParticipantForm({
           placeholder="Nome do jogador"
           {...register('nome')}
           className="mt-1"
+          aria-required="true"
+          aria-describedby={errors.nome ? "nome-error" : undefined}
         />
-        {errors.nome && <p className="text-red-500 text-sm mt-1">{errors.nome.message}</p>}
+        {errors.nome && (
+          <p id="nome-error" className="text-red-500 text-sm mt-1" role="alert">
+            {errors.nome.message}
+          </p>
+        )}
       </div>
-      
+
       <div>
         <Label htmlFor="nickname">Nickname</Label>
         <Input
@@ -101,10 +111,16 @@ export function ParticipantForm({
           placeholder="Nickname in-game"
           {...register('nickname')}
           className="mt-1"
+          aria-required="true"
+          aria-describedby={errors.nickname ? "nickname-error" : undefined}
         />
-        {errors.nickname && <p className="text-red-500 text-sm mt-1">{errors.nickname.message}</p>}
+        {errors.nickname && (
+          <p id="nickname-error" className="text-red-500 text-sm mt-1" role="alert">
+            {errors.nickname.message}
+          </p>
+        )}
       </div>
-      
+
       <div>
         <Label htmlFor="birth_date">Data de Nascimento</Label>
         <Input
@@ -112,10 +128,16 @@ export function ParticipantForm({
           type="date"
           {...register('birth_date')}
           className="mt-1"
+          aria-required="true"
+          aria-describedby={errors.birth_date ? "birth-date-error" : undefined}
         />
-        {errors.birth_date && <p className="text-red-500 text-sm mt-1">{errors.birth_date.message}</p>}
+        {errors.birth_date && (
+          <p id="birth-date-error" className="text-red-500 text-sm mt-1" role="alert">
+            {errors.birth_date.message}
+          </p>
+        )}
       </div>
-      
+
       <div>
         <Label htmlFor="phone">Telefone</Label>
         <Input
@@ -123,50 +145,57 @@ export function ParticipantForm({
           placeholder="+55 (00) 00000-0000"
           {...register('phone')}
           className="mt-1"
+          aria-required="true"
+          aria-describedby={errors.phone ? "phone-error" : undefined}
         />
-        {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
+        {errors.phone && (
+          <p id="phone-error" className="text-red-500 text-sm mt-1" role="alert">
+            {errors.phone.message}
+          </p>
+        )}
       </div>
-      
-      <div>
-        <Label htmlFor="team_id">Equipe</Label>
-        <select
-          id="team_id"
-          {...register('team_id')}
-          className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-md p-2 text-white"
-        >
-          <option value="">Selecione uma equipe</option>
-          {teams.map((team) => (
-            <option key={team.team_id} value={team.team_id}>
-              {team.name}
-            </option>
-          ))}
-        </select>
-        {errors.team_id && <p className="text-red-500 text-sm mt-1">{errors.team_id.message}</p>}
-      </div>
-      
+
+      <SelectField
+        label="Equipe"
+        id="team_id"
+        error={errors.team_id}
+        {...register('team_id')}
+      >
+        <option value="">Selecione uma equipe</option>
+        {teams.map((team) => (
+          <option key={team.team_id} value={team.team_id}>
+            {team.name}
+          </option>
+        ))}
+      </SelectField>
+
       <div className="flex items-center space-x-2 mt-4">
-        <Switch 
-          id="is_coach" 
+        <Switch
+          id="is_coach"
           checked={isCoach}
           onCheckedChange={(checked) => setValue('is_coach', checked)}
+          aria-describedby="coach-description"
         />
         <Label htmlFor="is_coach">É técnico/coach</Label>
+        <span id="coach-description" className="sr-only">
+          Marque esta opção se a pessoa for técnico ou coach da equipe
+        </span>
       </div>
 
       <div className="flex justify-end space-x-3 mt-6">
         {onCancel && (
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onCancel} 
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
             disabled={isLoading || submitting}
           >
             Cancelar
           </Button>
         )}
-        <Button 
+        <Button
           type="submit"
-          className="bg-red-500 hover:bg-red-600" 
+          className="bg-red-500 hover:bg-red-600"
           disabled={isLoading || submitting}
         >
           {(isLoading || submitting) ? 'Salvando...' : 'Salvar'}

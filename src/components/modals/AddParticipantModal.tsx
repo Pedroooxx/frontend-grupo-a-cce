@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,18 +8,24 @@ import {
 } from '@/components/ui/dialog';
 import { ParticipantForm } from '@/components/forms/ParticipantForm';
 import { User } from 'lucide-react';
+import type { ParticipantFormValues, Team } from '@/types/participant';
 
 interface AddParticipantModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
-  teams: { team_id: number; name: string }[];
+  onSubmit: (data: ParticipantFormValues) => Promise<void>;
+  teams: Team[];
 }
 
-export function AddParticipantModal({ isOpen, onClose, onSubmit, teams }: AddParticipantModalProps) {
+export function AddParticipantModal({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  teams 
+}: AddParticipantModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: ParticipantFormValues) => {
     setIsLoading(true);
     try {
       await onSubmit(data);
