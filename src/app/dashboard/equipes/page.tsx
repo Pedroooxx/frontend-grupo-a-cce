@@ -9,23 +9,35 @@ import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { searchTeams } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { detailedTeamsStats } from "@/data/statistics-mock"; // Import detailedTeamsStats
+import { detailedTeamsStats, detailedPlayersStats } from "@/data/statistics-mock"; // Import detailedPlayersStats
 
 const GerenciarEquipes = () => {
   // Use detailedTeamsStats from statistics-mock.ts
   const [equipes] = useState(
-    detailedTeamsStats.map((team) => ({
-      id: team.team_id,
-      nome: team.name,
-      coach: team.manager_name, // Assuming manager_name is the coach for now
-      membros: [], // This would need to be populated from detailedPlayersStats or a similar source
-      campeonato:
-        team.championships_participated > 0
-          ? `Participando de ${team.championships_participated} campeonatos`
-          : "Nenhum campeonato ativo",
-    }))
+    detailedTeamsStats.map((team) => {
+      const teamPlayers = detailedPlayersStats
+        .filter((player) => player.team_name === team.name && !player.is_coach) // Filter out coaches from members list
+        .map((player) => ({
+          nickname: player.nickname,
+          nome: player.name,
+          // You can add other player properties here if needed by the view
+        }));
+      return {
+        id: team.team_id,
+        nome: team.name,
+        coach: team.manager_name, // Assuming manager_name is the coach for now
+        membros: teamPlayers, // Populate members here
+        campeonato:
+          team.championships_participated > 0
+            ? `Participando de ${team.championships_participated} campeonatos`
+            : "Nenhum campeonato ativo",
+      };
+    })
   );
   const router = useRouter();
+
+  const totalPlayers = detailedPlayersStats.filter(player => !player.is_coach).length;
+  const totalCoaches = detailedPlayersStats.filter(player => player.is_coach).length;
 
   const handleSearchResultClick = (result: SearchResult) => {
     if (result.type === "team") {
@@ -173,7 +185,7 @@ const GerenciarEquipes = () => {
               <div>
                 <p className="dashboard-text-muted text-sm">Total de Jogadores</p>
                 {/* This needs to be calculated from detailedPlayersStats or similar */}
-                <p className="text-2xl font-bold text-white">N/A</p>
+                <p className="text-2xl font-bold text-white">{totalPlayers}</p>
               </div>
             </div>
           </Card>
@@ -187,7 +199,7 @@ const GerenciarEquipes = () => {
                   Coaches (Treinadores)
                 </p>
                 {/* This needs to be calculated based on is_coach in detailedPlayersStats or similar */}
-                <p className="text-2xl font-bold text-white">N/A</p>
+                <p className="text-2xl font-bold text-white">{totalCoaches}</p>
               </div>
             </div>
           </Card>
