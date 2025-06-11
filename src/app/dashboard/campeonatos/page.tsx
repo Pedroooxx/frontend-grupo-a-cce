@@ -9,54 +9,45 @@ import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { searchChampionships } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
+import { detailedChampionshipsStats } from "@/data/statistics-mock"; // Import detailedChampionshipsStats
 
 const Campeonatos = () => {
   const router = useRouter();
-  const [campeonatos] = useState([
-    {
-      id: 1,
-      nome: "Liga de Verão 2024",
-      status: "Em andamento",
-      formato: "Single Elimination",
-      equipesInscritas: 16,
-      localizacao: "Curitiba - PR",
-      dataInicio: "15/12/2024",
-      dataFim: "22/12/2024",
-    },
-    {
-      id: 2,
-      nome: "Torneio Nacional",
-      status: "Em andamento",
-      formato: "Double Elimination",
-      equipesInscritas: 8,
-      localizacao: "Londrina - PR",
-      dataInicio: "01/01/2025",
-      dataFim: "15/01/2025",
-    },
-    {
-      id: 3,
-      nome: "Copa Regional",
-      status: "Finalizado",
-      formato: "Single Elimination",
-      equipesInscritas: 24,
-      localizacao: "Cornélio Procópio - PR",
-      dataInicio: "01/11/2024",
-      dataFim: "30/11/2024",
-    },
-  ]);
+  const [campeonatos] = useState(
+    detailedChampionshipsStats.map((champ) => ({
+      id: champ.championship_id,
+      nome: champ.name,
+      status: champ.status, // Ensure this status matches expected values for getStatusBadge
+      formato: champ.format,
+      equipesInscritas: champ.total_teams,
+      localizacao: champ.location,
+      dataInicio: champ.start_date,
+      dataFim: champ.end_date,
+    }))
+  );
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Em andamento":
+    switch (status.toLowerCase()) {
+      // Normalize status to lowercase for comparison
+      case "em andamento":
+      case "ongoing": // Add mapping for "ongoing"
         return (
           <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
             Em andamento
           </Badge>
         );
-      case "Finalizado":
+      case "finalizado":
+      case "completed": // Add mapping for "completed"
         return (
           <Badge className="bg-red-500/20 text-red-500 border-red-500/30">
             Finalizado
+          </Badge>
+        );
+      case "próximo":
+      case "upcoming": // Add mapping for "upcoming"
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+            Próximo
           </Badge>
         );
       default:
@@ -79,7 +70,7 @@ const Campeonatos = () => {
       title="GERENCIAR"
       subtitle="CAMPEONATOS"
       breadcrumbs={[
-        { label: "DASHBOARD", href: "/" },
+        { label: "DASHBOARD", href: "/dashboard" }, // Corrected href
         { label: "CAMPEONATOS" },
       ]}
     >
@@ -188,7 +179,13 @@ const Campeonatos = () => {
                 <p className="dashboard-text-muted text-sm">
                   Campeonatos Ativos
                 </p>
-                <p className="text-2xl font-bold text-white">2</p>
+                <p className="text-2xl font-bold text-white">
+                  {campeonatos.filter(
+                    (c) =>
+                      c.status.toLowerCase() === "ongoing" ||
+                      c.status.toLowerCase() === "em andamento"
+                  ).length}
+                </p>
               </div>
             </div>
           </Card>
@@ -199,7 +196,12 @@ const Campeonatos = () => {
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">Equipes Totais</p>
-                <p className="text-2xl font-bold text-white">48</p>
+                <p className="text-2xl font-bold text-white">
+                  {campeonatos.reduce(
+                    (sum, c) => sum + c.equipesInscritas,
+                    0
+                  )}
+                </p>
               </div>
             </div>
           </Card>
@@ -210,7 +212,17 @@ const Campeonatos = () => {
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">Último Evento</p>
-                <p className="text-2xl font-bold text-white">Copa Regional</p>
+                {/* This logic might need refinement based on how "last event" is defined (e.g., by end_date) */}
+                <p className="text-2xl font-bold text-white">
+                  {campeonatos.length > 0
+                    ? campeonatos
+                        .sort(
+                          (a, b) =>
+                            new Date(b.dataFim).getTime() -
+                            new Date(a.dataFim).getTime()
+                        )[0]?.nome
+                    : "N/A"}
+                </p>
               </div>
             </div>
           </Card>
