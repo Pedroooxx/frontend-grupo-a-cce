@@ -54,15 +54,8 @@ export default function SignUp() {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
       <Card className="w-full max-w-md bg-gray-800 border-gray-700 p-8">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-white rounded flex items-center justify-center">
-              <Trophy className="w-8 h-8 text-black" />
-            </div>
-            <div>
-              <div className="text-white font-bold text-xl">ESPORTS</div>
-              <div className="text-red-500 font-bold text-xl">LEAGUE</div>
-            </div>
+        <div className="text-center mb-8">          <div className="flex items-center justify-center mb-4">
+            <img src="/images/logo.png" alt="Esports League" className="h-16" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Criar Conta</h1>
           <p className="text-gray-400">Cadastre-se para gerenciar campeonatos</p>

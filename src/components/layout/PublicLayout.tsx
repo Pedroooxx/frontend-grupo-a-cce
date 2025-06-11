@@ -23,15 +23,8 @@ export default function PublicLayout({ title, children, showBackToHome = true }:
         {/* Header */}
         <header className="bg-slate-800/95 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                  <Trophy className="w-5 h-5 text-black" />
-                </div>
-                <div>
-                  <div className="text-white font-bold text-lg">ESPORTS</div>
-                  <div className="text-red-500 font-bold text-lg leading-none">LEAGUE</div>
-                </div>
+            <div className="flex items-center justify-between">              <Link href="/" className="flex items-center">
+                <img src="/images/logo.png" alt="Esports League" className="h-10" />
               </Link>
 
               <nav className="hidden md:flex items-center space-x-6">
@@ -148,16 +141,9 @@ export default function PublicLayout({ title, children, showBackToHome = true }:
         <footer className="bg-slate-900 border-t border-slate-800 py-8 md:py-12">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
-              <div className="md:col-span-1">
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                    <Trophy className="w-5 h-5 text-black" />
-                  </div>
-                  <div>
-                    <div className="text-white font-bold text-lg">ESPORTS</div>
-                    <div className="text-red-500 font-bold text-lg leading-none">LEAGUE</div>
-                  </div>
-                </div>
+              <div className="md:col-span-1">                <Link href="/" className="flex items-center mb-4">
+                  <img src="/images/logo.png" alt="Esports League" className="h-10" />
+                </Link>
                 <p className="text-slate-400 text-sm max-w-xs">
                   A plataforma definitiva para campeonatos de Valorant profissionais e organizados.
                 </p>

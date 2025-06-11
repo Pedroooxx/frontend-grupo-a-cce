@@ -75,17 +75,9 @@ export function DashboardSidebar({ className }: SidebarProps) {
 
   return (
     <div className={cn("w-64 dashboard-sidebar border-r dashboard-border flex flex-col", className)}>
-      {/* Logo/Header */}
-      <div className="p-6 border-b dashboard-border">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-            <Trophy className="w-5 h-5 text-black" />
-          </div>
-          <div>
-            <div className="text-white font-bold text-sm">ESPORTS</div>
-            <div className="text-red-500 font-bold text-sm">LEAGUE</div>
-          </div>
-        </div>
+      {/* Logo/Header */}      <div className="p-6 border-b dashboard-border">        <Link href="/dashboard" className="flex items-center">
+          <img src="/images/logo.png" alt="Esports League" className="h-8" />
+        </Link>
       </div>
 
       {/* Navigation Menu */}

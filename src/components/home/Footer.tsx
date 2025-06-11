@@ -8,14 +8,8 @@ export function Footer() {
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo e Descrição */}
-          <div className="md:col-span-2">            <Link href="/" className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <Trophy className="w-6 h-6 text-black" />
-              </div>
-              <div>
-                <div className="text-white font-bold text-lg">ESPORTS</div>
-                <div className="text-red-500 font-bold text-lg leading-none">LEAGUE</div>
-              </div>
+          <div className="md:col-span-2">            <Link href="/" className="flex items-center mb-4">
+              <img src="/images/logo.png" alt="Esports League" className="h-10" />
             </Link>
             <p className="text-slate-400 max-w-md">
               Plataforma completa para criação e gerenciamento de campeonatos de Valorant. 

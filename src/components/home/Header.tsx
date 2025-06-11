@@ -10,16 +10,8 @@ export function Header() {
   return (
     <header className="bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-black" />
-            </div>
-            <div>
-              <div className="text-white font-bold text-lg">ESPORTS</div>
-              <div className="text-red-500 font-bold text-lg leading-none">LEAGUE</div>
-            </div>
+        <div className="flex items-center justify-between">          {/* Logo */}          <Link href="/" className="flex items-center">
+            <img src="/images/logo.png" alt="Esports League" className="h-10" />
           </Link>
 
           {/* Desktop Navigation */}
