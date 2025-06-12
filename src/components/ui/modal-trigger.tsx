@@ -25,12 +25,14 @@ export function ModalTrigger({
 
   if (asChild) {
     // Clone the child element and add the onClick handler
-    const child = React.Children.only(children) as React.ReactElement;
+    const child = React.Children.only(children) as React.ReactElement<Record<string, any>>;
     return React.cloneElement(child, {
-      ...child.props,
+      ...(child.props as Record<string, any>),
       onClick: (e: React.MouseEvent) => {
         handleClick(e);
-        if (child.props.onClick) child.props.onClick(e);
+        if (typeof child.props.onClick === 'function') {
+          child.props.onClick(e);
+        }
       },
     });
   }

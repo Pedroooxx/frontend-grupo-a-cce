@@ -37,26 +37,25 @@ export interface AgentStat {
 
 export interface DetailedPlayerStats {
   participant_id: number;
+  user_id: number;
   name: string;
   nickname: string;
   birth_date: string;
   phone: string;
-  team_id: number; // Add team_id reference
+  team_id: number;
   team_name: string;
-  is_coach: boolean; // Fix typo from is_COACH
-  user_id: number; // Add user reference
-  // Aggregated statistics
-  total_matches: number;
+  is_coach: boolean;
   total_kills: number;
-  total_assists: number;
   total_deaths: number;
+  total_assists: number;
+  kda_ratio: number;
+  win_rate: number;
+  total_matches: number;
   total_spike_plants: number;
   total_spike_defuses: number;
   total_mvps: number;
   total_first_kills: number;
-  kda_ratio: number;
   avg_score: number;
-  win_rate: number;
   favorite_agent: string;
   favorite_map: string;
 }
@@ -259,26 +258,25 @@ export interface ChampionshipPlayerRanking {
 // Update existing types to match ERD
 export interface DetailedPlayerStats {
   participant_id: number;
+  user_id: number;
   name: string;
   nickname: string;
   birth_date: string;
   phone: string;
-  team_id: number; // Add team_id reference
+  team_id: number;
   team_name: string;
-  is_coach: boolean; // Fix typo from is_COACH
-  user_id: number; // Add user reference
-  // Aggregated statistics
-  total_matches: number;
+  is_coach: boolean;
   total_kills: number;
-  total_assists: number;
   total_deaths: number;
+  total_assists: number;
+  kda_ratio: number;
+  win_rate: number;
+  total_matches: number;
   total_spike_plants: number;
   total_spike_defuses: number;
   total_mvps: number;
   total_first_kills: number;
-  kda_ratio: number;
   avg_score: number;
-  win_rate: number;
   favorite_agent: string;
   favorite_map: string;
 }

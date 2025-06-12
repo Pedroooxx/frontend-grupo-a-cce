@@ -1,6 +1,14 @@
+import React from 'react';
+
 // ...existing imports...
 
-export function YourModalComponent({ isOpen, onClose, children }) {
+interface YourModalComponentProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+export function YourModalComponent({ isOpen, onClose, children }: YourModalComponentProps) {
   return (
     <>
       {isOpen && (

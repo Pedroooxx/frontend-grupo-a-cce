@@ -15,13 +15,15 @@ interface AddParticipantModalProps {
   onClose: () => void;
   onSubmit: (data: ParticipantFormValues) => Promise<void>;
   teams: Team[];
+  defaultValues?: ParticipantFormValues;  // added
 }
 
 export function AddParticipantModal({ 
   isOpen, 
   onClose, 
   onSubmit, 
-  teams 
+  teams, 
+  defaultValues
 }: AddParticipantModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,7 +31,7 @@ export function AddParticipantModal({
     setIsLoading(true);
     try {
       await onSubmit(data);
-      onClose();
+      // onClose();  <-- removed: parent closeModal handles it
     } catch (error) {
       console.error('Falha ao adicionar participante:', error);
     } finally {
@@ -50,10 +52,14 @@ export function AddParticipantModal({
             <div className="p-2 bg-blue-500/20 rounded-full">
               <User className="w-6 h-6 text-blue-500" />
             </div>
-            <DialogTitle className="text-xl font-bold">Adicionar Jogador</DialogTitle>
+            <DialogTitle className="text-xl font-bold">
+              {defaultValues ? "Editar Jogador" : "Adicionar Jogador"}
+            </DialogTitle>
           </div>
           <DialogDescription className="text-slate-400">
-            Preencha o formulário abaixo para adicionar um novo participante à equipe.
+            {defaultValues
+              ? "Altere os dados do participante."
+              : "Preencha o formulário para adicionar."}
           </DialogDescription>
         </DialogHeader>
         
@@ -61,6 +67,7 @@ export function AddParticipantModal({
           onSubmit={handleSubmit}
           teams={teams}
           isLoading={isLoading}
+          defaultValues={defaultValues}      // pass through
           onCancel={onClose}
         />
       </DialogContent>
