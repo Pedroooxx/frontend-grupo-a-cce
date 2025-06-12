@@ -20,6 +20,10 @@ Funções especializadas para diferentes contextos:
 - `searchPlayers`: Busca específica para jogadores
 - `searchTeams`: Busca específica para equipes
 - `searchChampionships`: Busca específica para campeonatos
+- `searchPlayersAndTeams`: Busca combinada para jogadores e equipes
+- `searchChampionshipParticipations`: Busca específica para participações de equipes em campeonatos
+- `searchMatches`: Busca específica para partidas
+- `searchInscriptions`: Busca específica para inscrições em campeonatos
 
 ## Como Usar
 
@@ -180,11 +184,12 @@ Mostra indicador de carregamento durante a busca.
 Informações adicionais podem ser passadas através do campo `metadata` para uso personalizado.
 
 ### 5. Estilos Customizáveis
-Cada tipo de resultado tem cores e ícones específicos:
-- Jogadores: Azul
-- Equipes: Verde
-- Campeonatos: Roxo
-- Partidas: Laranja
+Cada tipo de resultado tem cores e ícones específicos definidos no `UniversalSearchBar.tsx`:
+- Jogadores: Azul (Ícone: `User`)
+- Equipes: Verde (Ícone: `Users`)
+- Campeonatos e Participações em Campeonatos: Roxo (Ícone: `Trophy`)
+- Partidas: Laranja (Ícone: `Calendar`)
+- Inscrições (e outros tipos não especificados): Cinza (Ícone: `Target`)
 
 ## Boas Práticas
 

@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { DashboardLayout } from "../_components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { UserPlus, Plus, Clock11Icon, File, Edit, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
@@ -15,34 +14,6 @@ const Inscricoes = () => {
   const router = useRouter();
   const [inscricoes, setInscricoes] = useState<DetailedInscriptionStats[]>(detailedInscriptionsStats);
 
-  const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "confirmed":
-        return (
-          <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-            Confirmada
-          </Badge>
-        );
-      case "pending":
-        return (
-          <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
-            Pendente
-          </Badge>
-        );
-      case "cancelled":
-        return (
-          <Badge className="bg-red-500/20 text-red-500 border-red-500/30">
-            Cancelada
-          </Badge>
-        );
-      default:
-        return (
-          <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">
-            {status}
-          </Badge>
-        );
-    }
-  };
 
   const handleSearchResultClick = (result: SearchResult) => {
     if (result.type === "inscription" && result.id) {
@@ -120,7 +91,6 @@ const Inscricoes = () => {
                   </div>
                 </div>
                 <div className="flex flex-col items-end space-y-2">
-                  {getStatusBadge(inscricao.status)}
                   <div className="flex space-x-2 mt-2">
                     <Button
                       size="sm"
