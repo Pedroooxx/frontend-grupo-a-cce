@@ -43,7 +43,6 @@ export const PublicSearchBar = ({
       onQueryChange(newQuery);
     }
   };
-
   const searchAll = useCallback((searchQuery: string): SearchResult[] => {
     if (!searchQuery.trim()) return [];
     const allPossibleResults: SearchResult[] = [];
@@ -60,7 +59,7 @@ export const PublicSearchBar = ({
           id: championship.championship_id,
           name: championship.name,
           type: 'championship' as const,
-          subtitle: `${championship.location} - ${championship.status === 'ongoing' ? 'Em andamento' : championship.status === 'completed' ? 'Finalizado' : 'Próximo'}`
+          subtitle: `${championship.location} - ${championship.status === 'ongoing' ? 'Em andamento' : championship.status === 'completed' ? 'Finalizado' : championship.status === 'upcoming' ? 'Em breve' : 'Cancelado'}`
         }));
       allPossibleResults.push(...championshipResults);
     }
@@ -76,7 +75,7 @@ export const PublicSearchBar = ({
           id: team.team_id,
           name: team.name,
           type: 'team' as const,
-          subtitle: `Gerenciado por ${team.manager_name} - ${Math.round(team.win_rate * 100)}% win rate`
+          subtitle: `Gerenciado por ${team.manager_name} - ${Math.round(team.win_rate * 100)}% taxa de vitória`
         }));
       allPossibleResults.push(...teamResults);
     }
@@ -98,8 +97,9 @@ export const PublicSearchBar = ({
         }));
       allPossibleResults.push(...matchResults);
     }
+    
     return allPossibleResults.slice(0, 8);
-  }, [searchTypes]); // Added searchTypes to useCallback dependency array
+  }, [searchTypes]);
 
   useEffect(() => {
     if (query.trim()) {
@@ -147,9 +147,7 @@ export const PublicSearchBar = ({
         inputRef.current?.blur();
         break;
     }
-  };
-
-  const handleResultClick = (result: SearchResult) => {
+  };  const handleResultClick = (result: SearchResult) => {
     if (onResultClick) {
       onResultClick(result);
     } else {
@@ -160,9 +158,16 @@ export const PublicSearchBar = ({
           path = `/campeonatos/${result.id}`;
           break;
         case 'team':
-          // Find championship ID for the team (assuming first championship)
-          const teamChampionship = publicChampionships[0];
-          path = `/campeonatos/${teamChampionship.championship_id}/equipes/${result.id}`;
+          // Find which championship the team participates in by looking at matches
+          const teamMatch = publicMatches.find(match => 
+            match.teamA.team_id === result.id || match.teamB.team_id === result.id
+          );
+          if (teamMatch) {
+            path = `/campeonatos/${teamMatch.championship_id}/equipes/${result.id}`;
+          } else {
+            // Fallback to first championship if no matches found
+            path = `/campeonatos/1/equipes/${result.id}`;
+          }
           break;
         case 'match':
           // Find championship ID for the match

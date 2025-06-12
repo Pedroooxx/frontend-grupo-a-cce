@@ -5,60 +5,39 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Plus, Edit, Clock, MapPin, Trophy } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
+import { searchMatches } from "@/data/search-functions";
+import { SearchResult } from "@/hooks/useSearch";
+import { recentMatches } from "@/data/statistics-mock"; // Import recentMatches
 
 const GerenciarPartidas = () => {
-  const [partidas] = useState([
-    {
-      id: 1,
-      equipeA: "Valorant Kings",
-      equipeB: "Phoenix Squad",
-      campeonato: "Liga de Verão 2024",
-      mapa: "Haven",
-      data: null,
-      status: "Pré-agendada",
-      resultado: null,
-      fase: "Quartas de Final",
-    },
-    {
-      id: 2,
-      equipeA: "Sage Warriors",
-      equipeB: "Viper Elite",
-      campeonato: "Liga de Verão 2024",
-      mapa: "Bind",
-      data: "15/12/2024",
-      status: "Agendada",
-      resultado: null,
-      fase: "Oitavas de Final",
-    },
-    {
-      id: 3,
-      equipeA: "Jett Squad",
-      equipeB: "Reyna Team",
-      campeonato: "Torneio Nacional",
-      mapa: "Ascent",
-      data: "14/12/2024",
-      status: "Finalizada",
-      resultado: "13-8",
-      vencedor: "Jett Squad",
-      fase: "Semifinal",
-    },
-  ]);
+  const router = useRouter();
+  // Use recentMatches from statistics-mock.ts
+  const [partidas] = useState(recentMatches);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Pré-agendada":
+  const getStatusBadge = (status: string | undefined) => { // Status can be undefined
+    // Simplified status logic, assuming status comes from recentMatches or similar structure
+    // This might need adjustment based on actual values in recentMatches
+    if (!status) return <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">Desconhecido</Badge>; 
+
+    switch (status.toLowerCase()) {
+      case "pré-agendada": // Assuming these statuses exist or mapping them
+      case "upcoming":
         return (
-          <Badge className="bg-red-500/20 text-red-500 border-red-500/30">
+          <Badge className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30">
             Pré-agendada
           </Badge>
         );
-      case "Agendada":
+      case "agendada":
+      case "ongoing":
         return (
           <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
             Agendada
           </Badge>
         );
-      case "Finalizada":
+      case "finalizada":
+      case "completed":
         return (
           <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">
             Finalizada
@@ -73,7 +52,7 @@ const GerenciarPartidas = () => {
     }
   };
 
-  const renderData = (data: string | null) => {
+  const renderData = (data: string | null | undefined) => {
     if (!data) {
       return (
         <div className="flex items-center space-x-1">
@@ -84,15 +63,20 @@ const GerenciarPartidas = () => {
         </div>
       );
     }
-    
+
     return (
       <div className="flex items-center space-x-1">
         <Clock className="w-4 h-4 text-blue-500" />
-        <span className="text-white text-sm">
-          {data}
-        </span>
+        <span className="text-white text-sm">{data}</span>
       </div>
     );
+  };
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    if (result.type === "match") {
+      // Ensure result.id is used, which should correspond to match_id from searchMatches
+      router.push(`/dashboard/partidas/${result.id}`);
+    }
   };
 
   return (
@@ -100,7 +84,7 @@ const GerenciarPartidas = () => {
       title="GERENCIAR"
       subtitle="PARTIDAS"
       breadcrumbs={[
-        { label: "DASHBOARD", href: "/" },
+        { label: "DASHBOARD", href: "/dashboard" },
         { label: "GERENCIAR PARTIDAS" },
       ]}
     >
@@ -119,11 +103,27 @@ const GerenciarPartidas = () => {
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div className="flex justify-center my-6">
+          <UniversalSearchBar
+            searchFunction={searchMatches}
+            config={{
+              searchTypes: ["match"],
+              placeholder: "Buscar partidas por time, torneio ou mapa...",
+              maxResults: 6,
+              minQueryLength: 1, // Set to 0 to show results on click if desired, or keep at 1
+              debounceMs: 300,
+            }}
+            onResultClick={handleSearchResultClick}
+            className="max-w-xl"
+          />
+        </div>
+
         {/* Lista de partidas */}
         <div className="space-y-4">
           {partidas.map((partida) => (
             <Card
-              key={partida.id}
+              key={partida.match_id} // Use match_id from recentMatches
               className="dashboard-card border-gray-700 p-6"
             >
               <div className="flex items-center justify-between">
@@ -136,29 +136,27 @@ const GerenciarPartidas = () => {
                     {/* Equipes */}
                     <div className="text-center">
                       <h3 className="text-lg font-bold text-white">
-                        {partida.equipeA}
+                        {partida.team_a} {/* Use team_a from recentMatches */}
                       </h3>
-                      {partida.vencedor === partida.equipeA && (
+                      {partida.winner === partida.team_a && (
                         <Trophy className="w-5 h-5 text-yellow-500 mx-auto mt-1" />
                       )}
                     </div>
 
                     <div className="text-center">
-                      <span className="text-2xl font-bold text-red-500">
-                        VS
-                      </span>
-                      {partida.resultado && (
+                      <span className="text-2xl font-bold text-red-500">VS</span>
+                      {partida.score_a !== undefined && partida.score_b !== undefined && (
                         <p className="text-xl font-bold text-white mt-1">
-                          {partida.resultado}
+                          {`${partida.score_a} - ${partida.score_b}`} {/* Use score_a, score_b */}
                         </p>
                       )}
                     </div>
 
                     <div className="text-center">
                       <h3 className="text-lg font-bold text-white">
-                        {partida.equipeB}
+                        {partida.team_b} {/* Use team_b from recentMatches */}
                       </h3>
-                      {partida.vencedor === partida.equipeB && (
+                      {partida.winner === partida.team_b && (
                         <Trophy className="w-5 h-5 text-yellow-500 mx-auto mt-1" />
                       )}
                     </div>
@@ -171,32 +169,37 @@ const GerenciarPartidas = () => {
                     <div className="flex items-center space-x-1">
                       <MapPin className="w-4 h-4 text-orange-500" />
                       <span className="text-white font-medium">
-                        {partida.mapa}
+                        {partida.map} {/* Use map from recentMatches */}
                       </span>
                     </div>
                   </div>
 
                   <div className="text-center">
                     <p className="dashboard-text-muted text-xs">Data</p>
-                    {renderData(partida.data)}
+                    {/* Assuming recentMatches has a date field, adjust renderData if needed */}
+                    {renderData(partida.date)} 
                   </div>
 
                   <div className="text-center">
                     <p className="dashboard-text-muted text-xs">Fase</p>
+                    {/* Assuming tournament can act as fase or a new field is needed */}
                     <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                      {partida.fase}
+                      {partida.tournament} {/* Use tournament or a specific fase field */}
                     </Badge>
                   </div>
 
                   <div className="text-center">
                     <p className="dashboard-text-muted text-xs">Status</p>
-                    {getStatusBadge(partida.status)}
+                    {/* Status might need to be derived or added to recentMatches items */}
+                    {/* For now, passing a hardcoded or example status */}
+                    {getStatusBadge(partida.winner ? "Finalizada" : "Agendada")} 
                   </div>
 
                   <Button
                     size="sm"
                     variant="outline"
                     className="border-gray-600 text-gray-300"
+                    onClick={() => router.push(`/dashboard/partidas/editar/${partida.match_id}`)} // Example edit route
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -206,9 +209,10 @@ const GerenciarPartidas = () => {
               <div className="mt-4 pt-4 border-t border-gray-700">
                 <div className="flex justify-between items-center">
                   <p className="dashboard-text-muted text-sm">
-                    {partida.campeonato}
+                    {partida.tournament} {/* Use tournament from recentMatches */}
                   </p>
-                  {partida.status === "Pré-agendada" && (
+                  {/* Logic for "Definir Data" button might need adjustment based on data */}
+                  {(!partida.date || (partida.winner ? false : true)) && (
                     <Button
                       size="sm"
                       className="bg-yellow-500 hover:bg-yellow-600 text-black"
@@ -222,7 +226,7 @@ const GerenciarPartidas = () => {
           ))}
         </div>
 
-        {/* Stats das partidas */}
+        {/* Stats das partidas - These should also be derived from recentMatches or other mock data */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
           <Card className="dashboard-card border-gray-700 p-6">
             <div className="flex items-center space-x-3">
@@ -231,7 +235,8 @@ const GerenciarPartidas = () => {
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">Pré-agendadas</p>
-                <p className="text-2xl font-bold text-white">1</p>
+                {/* Calculate based on data */}
+                <p className="text-2xl font-bold text-white">{partidas.filter(p => !p.date && !p.winner).length}</p>
               </div>
             </div>
           </Card>
@@ -242,7 +247,8 @@ const GerenciarPartidas = () => {
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">Agendadas</p>
-                <p className="text-2xl font-bold text-white">1</p>
+                {/* Calculate based on data */}
+                <p className="text-2xl font-bold text-white">{partidas.filter(p => p.date && !p.winner).length}</p>
               </div>
             </div>
           </Card>
@@ -253,7 +259,8 @@ const GerenciarPartidas = () => {
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">Finalizadas</p>
-                <p className="text-2xl font-bold text-white">1</p>
+                {/* Calculate based on data */}
+                <p className="text-2xl font-bold text-white">{partidas.filter(p => p.winner).length}</p>
               </div>
             </div>
           </Card>
@@ -264,7 +271,8 @@ const GerenciarPartidas = () => {
               </div>
               <div>
                 <p className="dashboard-text-muted text-sm">Esta Semana</p>
-                <p className="text-2xl font-bold text-white">3</p>
+                {/* This requires date logic based on current week and partida.date */}
+                <p className="text-2xl font-bold text-white">N/A</p> 
               </div>
             </div>
           </Card>

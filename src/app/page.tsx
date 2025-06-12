@@ -1,14 +1,15 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import { Search, Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, Menu, X, MapPin, Crown, Play, CheckCircle, Circle, User } from "lucide-react";
+import { Search, Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, User } from "lucide-react";
 import Link from "next/link";
 import { publicChampionships, publicMatches } from '@/data/public-mock';
 import { PublicSearchBar } from "@/components/public/PublicSearchBar";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 
 export default function HomePage() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -49,144 +50,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      {/* Header */}
-      <header className="bg-slate-800/95 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">            <Link href="/" className="flex items-center">
-              <img src="/images/logo.png" alt="Esports League" className="h-10" />
-            </Link>
-
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/campeonatos" className="text-slate-300 hover:text-white transition-colors">
-                Campeonatos
-              </Link>
-              <Link href="#sobre" className="text-slate-300 hover:text-white transition-colors">
-                Sobre
-              </Link>
-              <Link href="#contato" className="text-slate-300 hover:text-white transition-colors">
-                Contato
-              </Link>
-            </nav>
-
-            {/* Desktop Buttons */}
-            <div className="hidden md:flex items-center space-x-3">
-              {!session ? (
-                <>
-                  <button 
-                    onClick={() => handleAuthAction('signin')}
-                    className="px-4 py-2 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors rounded-md flex items-center"
-                  >
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Entrar
-                  </button>
-                  <button 
-                    onClick={() => handleAuthAction('signup')}
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white transition-colors rounded-md flex items-center"
-                  >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Criar Conta
-                  </button>
-                </>
-              ) : (
-                <button 
-                  onClick={() => handleAuthAction('dashboard')}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white transition-colors rounded-md flex items-center"
-                >
-                  <Trophy className="w-4 h-4 mr-2" />
-                  Dashboard
-                </button>
-              )}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button 
-              className="md:hidden text-white p-2"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Sidebar Menu */}
-      <div className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        {/* Backdrop */}
-        <div 
-          className="absolute inset-0 bg-black bg-opacity-50"
-          onClick={() => setIsMenuOpen(false)}
-        ></div>
-        
-        {/* Sidebar */}
-        <div className={`absolute right-0 top-0 h-full w-80 bg-slate-800 border-l border-slate-700 transform transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-          <div className="p-6">
-            {/* Close Button */}
-            <div className="flex justify-end mb-6">
-              <button 
-                onClick={() => setIsMenuOpen(false)}
-                className="text-slate-400 hover:text-white p-2"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Navigation Links */}
-            <nav className="space-y-4 mb-8">
-              <Link 
-                href="/campeonatos" 
-                className="block text-slate-300 hover:text-white text-lg py-2 border-b border-slate-700"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Campeonatos
-              </Link>
-              <Link 
-                href="#sobre" 
-                className="block text-slate-300 hover:text-white text-lg py-2 border-b border-slate-700"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Sobre
-              </Link>
-              <Link 
-                href="#contato" 
-                className="block text-slate-300 hover:text-white text-lg py-2 border-b border-slate-700"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Contato
-              </Link>
-            </nav>
-
-            {/* CTA Buttons */}
-            <div className="space-y-3">
-              {!session ? (
-                <>
-                  <button 
-                    onClick={() => { setIsMenuOpen(false); handleAuthAction('signin'); }}
-                    className="w-full px-4 py-3 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors rounded-md flex items-center justify-center"
-                  >
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Entrar
-                  </button>
-                  <button 
-                    onClick={() => { setIsMenuOpen(false); handleAuthAction('signup'); }}
-                    className="w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white transition-colors rounded-md flex items-center justify-center"
-                  >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Criar Conta
-                  </button>
-                </>
-              ) : (
-                <button 
-                  onClick={() => { setIsMenuOpen(false); handleAuthAction('dashboard'); }}
-                  className="w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white transition-colors rounded-md flex items-center justify-center"
-                >
-                  <Trophy className="w-4 h-4 mr-2" />
-                  Dashboard
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header onAuthAction={handleAuthAction} />
 
       {/* Hero Banner */}
       <section className="relative bg-gradient-to-b from-slate-800 to-slate-900 py-12 md:py-20 overflow-hidden">
@@ -283,38 +147,20 @@ export default function HomePage() {
 
       {/* Search Section */}
       <section id="campeonatos" className="py-12 md:py-16 bg-slate-900">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8 md:mb-12">
+        <div className="container mx-auto px-4">          <div className="text-center mb-8 md:mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-              Encontre Campeonatos
+              Encontre Campeonatos, Equipes e Partidas
             </h2>            
             <p className="text-slate-400 max-w-2xl mx-auto text-sm md:text-base px-4">
-              Busque por campeonatos ativos, equipes participantes ou jogadores. 
+              Busque por campeonatos ativos, equipes participantes ou partidas específicas. 
               Acompanhe estatísticas em tempo real e veja os melhores desempenhos.
             </p>
-          </div>
-
-          <div className="max-w-2xl mx-auto mb-8 md:mb-12 px-4">            
-            {/* 
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <input 
-                placeholder="Buscar campeonatos, equipes..."
-                className="w-full pl-12 pr-20 md:pr-24 py-3 md:py-4 bg-slate-800 border border-slate-700 rounded-md text-white placeholder-slate-400 text-sm md:text-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-              <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 hover:bg-red-600 text-white px-3 md:px-4 py-2 rounded-md transition-colors text-sm md:text-base">
-                Buscar
-              </button>
-            </div>
-            */}
-            <PublicSearchBar
-              searchTypes={['championship']}
-              placeholder="Buscar campeonatos..."
-              // className prop will use PublicSearchBar's default "max-w-2xl" which fits this parent div.
-              // Or pass "w-full" if PublicSearchBar's default is removed/changed.
-              // Given parent is "max-w-2xl mx-auto", PublicSearchBar's default "max-w-2xl" is fine.
+          </div>          <div className="max-w-2xl mx-auto mb-8 md:mb-12 px-4">              <PublicSearchBar
+              searchTypes={['championship', 'team', 'match']}
+              placeholder="Buscar campeonatos, equipes ou partidas..."
+              className="w-full"
             />
-          </div>          {/* Featured Championships */}
+          </div>{/* Featured Championships */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col min-h-[280px]">
               <div className="flex items-center justify-between mb-4">
@@ -544,57 +390,10 @@ export default function HomePage() {
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </div>
-          </div>
-        </div>
-      </section>      {/* Footer */}
-      <footer className="bg-slate-900 border-t border-slate-800 py-8 md:py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
-            <div className="md:col-span-1">              <Link href="/" className="flex items-center mb-4">
-                <img src="/images/logo.png" alt="Esports League" className="h-10" />
-              </Link>
-              <p className="text-slate-400 text-sm max-w-xs">
-                A plataforma definitiva para campeonatos de Valorant profissionais e organizados.
-              </p>
-            </div>
+          </div>        </div>
+      </section>
 
-            <div>
-              <h4 className="text-white font-semibold mb-3 md:mb-4">Plataforma</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="#" className="hover:text-white transition-colors">Campeonatos</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Equipes</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Estatísticas</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Ranking</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-white font-semibold mb-3 md:mb-4">Suporte</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="#" className="hover:text-white transition-colors">Central de Ajuda</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Contato</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Regras</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">FAQ</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-white font-semibold mb-3 md:mb-4">Legal</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="#" className="hover:text-white transition-colors">Termos de Uso</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Privacidade</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Cookies</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-slate-800 mt-6 md:mt-8 pt-6 md:pt-8 text-center">
-            <p className="text-slate-400 text-xs md:text-sm">
-              © 2024 Esports League. Todos os direitos reservados.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

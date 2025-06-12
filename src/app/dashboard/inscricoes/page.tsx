@@ -3,95 +3,123 @@ import React, { useState } from "react";
 import { DashboardLayout } from "../_components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Plus, Clock11Icon, File } from "lucide-react";
+import { UserPlus, Plus, Clock11Icon, File, Edit, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
+import { searchInscriptions } from "@/data/search-functions";
+import { SearchResult } from "@/hooks/useSearch";
+import { detailedInscriptionsStats, DetailedInscriptionStats } from "@/data/statistics-mock";
 
 const Inscricoes = () => {
-  const [inscricoes] = useState([
-    {
-      id: 1,
-      nomeEquipe: "Valorant Kings",
-      campeonato: "Liga de Verão 2024",
-      dataInscricao: "10/12/2024",
-      coach: "João Silva",
-    },
-    {
-      id: 2,
-      nomeEquipe: "Phoenix Squad",
-      campeonato: "Torneio Nacional",
-      dataInscricao: "08/12/2024",
-      coach: "Maria Santos",
-    },
-    {
-      id: 3,
-      nomeEquipe: "Sage Warriors",
-      campeonato: "Liga de Verão 2024",
-      dataInscricao: "05/12/2024",
-      coach: "Pedro Costa",
-    },
-  ]);
+  const router = useRouter();
+  const [inscricoes, setInscricoes] = useState<DetailedInscriptionStats[]>(detailedInscriptionsStats);
+
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    if (result.type === "inscription" && result.id) {
+      // Navigate to a detail page or filter the list
+      // For now, we can filter the list as an example or log
+      console.log("Inscription selected:", result);
+      // Example: router.push(`/dashboard/inscricoes/${result.id}`);
+      // Or to filter current list:
+      // const filtered = detailedInscriptionsStats.filter(i => i.inscription_id === result.id);
+      // setInscricoes(filtered.length > 0 ? filtered : detailedInscriptionsStats); // Show all if filter is empty
+    }
+  };
+  
+  const totalInscricoes = inscricoes.length;
+  const ultimaInscricao = totalInscricoes > 0 
+    ? [...inscricoes].sort((a, b) => new Date(b.inscription_date).getTime() - new Date(a.inscription_date).getTime())[0] 
+    : null;
 
   return (
     <DashboardLayout
       title="GERENCIAR"
       subtitle="INSCRIÇÕES"
-      breadcrumbs={[{ label: "DASHBOARD", href: "/" }, { label: "INSCRIÇÕES" }]}
+      breadcrumbs={[
+        { label: "DASHBOARD", href: "/dashboard" }, 
+        { label: "INSCRIÇÕES" },
+      ]}
     >
       <div className="p-8 space-y-6">
-        {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-white">
             Inscrições de Equipes
           </h1>
-          <div className="flex space-x-2">
-            <Button variant="outline" className="border-gray-600 text-gray-300">
-              Filtrar por Campeonato
-            </Button>
-            <Button className="bg-red-500 hover:bg-red-600 text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Fazer Inscrição
-            </Button>
-          </div>
+          <Button className="bg-red-500 hover:bg-red-600 text-white">
+            <Plus className="w-4 h-4 mr-2" />
+            Fazer Inscrição
+          </Button>
         </div>
 
-        {/* Lista de inscrições */}
+        <div className="flex justify-center my-6">
+          <UniversalSearchBar
+            searchFunction={searchInscriptions}
+            config={{
+              searchTypes: ["inscription"],
+              placeholder: "Buscar inscrições por equipe, campeonato ou coach...",
+              maxResults: 6,
+              minQueryLength: 1,
+              debounceMs: 300,
+            }}
+            onResultClick={handleSearchResultClick}
+            className="max-w-xl"
+          />
+        </div>
+
         <div className="space-y-4">
           {inscricoes.map((inscricao) => (
             <Card
-              key={inscricao.id}
+              key={inscricao.inscription_id}
               className="dashboard-card border-gray-700 p-6"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="p-2 bg-blue-500/20 rounded-lg">
                     <UserPlus className="w-6 h-6 text-blue-500" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">
-                      {inscricao.nomeEquipe}
+                      {inscricao.team_name}
                     </h3>
                     <p className="dashboard-text-muted text-sm">
-                      {inscricao.campeonato}
+                      {inscricao.championship_name}
                     </p>
                     <p className="dashboard-text-muted text-xs">
-                      Coach: {inscricao.coach}
+                      Coach: {inscricao.coach_name}
                     </p>
                   </div>
                 </div>
-
-                <div className="flex items-center space-x-6">
-                  <div className="text-center">
-                    <p className="dashboard-text-muted text-xs">Data</p>
-                    <p className="text-white text-sm">
-                      {inscricao.dataInscricao}
-                    </p>
+                <div className="flex flex-col items-end space-y-2">
+                  <div className="flex space-x-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-gray-600 text-gray-300 hover:text-white hover:bg-gray-700"
+                      // onClick={() => router.push(`/dashboard/inscricoes/editar/${inscricao.inscription_id}`)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                      // onClick={() => console.log('Delete inscription:', inscricao.inscription_id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-700 flex items-center justify-between">
+                <div className="text-sm text-gray-400">
+                    Data da Inscrição: {new Date(inscricao.inscription_date).toLocaleDateString('pt-BR')}
                 </div>
               </div>
             </Card>
           ))}
         </div>
 
-        {/* Stats das inscrições */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <Card className="dashboard-card border-gray-700 p-6">
             <div className="flex items-center space-x-3">
@@ -102,7 +130,7 @@ const Inscricoes = () => {
                 <p className="dashboard-text-muted text-sm">
                   Total de Inscrições
                 </p>
-                <p className="text-2xl font-bold text-white">3</p>
+                <p className="text-2xl font-bold text-white">{totalInscricoes}</p>
               </div>
             </div>
           </Card>
@@ -112,8 +140,10 @@ const Inscricoes = () => {
                 <Clock11Icon className="w-6 h-6 text-orange-500" />
               </div>
               <div>
-                <p className="dashboard-text-muted text-sm">Última Inscrição</p>
-                <p className="text-2xl font-bold text-white">Valorant Kings</p>
+                <p className="dashboard-text-muted text-sm">Última Inscrição (Equipe)</p>
+                <p className="text-2xl font-bold text-white">
+                  {ultimaInscricao ? ultimaInscricao.team_name : "N/A"}
+                </p>
               </div>
             </div>
           </Card>
