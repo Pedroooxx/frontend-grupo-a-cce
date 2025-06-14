@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Search, Trophy, Users, Calendar, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { publicChampionships, publicTeams, publicMatches } from '@/data/statistics-mock';
+import { publicChampionships, publicTeams, publicMatches } from '@/data/data-mock';
 
 interface SearchResult {
   id: number;

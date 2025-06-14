@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { searchMatches } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { recentMatches } from "@/data/statistics-mock"; // Import recentMatches
+import { recentMatches } from "@/data/data-mock"; // Import recentMatches
 
 const GerenciarPartidas = () => {
   const router = useRouter();

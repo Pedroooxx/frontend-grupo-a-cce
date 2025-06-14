@@ -6,7 +6,7 @@ import { Search, User, Users, Trophy, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { SearchResult } from '@/types/statistics';
-import { searchAll } from '@/data/statistics-mock';
+import { searchAll } from '@/data/data-mock';
 
 export const SearchBar = () => {
   const [query, setQuery] = useState('');

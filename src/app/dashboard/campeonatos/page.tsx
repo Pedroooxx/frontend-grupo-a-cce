@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { searchChampionships } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { detailedChampionshipsStats } from "@/data/statistics-mock"; // Import detailedChampionshipsStats
+import { detailedChampionshipsStats } from "@/data/data-mock"; // Import detailedChampionshipsStats
 
 const Campeonatos = () => {
   const router = useRouter();

@@ -8,7 +8,7 @@ import { DashboardLayout } from "../_components/DashboardLayout";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { searchPlayers } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { detailedPlayersStats } from "@/data/statistics-mock";
+import { detailedPlayersStats } from "@/data/data-mock";
 
 const GerenciarJogadores = () => {
   const [jogadores] = useState(detailedPlayersStats.slice(0, 4)); // Usar dados reais

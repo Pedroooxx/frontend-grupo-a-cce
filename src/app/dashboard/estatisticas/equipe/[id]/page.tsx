@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '../../../_components/DashboardLayout';
 import { Users, Trophy, Target, TrendingUp, User, Crown, Shield } from 'lucide-react';
-import { detailedTeamsStats, championshipParticipations, detailedPlayersStats } from '@/data/statistics-mock';
+import { detailedTeamsStats, championshipParticipations, detailedPlayersStats } from '@/data/data-mock';
 
 const TeamStatistics = () => {
   const params = useParams();

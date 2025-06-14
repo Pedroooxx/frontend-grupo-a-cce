@@ -11,7 +11,7 @@ import {
   mapPerformanceStats,
   recentMatches,
   topPerformers
-} from "@/data/statistics-mock";
+} from "@/data/data-mock";
 
 export function DashboardContent() {
   const { data: session } = useSession();

@@ -11,7 +11,7 @@ import {
   agentUsageStats,
   mapPerformanceStats,
   championshipParticipations,
-} from "@/data/statistics-mock";
+} from "@/data/data-mock";
 
 const PlayerStatistics = () => {
   const params = useParams();

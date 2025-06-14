@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { searchTeams } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { detailedTeamsStats, detailedPlayersStats } from "@/data/statistics-mock"; // Import detailedPlayersStats
+import { detailedTeamsStats, detailedPlayersStats } from "@/data/data-mock"; // Import detailedPlayersStats
 
 const GerenciarEquipes = () => {
   // Use detailedTeamsStats from statistics-mock.ts

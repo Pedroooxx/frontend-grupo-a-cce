@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { searchInscriptions } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { detailedInscriptionsStats, DetailedInscriptionStats } from "@/data/statistics-mock";
+import { detailedInscriptionsStats, DetailedInscriptionStats } from "@/data/data-mock";
 
 const Inscricoes = () => {
   const router = useRouter();

@@ -22,7 +22,7 @@ import {
   championshipStandings,
   publicParticipants,
   participantStatistics,
-} from "./statistics-mock";
+} from "./data-mock";
 
 export const getChampionshipById = (
   id: number

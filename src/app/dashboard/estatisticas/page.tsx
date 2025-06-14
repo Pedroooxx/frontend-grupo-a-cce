@@ -14,7 +14,7 @@ import {
   topEquipes,
   estatisticasGerais,
   mapasData,
-} from '@/data/statistics-mock';
+} from '@/data/data-mock';
 
 const Estatisticas = () => {
   const router = useRouter();
