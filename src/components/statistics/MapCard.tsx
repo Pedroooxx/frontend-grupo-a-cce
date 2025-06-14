@@ -1,4 +1,4 @@
-import { MapData } from '@/types/statistics';
+import { MapData } from '@/types/data-types';
 import { Tooltip } from '../ui/Tooltip';
 import { getMapColor, getLighterColor } from '@/utils/mapColors';
 import { useState } from 'react';

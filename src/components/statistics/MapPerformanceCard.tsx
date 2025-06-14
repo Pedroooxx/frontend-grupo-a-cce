@@ -1,6 +1,6 @@
 'use client'
 import { Card } from '@/components/ui/card';
-import { MapData } from '@/types/statistics';
+import { MapData } from '@/types/data-types';
 import { TrendingUp } from 'lucide-react';
 import { useMapImages } from '@/hooks/useMapImages';
 import { MapCard } from './MapCard';

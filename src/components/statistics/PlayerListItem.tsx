@@ -1,4 +1,4 @@
-import { Player } from '@/types/statistics';
+import { Player } from '@/types/data-types';
 import { PlayerRankBadge } from './PlayerRankBadge';
 import { PlayerStatsDisplay } from './PlayerStatsDisplay';
 

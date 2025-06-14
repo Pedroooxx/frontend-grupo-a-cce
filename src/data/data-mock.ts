@@ -12,17 +12,14 @@ import {
   DetailedChampionshipStats,
   ChampionshipTeamRanking,
   ChampionshipPlayerRanking,
-} from "@/types/statistics";
-
-import {
   PublicChampionship,
   PublicMatch,
   PublicTeam,
-  ChampionshipStandings,
   PublicParticipant,
-  Agent,
+  ChampionshipStandings,
   ParticipantStatistics,
-} from "@/types/public";
+  Agent,
+} from "@/types/data-types";
 
 // Mock data for public championships
 export const publicChampionships: PublicChampionship[] = [
@@ -2345,3 +2342,52 @@ export const detailedInscriptionsStats: DetailedInscriptionStats[] = [
     coach_name: "Pedro Santos", // Manager of Sage Warriors
   },
 ];
+
+// Add searchAll function
+export const searchAll = (query: string): SearchResult[] => {
+  if (!query.trim()) return [];
+
+  const results: SearchResult[] = [];
+  const searchQuery = query.toLowerCase();
+
+  // Search players
+  const playerResults = topJogadores
+    .filter(player => 
+      player.nome.toLowerCase().includes(searchQuery) ||
+      player.equipe.toLowerCase().includes(searchQuery)
+    )
+    .map(player => ({
+      id: Math.random(), // Generate temporary ID
+      name: player.nome,
+      type: 'player' as const,
+      subtitle: `${player.equipe} - KDA: ${player.kda}`,
+    }));
+
+  // Search teams  
+  const teamResults = topEquipes
+    .filter(team => 
+      team.nome.toLowerCase().includes(searchQuery)
+    )
+    .map(team => ({
+      id: Math.random(), // Generate temporary ID
+      name: team.nome,
+      type: 'team' as const,
+      subtitle: `${team.vitorias}V - ${team.derrotas}D - ${team.winRate}`,
+    }));
+
+  // Search championships
+  const championshipResults = publicChampionships
+    .filter(championship => 
+      championship.name.toLowerCase().includes(searchQuery) ||
+      championship.description.toLowerCase().includes(searchQuery)
+    )
+    .map(championship => ({
+      id: championship.championship_id,
+      name: championship.name,
+      type: 'championship' as const,
+      subtitle: `${championship.location} - ${championship.status}`,
+    }));
+
+  results.push(...playerResults, ...teamResults, ...championshipResults);
+  return results;
+};

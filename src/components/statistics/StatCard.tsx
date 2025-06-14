@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { BarChart3 } from 'lucide-react';
-import { GeneralStat } from '@/types/statistics';
+import { GeneralStat } from '@/types/data-types';
 
 interface StatCardProps {
   stat: GeneralStat;

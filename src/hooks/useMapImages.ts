@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapData } from '@/types/statistics';
+import { MapData } from '@/types/data-types';
 
 /**
  * Hook that provides image paths for maps

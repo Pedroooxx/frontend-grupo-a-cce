@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users } from 'lucide-react';
-import { Team } from '@/types/statistics';
+import { Team } from '@/types/data-types';
 import { Tooltip } from '../ui/Tooltip';
 
 interface TeamRankingCardProps {

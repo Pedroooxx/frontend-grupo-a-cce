@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Search, User, Users, Trophy, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { SearchResult } from '@/types/statistics';
+import { SearchResult } from '@/types/data-types';
 import { searchAll } from '@/data/data-mock';
 
 export const SearchBar = () => {

@@ -6,7 +6,7 @@ import {
   ChampionshipStandings,
   PublicParticipant,
   ParticipantStatistics,
-} from "@/types/public";
+} from "@/types/data-types";
 
 import {
   detailedPlayersStats,

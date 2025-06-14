@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Trophy } from 'lucide-react';
-import { Player } from '@/types/statistics';
+import { Player } from '@/types/data-types';
 import { PlayerListItem } from './PlayerListItem';
 
 interface TopPlayersCardProps {
