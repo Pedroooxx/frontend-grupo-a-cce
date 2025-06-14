@@ -4,11 +4,15 @@ import { Calendar, MapPin, Trophy, Users, Target, Crown } from 'lucide-react';
 import { publicChampionships } from '@/data/data-mock';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { useState } from 'react';
-import { PublicSearchBar } from '@/components/public/PublicSearchBar';
+import { UniversalSearchBar } from '@/components/common/UniversalSearchBar'; // Updated import
+import { searchPublicCatalog } from '@/data/search-functions'; // Import the search function
+import { SearchConfig, SearchResult } from '@/hooks/useSearch'; // Import SearchConfig and SearchResult
+import { useRouter } from 'next/navigation'; // Ensure useRouter is imported if not already
 
 export default function ChampionshipsListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'ongoing' | 'completed'>('all');
+  const router = useRouter(); // Ensure router is initialized
 
   const filteredChampionships = publicChampionships.filter(championship => {
     const matchesSearch = championship.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -42,6 +46,50 @@ export default function ChampionshipsListPage() {
     });
   };
 
+  // Configuration for UniversalSearchBar
+  const searchConfig: SearchConfig = {
+    searchTypes: ['championship', 'team', 'match'],
+    placeholder: "Buscar campeonatos, equipes ou partidas...",
+    maxResults: 8,
+  };
+
+  const handleResultClick = (result: SearchResult) => {
+    // Implement navigation logic based on result type if needed
+    console.log('Result clicked:', result);
+    // Example: router.push(`/campeonatos/${result.id}`);
+    let path = '';
+    switch (result.type) {
+      case 'championship':
+        path = `/campeonatos/${result.id}`;
+        break;
+      case 'team':
+        // Example: You might need to find which championship the team belongs to
+        // This logic might need access to other data like publicMatches from data-mock
+        // const teamMatch = publicMatches.find(match => 
+        //   match.teamA.team_id === result.id || match.teamB.team_id === result.id
+        // );
+        // if (teamMatch) {
+        //   path = `/campeonatos/${teamMatch.championship_id}/equipes/${result.id}`;
+        // } else {
+        //   path = `/campeonatos/1/equipes/${result.id}`; // Fallback or error handling
+        // }
+        console.warn('Team click navigation needs specific implementation for campeonatos page');
+        break;
+      case 'match':
+        // const matchDetails = publicMatches.find(m => m.match_id === result.id);
+        // if (matchDetails) {
+        //   path = `/campeonatos/${matchDetails.championship_id}/partidas/${result.id}`;
+        // }
+        console.warn('Match click navigation needs specific implementation for campeonatos page');
+        break;
+      default:
+        console.log('Unhandled search result type:', result.type);
+    }
+    if (path) {
+      router.push(path);
+    }
+  };
+
   return (
     <PublicLayout title="Campeonatos">
       {/* Hero Section */}
@@ -62,12 +110,14 @@ export default function ChampionshipsListPage() {
       <section className="py-8 bg-slate-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row gap-4 mb-8">
-            {/* Search */}            <div className="flex-1 relative">
-              <PublicSearchBar
-                searchTypes={['championship', 'team', 'match']}
-                placeholder="Buscar campeonatos, equipes ou partidas..."
+            {/* Search */}            
+            <div className="flex-1 relative">
+              <UniversalSearchBar
+                searchFunction={searchPublicCatalog}
+                config={searchConfig}
                 onQueryChange={setSearchQuery}
-                className="w-full" 
+                onResultClick={handleResultClick} // Optional: handle click on search results
+                className="w-full"
               />
             </div>
 
@@ -93,7 +143,8 @@ export default function ChampionshipsListPage() {
             </p>
           </div>
 
-          {/* Championships Grid */}          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Championships Grid */}          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredChampionships.map((championship) => (
               <div key={championship.championship_id} className="bg-slate-800 border border-slate-700 rounded-md p-6 hover:bg-slate-750 transition-colors">
                 <div className="flex items-start justify-between mb-4">

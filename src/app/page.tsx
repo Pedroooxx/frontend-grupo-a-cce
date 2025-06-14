@@ -3,11 +3,13 @@ import React, { useEffect, useState } from "react";
 import { Search, Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, User } from "lucide-react";
 import Link from "next/link";
 import { publicChampionships, publicMatches } from '@/data/data-mock';
-import { PublicSearchBar } from "@/components/public/PublicSearchBar";
+import { UniversalSearchBar } from "@/components/common/UniversalSearchBar"; // Updated import
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { searchPublicCatalog } from "@/data/search-functions"; // Import the search function
+import { SearchConfig, SearchResult } from "@/hooks/useSearch"; // Import SearchConfig and SearchResult
 
 export default function HomePage() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -47,6 +49,43 @@ export default function HomePage() {
       </div>
     );
   }
+
+  // Configuration for UniversalSearchBar
+  const searchConfig: SearchConfig = {
+    searchTypes: ['championship', 'team', 'match'],
+    placeholder: "Buscar campeonatos, equipes ou partidas...",
+    maxResults: 8,
+  };
+
+  const handleResultClick = (result: SearchResult) => {
+    // Implement navigation logic based on result type if needed
+    console.log('Result clicked:', result);
+    let path = '';
+    switch (result.type) {
+      case 'championship':
+        path = `/campeonatos/${result.id}`;
+        break;
+      case 'team':
+        const teamMatch = publicMatches.find(match => 
+          match.teamA.team_id === result.id || match.teamB.team_id === result.id
+        );
+        if (teamMatch) {
+          path = `/campeonatos/${teamMatch.championship_id}/equipes/${result.id}`;
+        } else {
+          path = `/campeonatos/1/equipes/${result.id}`; // Fallback
+        }
+        break;
+      case 'match':
+        const match = publicMatches.find(m => m.match_id === result.id);
+        if (match) {
+          path = `/campeonatos/${match.championship_id}/partidas/${result.id}`;
+        }
+        break;
+    }
+    if (path) {
+      router.push(path);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -155,9 +194,11 @@ export default function HomePage() {
               Busque por campeonatos ativos, equipes participantes ou partidas específicas. 
               Acompanhe estatísticas em tempo real e veja os melhores desempenhos.
             </p>
-          </div>          <div className="max-w-2xl mx-auto mb-8 md:mb-12 px-4">              <PublicSearchBar
-              searchTypes={['championship', 'team', 'match']}
-              placeholder="Buscar campeonatos, equipes ou partidas..."
+          </div>          <div className="max-w-2xl mx-auto mb-8 md:mb-12 px-4">              
+            <UniversalSearchBar
+              searchFunction={searchPublicCatalog}
+              config={searchConfig}
+              onResultClick={handleResultClick} // Handle click on search results
               className="w-full"
             />
           </div>{/* Featured Championships */}

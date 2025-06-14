@@ -435,3 +435,101 @@ export const searchInscriptions = (
       },
     }));
 };
+
+// Search function for public catalog (championships, teams, matches)
+export const searchPublicCatalog = (
+  query: string,
+  types: string[]
+): SearchResult[] => {
+  if (!query.trim()) return [];
+  const searchQuery = query.toLowerCase();
+  const allPossibleResults: SearchResult[] = [];
+
+  // Search championships
+  if (types.includes("championship")) {
+    const championshipResults = publicChampionships
+      .filter(
+        (championship) =>
+          championship.name.toLowerCase().includes(searchQuery) ||
+          championship.description.toLowerCase().includes(searchQuery) ||
+          championship.location.toLowerCase().includes(searchQuery)
+      )
+      .map((championship) => ({
+        id: championship.championship_id,
+        name: championship.name,
+        type: "championship",
+        subtitle: `${championship.location} - ${
+          championship.status === "ongoing"
+            ? "Em andamento"
+            : championship.status === "completed"
+            ? "Finalizado"
+            : championship.status === "upcoming"
+            ? "Em breve"
+            : "Cancelado"
+        }`,
+        metadata: {
+          status: championship.status,
+          location: championship.location,
+          startDate: championship.start_date,
+          endDate: championship.end_date,
+        },
+      }));
+    allPossibleResults.push(...championshipResults);
+  }
+
+  // Search teams
+  if (types.includes("team")) {
+    const teamResults = publicTeams
+      .filter(
+        (team) =>
+          team.name.toLowerCase().includes(searchQuery) ||
+          team.manager_name.toLowerCase().includes(searchQuery)
+      )
+      .map((team) => ({
+        id: team.team_id,
+        name: team.name,
+        type: "team",
+        subtitle: `Gerenciado por ${
+          team.manager_name
+        } - ${Math.round(team.win_rate * 100)}% taxa de vitória`,
+        metadata: {
+          managerName: team.manager_name,
+          winRate: team.win_rate,
+        },
+      }));
+    allPossibleResults.push(...teamResults);
+  }
+
+  // Search matches
+  if (types.includes("match")) {
+    const matchResults = publicMatches
+      .filter(
+        (match) =>
+          match.teamA.name.toLowerCase().includes(searchQuery) ||
+          match.teamB.name.toLowerCase().includes(searchQuery) ||
+          match.map.toLowerCase().includes(searchQuery) ||
+          match.stage.toLowerCase().includes(searchQuery)
+      )
+      .map((match) => ({
+        id: match.match_id,
+        name: `${match.teamA.name} vs ${match.teamB.name}`,
+        type: "match",
+        subtitle: `${match.stage} - ${match.map} - ${
+          match.status === "completed"
+            ? "Finalizada"
+            : match.status === "live"
+            ? "Ao Vivo"
+            : "Agendada"
+        }`,
+        metadata: {
+          championshipId: match.championship_id,
+          status: match.status,
+          map: match.map,
+          stage: match.stage,
+        },
+      }));
+    allPossibleResults.push(...matchResults);
+  }
+
+  return allPossibleResults.slice(0, 8); // Corresponds to maxResults in PublicSearchBar
+};
