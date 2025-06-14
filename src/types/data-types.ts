@@ -201,6 +201,7 @@ export interface AgentStat {
 // Detailed statistics types
 export interface DetailedPlayerStats {
   participant_id: number;
+  user_id: number;
   name: string;
   nickname: string;
   birth_date: string;
@@ -208,19 +209,17 @@ export interface DetailedPlayerStats {
   team_id: number;
   team_name: string;
   is_coach: boolean;
-  user_id: number;
-  // Aggregated statistics
-  total_matches: number;
   total_kills: number;
-  total_assists: number;
   total_deaths: number;
+  total_assists: number;
+  kda_ratio: number;
+  win_rate: number;
+  total_matches: number;
   total_spike_plants: number;
   total_spike_defuses: number;
   total_mvps: number;
   total_first_kills: number;
-  kda_ratio: number;
   avg_score: number;
-  win_rate: number;
   favorite_agent: string;
   favorite_map: string;
 }
@@ -339,13 +338,30 @@ export interface ChampionshipPlayerRanking {
   mvps: number;
 }
 
-// Search and UI types
-export interface SearchResult {
-  id: number;
+// Update existing types to match ERD
+export interface DetailedPlayerStats {
+  participant_id: number;
+  user_id: number;
   name: string;
-  type: 'player' | 'team' | 'championship';
-  subtitle?: string;
-  avatar?: string;
+  nickname: string;
+  birth_date: string;
+  phone: string;
+  team_id: number;
+  team_name: string;
+  is_coach: boolean;
+  total_kills: number;
+  total_deaths: number;
+  total_assists: number;
+  kda_ratio: number;
+  win_rate: number;
+  total_matches: number;
+  total_spike_plants: number;
+  total_spike_defuses: number;
+  total_mvps: number;
+  total_first_kills: number;
+  avg_score: number;
+  favorite_agent: string;
+  favorite_map: string;
 }
 
 export interface SearchFilters {

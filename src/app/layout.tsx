@@ -1,6 +1,7 @@
 import './globals.css'
 import { SessionProvider } from '@/components/auth/SessionProvider'
 import { Metadata } from 'next'
+import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
   title: 'Spike League - Gerencie seu próprio campeonato de Valorant',
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body>
         <SessionProvider>
           {children}
+          <Toaster position="top-right" />
         </SessionProvider>
       </body>
     </html>
