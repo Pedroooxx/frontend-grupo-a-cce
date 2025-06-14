@@ -24,7 +24,7 @@ import {
   getParticipantsByTeamId,
   getTeamMatchesInChampionship,
   getStandingsByChampionshipId
-} from '@/data/public-mock';
+} from '@/data/search-functions';
 import PublicLayout from '@/components/layout/PublicLayout';
 
 interface PageProps {

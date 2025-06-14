@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { getStandingsByChampionshipId, getChampionshipById } from '@/data/public-mock';
+import { getStandingsByChampionshipId, getChampionshipById } from '@/data/search-functions';
 
 interface Match {
   match_id: number;

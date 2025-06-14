@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Search, Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, User } from "lucide-react";
 import Link from "next/link";
-import { publicChampionships, publicMatches } from '@/data/public-mock';
+import { publicChampionships, publicMatches } from '@/data/statistics-mock';
 import { PublicSearchBar } from "@/components/public/PublicSearchBar";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";

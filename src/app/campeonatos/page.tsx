@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link';
 import { Calendar, MapPin, Trophy, Users, Target, Crown } from 'lucide-react';
-import { publicChampionships } from '@/data/public-mock';
+import { publicChampionships } from '@/data/statistics-mock';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { useState } from 'react';
 import { PublicSearchBar } from '@/components/public/PublicSearchBar';

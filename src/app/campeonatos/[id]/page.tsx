@@ -1,6 +1,6 @@
 'use client';
 import { notFound } from 'next/navigation';
-import { getChampionshipById, getMatchesByChampionshipId, getTeamsByChampionshipId } from '@/data/public-mock';
+import { getChampionshipById, getMatchesByChampionshipId, getTeamsByChampionshipId } from '@/data/search-functions';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { ChampionshipDetails } from '@/components/public/ChampionshipDetails';
 import { Calendar, MapPin, Trophy, Users, Crown } from 'lucide-react';
