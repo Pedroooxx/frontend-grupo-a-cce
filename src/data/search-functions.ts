@@ -9,19 +9,14 @@ import {
 } from "@/types/data-types";
 
 import {
-  detailedPlayersStats,
-  detailedTeamsStats,
-  detailedChampionshipsStats,
-  championshipParticipations,
-  recentMatches,
-  detailedInscriptionsStats, // Import detailedInscriptionsStats
-  DetailedInscriptionStats, // Import the type DetailedInscriptionStats
   publicChampionships,
   publicMatches,
   publicTeams,
   championshipStandings,
   publicParticipants,
   participantStatistics,
+  topJogadores,
+  topEquipes,
 } from "./data-mock";
 
 export const getChampionshipById = (
@@ -115,95 +110,7 @@ export const getTeamsByChampionshipId = (
   return publicTeams.filter((team) => teamIds.has(team.team_id));
 };
 
-// Busca geral (estatísticas) - jogadores, equipes e campeonatos
-export const searchStatistics = (
-  query: string,
-  types: string[] = ["player", "team", "championship"]
-): SearchResult[] => {
-  if (!query.trim()) return [];
-
-  const results: SearchResult[] = [];
-  const searchQuery = query.toLowerCase();
-
-  // Buscar jogadores
-  if (types.includes("player")) {
-    const playerResults = detailedPlayersStats
-      .filter(
-        (player) =>
-          player.nickname.toLowerCase().includes(searchQuery) ||
-          player.name.toLowerCase().includes(searchQuery) ||
-          player.team_name.toLowerCase().includes(searchQuery)
-      )
-      .map((player) => ({
-        id: player.participant_id,
-        name: player.nickname,
-        type: "player",
-        subtitle: `${player.name} - ${player.team_name} - KDA: ${player.kda_ratio}`,
-        metadata: {
-          teamName: player.team_name,
-          kda: player.kda_ratio,
-          winRate: player.win_rate,
-          isCoach: player.is_coach,
-        },
-      }));
-    results.push(...playerResults);
-  }
-
-  // Buscar equipes
-  if (types.includes("team")) {
-    const teamResults = detailedTeamsStats
-      .filter(
-        (team) =>
-          team.name.toLowerCase().includes(searchQuery) ||
-          team.manager_name.toLowerCase().includes(searchQuery)
-      )
-      .map((team) => ({
-        id: team.team_id,
-        name: team.name,
-        type: "team",
-        subtitle: `Gerenciado por ${team.manager_name} - Win Rate: ${Math.round(
-          team.win_rate * 100
-        )}%`,
-        metadata: {
-          managerName: team.manager_name,
-          winRate: team.win_rate,
-          totalMatches: team.total_matches,
-          activePlayers: team.active_players,
-        },
-      }));
-    results.push(...teamResults);
-  }
-
-  // Buscar campeonatos
-  if (types.includes("championship")) {
-    const championshipResults = detailedChampionshipsStats
-      .filter(
-        (championship) =>
-          championship.name.toLowerCase().includes(searchQuery) ||
-          championship.description.toLowerCase().includes(searchQuery) ||
-          championship.location.toLowerCase().includes(searchQuery)
-      )
-      .map((championship) => ({
-        id: championship.championship_id,
-        name: championship.name,
-        type: "championship",
-        subtitle: `${championship.location} - ${getStatusText(
-          championship.status
-        )}`,
-        metadata: {
-          status: championship.status,
-          location: championship.location,
-          totalTeams: championship.total_teams,
-          organizer: championship.organizer_name,
-        },
-      }));
-    results.push(...championshipResults);
-  }
-
-  return results;
-};
-
-// Busca específica para jogadores (página de gerenciar jogadores)
+// Busca específica para jogadores (baseada em publicParticipants)
 export const searchPlayers = (
   query: string,
   types: string[] = ["player"]
@@ -212,35 +119,35 @@ export const searchPlayers = (
 
   const searchQuery = query.toLowerCase();
 
-  return detailedPlayersStats
+  return publicParticipants
     .filter(
-      (player) =>
-        player.nickname.toLowerCase().includes(searchQuery) ||
-        player.name.toLowerCase().includes(searchQuery) ||
-        player.team_name.toLowerCase().includes(searchQuery) ||
-        player.phone.includes(searchQuery)
+      (participant) =>
+        participant.nickname.toLowerCase().includes(searchQuery) ||
+        participant.name.toLowerCase().includes(searchQuery) ||
+        participant.team_name.toLowerCase().includes(searchQuery) ||
+        participant.phone.includes(searchQuery)
     )
-    .map((player) => ({
-      id: player.participant_id,
-      name: player.nickname,
+    .map((participant) => ({
+      id: participant.participant_id,
+      name: participant.nickname,
       type: "player",
-      subtitle: `${player.name} - ${player.team_name}`,
+      subtitle: `${participant.name} - ${participant.team_name}`,
       metadata: {
-        fullName: player.name,
-        teamName: player.team_name,
-        phone: player.phone,
-        kda: player.kda_ratio,
-        winRate: player.win_rate,
-        isCoach: player.is_coach,
-        birthDate: player.birth_date,
-        kills: player.total_kills,
-        deaths: player.total_deaths,
-        assists: player.total_assists,
+        fullName: participant.name,
+        teamName: participant.team_name,
+        phone: participant.phone,
+        kda: participant.kda_ratio,
+        winRate: participant.win_rate,
+        isCoach: participant.is_coach,
+        birthDate: participant.birth_date,
+        kills: participant.total_kills,
+        deaths: participant.total_deaths,
+        assists: participant.total_assists,
       },
     }));
 };
 
-// Busca específica para equipes (página de gerenciar equipes)
+// Busca específica para equipes (baseada em publicTeams)
 export const searchTeams = (
   query: string,
   types: string[] = ["team"]
@@ -249,7 +156,7 @@ export const searchTeams = (
 
   const searchQuery = query.toLowerCase();
 
-  return detailedTeamsStats
+  return publicTeams
     .filter(
       (team) =>
         team.name.toLowerCase().includes(searchQuery) ||
@@ -259,22 +166,19 @@ export const searchTeams = (
       id: team.team_id,
       name: team.name,
       type: "team",
-      subtitle: `${team.active_players} jogadores - Gerenciado por ${team.manager_name}`,
+      subtitle: `${team.participants_count} jogadores - Gerenciado por ${team.manager_name}`,
       metadata: {
         managerName: team.manager_name,
-        activePlayers: team.active_players,
-        coaches: team.coaches,
+        participantsCount: team.participants_count,
         winRate: team.win_rate,
-        totalMatches: team.total_matches,
         wins: team.wins,
         losses: team.losses,
-        teamKda: team.team_kda,
         championshipsWon: team.championships_won,
       },
     }));
 };
 
-// Busca específica para campeonatos
+// Busca específica para campeonatos (baseada em publicChampionships)
 export const searchChampionships = (
   query: string,
   types: string[] = ["championship"]
@@ -283,31 +187,54 @@ export const searchChampionships = (
 
   const searchQuery = query.toLowerCase();
 
-  return detailedChampionshipsStats
+  return publicChampionships
     .filter(
       (championship) =>
         championship.name.toLowerCase().includes(searchQuery) ||
         championship.description.toLowerCase().includes(searchQuery) ||
-        championship.location.toLowerCase().includes(searchQuery) ||
-        championship.organizer_name.toLowerCase().includes(searchQuery)
+        championship.location.toLowerCase().includes(searchQuery)
     )
     .map((championship) => ({
       id: championship.championship_id,
       name: championship.name,
       type: "championship",
-      subtitle: `${championship.total_teams} equipes - ${championship.location}`,
+      subtitle: `${championship.teams_count} equipes - ${championship.location}`,
       metadata: {
         description: championship.description,
         status: championship.status,
         location: championship.location,
-        organizer: championship.organizer_name,
-        totalTeams: championship.total_teams,
-        totalPlayers: championship.total_players,
+        teamsCount: championship.teams_count,
+        matchesCount: championship.matches_count,
         startDate: championship.start_date,
         endDate: championship.end_date,
         format: championship.format,
+        prizePool: championship.prize_pool,
       },
     }));
+};
+
+// Busca geral (estatísticas) - jogadores, equipes e campeonatos
+export const searchStatistics = (
+  query: string,
+  types: string[] = ["player", "team", "championship"]
+): SearchResult[] => {
+  if (!query.trim()) return [];
+
+  const results: SearchResult[] = [];
+
+  if (types.includes("player")) {
+    results.push(...searchPlayers(query));
+  }
+
+  if (types.includes("team")) {
+    results.push(...searchTeams(query));
+  }
+
+  if (types.includes("championship")) {
+    results.push(...searchChampionships(query));
+  }
+
+  return results;
 };
 
 // Busca mista para jogadores e equipes (útil para algumas páginas)
@@ -344,96 +271,6 @@ const getStatusText = (status: string): string => {
     default:
       return status;
   }
-};
-
-// Busca específica para participações em campeonatos
-export const searchChampionshipParticipations = (
-  query: string
-): SearchResult[] => {
-  if (!query.trim()) return [];
-
-  const searchQuery = query.toLowerCase();
-
-  return championshipParticipations
-    .filter((participation) =>
-      participation.championship_name.toLowerCase().includes(searchQuery)
-    )
-    .map((participation) => ({
-      id: participation.championship_id,
-      name: participation.championship_name,
-      type: "championship_participation",
-      subtitle: `${participation.matches_played} partidas - ${participation.status}`,
-      metadata: {
-        status: participation.status,
-        matchesPlayed: participation.matches_played,
-      },
-    }));
-};
-
-// Busca específica para partidas
-export const searchMatches = (
-  query: string,
-  types: string[] = ["match"]
-): SearchResult[] => {
-  if (!query.trim() || !types.includes("match")) return [];
-
-  const searchQuery = query.toLowerCase();
-
-  return recentMatches
-    .filter(
-      (match) =>
-        match.team_a.toLowerCase().includes(searchQuery) ||
-        match.team_b.toLowerCase().includes(searchQuery) ||
-        match.tournament.toLowerCase().includes(searchQuery) ||
-        match.map.toLowerCase().includes(searchQuery)
-    )
-    .map((match) => ({
-      id: match.match_id,
-      name: `${match.team_a} vs ${match.team_b}`,
-      type: "match",
-      subtitle: `${match.tournament} - ${match.map} (${match.date})`,
-      metadata: {
-        team_a: match.team_a,
-        team_b: match.team_b,
-        score_a: match.score_a,
-        score_b: match.score_b,
-        map: match.map,
-        date: match.date,
-        tournament: match.tournament,
-        winner: match.winner,
-      },
-    }));
-};
-
-// Busca específica para inscrições
-export const searchInscriptions = (
-  query: string,
-  types: string[] = ["inscription"]
-): SearchResult[] => {
-  if (!query.trim() || !types.includes("inscription")) return [];
-
-  const searchQuery = query.toLowerCase();
-
-  return detailedInscriptionsStats
-    .filter(
-      (inscription: DetailedInscriptionStats) =>
-        inscription.team_name.toLowerCase().includes(searchQuery) ||
-        inscription.championship_name.toLowerCase().includes(searchQuery) ||
-        inscription.coach_name.toLowerCase().includes(searchQuery)
-    )
-    .map((inscription: DetailedInscriptionStats) => ({
-      id: inscription.inscription_id,
-      name: `Inscrição: ${inscription.team_name} - ${inscription.championship_name}`,
-      type: "inscription",
-      subtitle: `Coach: ${inscription.coach_name} - Data: ${inscription.inscription_date} - Status: ${inscription.status}`,
-      metadata: {
-        team_name: inscription.team_name,
-        championship_name: inscription.championship_name,
-        inscription_date: inscription.inscription_date,
-        status: inscription.status,
-        coach_name: inscription.coach_name,
-      },
-    }));
 };
 
 // Search function for public catalog (championships, teams, matches)
@@ -532,4 +369,88 @@ export const searchPublicCatalog = (
   }
 
   return allPossibleResults.slice(0, 8); // Corresponds to maxResults in PublicSearchBar
+};
+
+// Busca em todos os dados (jogadores, equipes, campeonatos) - para a página inicial
+export const searchAll = (
+  query: string,
+  types: string[] = ["player", "team", "championship"]
+): SearchResult[] => {
+  if (!query.trim()) return [];
+
+  const results: SearchResult[] = [];
+  const searchQuery = query.toLowerCase();
+
+  // Buscar jogadores
+  if (types.includes("player")) {
+    const playerResults = topJogadores
+      .filter(
+        (player) =>
+          player.nome.toLowerCase().includes(searchQuery) ||
+          player.equipe.toLowerCase().includes(searchQuery)
+      )
+      .map((player, index) => ({
+        id: index + 1000, // Generate unique ID
+        name: player.nome,
+        type: "player",
+        subtitle: `${player.equipe} - KDA: ${player.kda} - ${player.winRate}`,
+        metadata: {
+          teamName: player.equipe,
+          kda: player.kda,
+          winRate: player.winRate,
+          kills: player.kills,
+        },
+      }));
+    results.push(...playerResults);
+  }
+
+  // Buscar equipes
+  if (types.includes("team")) {
+    const teamResults = topEquipes
+      .filter(
+        (team) =>
+          team.nome.toLowerCase().includes(searchQuery)
+      )
+      .map((team, index) => ({
+        id: index + 2000, // Generate unique ID
+        name: team.nome,
+        type: "team",
+        subtitle: `${team.vitorias}V - ${team.derrotas}D - ${team.winRate}`,
+        metadata: {
+          winRate: team.winRate,
+          wins: team.vitorias,
+          losses: team.derrotas,
+          points: team.pontos,
+        },
+      }));
+    results.push(...teamResults);
+  }
+
+  // Buscar campeonatos
+  if (types.includes("championship")) {
+    const championshipResults = publicChampionships
+      .filter(
+        (championship) =>
+          championship.name.toLowerCase().includes(searchQuery) ||
+          championship.description.toLowerCase().includes(searchQuery) ||
+          championship.location.toLowerCase().includes(searchQuery)
+      )
+      .map((championship) => ({
+        id: championship.championship_id,
+        name: championship.name,
+        type: "championship",
+        subtitle: `${championship.location} - ${getStatusText(
+          championship.status
+        )}`,
+        metadata: {
+          status: championship.status,
+          location: championship.location,
+          teamsCount: championship.teams_count,
+          prizePool: championship.prize_pool,
+        },
+      }));
+    results.push(...championshipResults);
+  }
+
+  return results;
 };

@@ -7,14 +7,54 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Plus, Edit, Clock, MapPin, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
-import { searchMatches } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { recentMatches } from "@/data/data-mock"; // Import recentMatches
+import { publicMatches } from "@/data/data-mock"; // Import publicMatches instead of recentMatches
+
+// Create a temporary search function for matches using publicMatches
+const searchMatches = (query: string, types: string[] = ["match"]): SearchResult[] => {
+  if (!query.trim() || !types.includes("match")) return [];
+
+  const searchQuery = query.toLowerCase();
+
+  return publicMatches
+    .filter(
+      (match) =>
+        match.teamA.name.toLowerCase().includes(searchQuery) ||
+        match.teamB.name.toLowerCase().includes(searchQuery) ||
+        match.map.toLowerCase().includes(searchQuery) ||
+        match.stage.toLowerCase().includes(searchQuery)
+    )
+    .map((match) => ({
+      id: match.match_id,
+      name: `${match.teamA.name} vs ${match.teamB.name}`,
+      type: "match",
+      subtitle: `${match.stage} - ${match.map}`,
+      metadata: {
+        championshipId: match.championship_id,
+        status: match.status,
+        map: match.map,
+        stage: match.stage,
+      },
+    }));
+};
 
 const GerenciarPartidas = () => {
   const router = useRouter();
-  // Use recentMatches from statistics-mock.ts
-  const [partidas] = useState(recentMatches);
+  // Convert publicMatches to the expected format
+  const [partidas] = useState(
+    publicMatches.map(match => ({
+      match_id: match.match_id,
+      team_a: match.teamA.name,
+      team_b: match.teamB.name,
+      score_a: match.score?.teamA,
+      score_b: match.score?.teamB,
+      map: match.map,
+      date: new Date(match.date).toLocaleDateString('pt-BR'),
+      tournament: `Championship ${match.championship_id}`,
+      winner: match.winner_team_id === match.teamA.team_id ? match.teamA.name :
+              match.winner_team_id === match.teamB.team_id ? match.teamB.name : undefined
+    }))
+  );
 
   const getStatusBadge = (status: string | undefined) => { // Status can be undefined
     // Simplified status logic, assuming status comes from recentMatches or similar structure

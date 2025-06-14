@@ -8,10 +8,10 @@ import { DashboardLayout } from "../_components/DashboardLayout";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { searchPlayers } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { detailedPlayersStats } from "@/data/data-mock";
+import { publicParticipants } from "@/data/data-mock";
 
 const GerenciarJogadores = () => {
-  const [jogadores] = useState(detailedPlayersStats.slice(0, 4)); // Usar dados reais
+  const [jogadores] = useState(publicParticipants.slice(0, 4)); // Usar dados reais
 
   const handlePlayerSearch = (result: SearchResult) => {
     // Aqui você pode implementar a navegação para detalhes do jogador

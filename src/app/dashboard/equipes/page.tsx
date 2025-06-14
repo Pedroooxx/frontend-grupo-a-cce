@@ -9,13 +9,13 @@ import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { searchTeams } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { detailedTeamsStats, detailedPlayersStats } from "@/data/data-mock"; // Import detailedPlayersStats
+import { publicTeams, publicParticipants } from "@/data/data-mock"; // Import correct data
 
 const GerenciarEquipes = () => {
-  // Use detailedTeamsStats from statistics-mock.ts
+  // Use publicTeams from data-mock.ts
   const [equipes] = useState(
-    detailedTeamsStats.map((team) => {
-      const teamPlayers = detailedPlayersStats
+    publicTeams.map((team) => {
+      const teamPlayers = publicParticipants
         .filter((player) => player.team_name === team.name && !player.is_coach) // Filter out coaches from members list
         .map((player) => ({
           nickname: player.nickname,
@@ -36,8 +36,8 @@ const GerenciarEquipes = () => {
   );
   const router = useRouter();
 
-  const totalPlayers = detailedPlayersStats.filter(player => !player.is_coach).length;
-  const totalCoaches = detailedPlayersStats.filter(player => player.is_coach).length;
+  const totalPlayers = publicParticipants.filter(player => !player.is_coach).length;
+  const totalCoaches = publicParticipants.filter(player => player.is_coach).length;
 
   const handleSearchResultClick = (result: SearchResult) => {
     if (result.type === "team") {
@@ -170,9 +170,8 @@ const GerenciarEquipes = () => {
                 <Users className="w-6 h-6 text-blue-500" />
               </div>
               <div>
-                <p className="dashboard-text-muted text-sm">Total de Equipes</p>
-                <p className="text-2xl font-bold text-white">
-                  {detailedTeamsStats.length}
+                <p className="dashboard-text-muted text-sm">Total de Equipes</p>                <p className="text-2xl font-bold text-white">
+                  {publicTeams.length}
                 </p>
               </div>
             </div>

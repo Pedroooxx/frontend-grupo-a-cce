@@ -9,17 +9,17 @@ import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { searchChampionships } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { detailedChampionshipsStats } from "@/data/data-mock"; // Import detailedChampionshipsStats
+import { publicChampionships } from "@/data/data-mock"; // Import publicChampionships instead
 
 const Campeonatos = () => {
   const router = useRouter();
   const [campeonatos] = useState(
-    detailedChampionshipsStats.map((champ) => ({
+    publicChampionships.map((champ) => ({
       id: champ.championship_id,
       nome: champ.name,
       status: champ.status, // Ensure this status matches expected values for getStatusBadge
       formato: champ.format,
-      equipesInscritas: champ.total_teams,
+      equipesInscritas: champ.teams_count,
       localizacao: champ.location,
       dataInicio: champ.start_date,
       dataFim: champ.end_date,

@@ -6,9 +6,41 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Plus, Clock11Icon, File, Edit, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
-import { searchInscriptions } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { detailedInscriptionsStats, DetailedInscriptionStats } from "@/data/data-mock";
+
+// Create a temporary search function for inscriptions since we don't have this data
+const searchInscriptions = (query: string, types: string[] = ["inscription"]): SearchResult[] => {
+  if (!query.trim() || !types.includes("inscription")) return [];
+  // Return empty array since we don't have inscription data
+  return [];
+};
+
+// Create a mock type for inscriptions
+interface DetailedInscriptionStats {
+  inscription_id: number;
+  team_name: string;
+  championship_name: string;
+  coach_name: string;
+  inscription_date: string;
+}
+
+// Mock data since detailedInscriptionsStats doesn't exist in data-mock
+const detailedInscriptionsStats: DetailedInscriptionStats[] = [
+  {
+    inscription_id: 1,
+    team_name: "Valorant Kings",
+    championship_name: "Liga de Verão 2024",
+    coach_name: "Carlos Silva",
+    inscription_date: "2024-01-10",
+  },
+  {
+    inscription_id: 2,
+    team_name: "Phoenix Squad",
+    championship_name: "Liga de Verão 2024",
+    coach_name: "Ana Costa",
+    inscription_date: "2024-01-12",
+  },
+];
 
 const Inscricoes = () => {
   const router = useRouter();
