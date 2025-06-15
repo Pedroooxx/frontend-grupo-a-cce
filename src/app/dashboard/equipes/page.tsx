@@ -3,16 +3,16 @@ import React, { useState } from "react";
 import { DashboardLayout } from "../_components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Users, Plus, Edit, Trash2, User } from "lucide-react";
+import { Users, Plus, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { searchTeams } from "@/data/search-functions";
 import { SearchResult } from "@/hooks/useSearch";
-import { publicTeams, publicParticipants } from "@/data/data-mock"; // Import correct data
+import { publicTeams, publicParticipants } from "@/data/data-mock";
+import TeamCard from "@/components/cards/TeamCard";
 
 const GerenciarEquipes = () => {
-  // Use publicTeams from data-mock.ts
+  // Map directly from publicTeams and publicParticipants
   const [equipes] = useState(
     publicTeams.map((team) => {
       const teamPlayers = publicParticipants
@@ -20,7 +20,6 @@ const GerenciarEquipes = () => {
         .map((player) => ({
           nickname: player.nickname,
           nome: player.name,
-          // You can add other player properties here if needed by the view
         }));
       return {
         id: team.team_id,
@@ -36,8 +35,12 @@ const GerenciarEquipes = () => {
   );
   const router = useRouter();
 
-  const totalPlayers = publicParticipants.filter(player => !player.is_coach).length;
-  const totalCoaches = publicParticipants.filter(player => player.is_coach).length;
+  const totalPlayers = publicParticipants.filter(
+    (player) => !player.is_coach
+  ).length;
+  const totalCoaches = publicParticipants.filter(
+    (player) => player.is_coach
+  ).length;
 
   const handleSearchResultClick = (result: SearchResult) => {
     if (result.type === "team") {
@@ -50,7 +53,7 @@ const GerenciarEquipes = () => {
       title="GERENCIAR"
       subtitle="EQUIPES"
       breadcrumbs={[
-        { label: "DASHBOARD", href: "/dashboard" }, // Corrected href
+        { label: "DASHBOARD", href: "/dashboard" },
         { label: "GERENCIAR EQUIPES" },
       ]}
     >
@@ -83,82 +86,7 @@ const GerenciarEquipes = () => {
         {/* Lista de equipes */}
         <div className="space-y-6">
           {equipes.map((equipe) => (
-            <Card key={equipe.id} className="dashboard-card border-gray-700 p-6">
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-blue-500/20 rounded-lg">
-                    <Users className="w-8 h-8 text-blue-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">
-                      {equipe.nome}
-                    </h3>
-                    <p className="dashboard-text-muted">
-                      Coach: {equipe.coach}
-                    </p>
-                    <p className="dashboard-text-muted text-sm">
-                      {equipe.campeonato}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-4">
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-gray-600 text-gray-300"
-                      onClick={() =>
-                        router.push(`/dashboard/equipes/editar/${equipe.id}`) // Example edit route
-                      }
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                      // Add delete functionality here if needed
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Membros da equipe - Placeholder, as actual member data is not in detailedTeamsStats */}
-              <div>
-                <h4 className="text-lg font-semibold text-white mb-4">
-                  Membros da Equipe ({equipe.membros.length})
-                </h4>
-                {equipe.membros.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    {equipe.membros.map((membro, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-800/50 rounded-lg p-4 text-center"
-                      >
-                        <div className="p-2 bg-gray-700 rounded-lg mb-3 mx-auto w-fit">
-                          <User className="w-6 h-6 text-gray-300" />
-                        </div>
-                        <h5 className="text-white font-medium text-sm">
-                          {/* @ts-ignore */}
-                          {membro.nickname}
-                        </h5>
-                        <p className="dashboard-text-muted text-xs">
-                          {/* @ts-ignore */}
-                          {membro.nome}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-400 text-sm">
-                    Informações de membros não disponíveis.
-                  </p>
-                )}
-              </div>
-            </Card>
+            <TeamCard key={equipe.id} equipe={equipe} />
           ))}
         </div>
 
@@ -170,7 +98,8 @@ const GerenciarEquipes = () => {
                 <Users className="w-6 h-6 text-blue-500" />
               </div>
               <div>
-                <p className="dashboard-text-muted text-sm">Total de Equipes</p>                <p className="text-2xl font-bold text-white">
+                <p className="dashboard-text-muted text-sm">Total de Equipes</p>
+                <p className="text-2xl font-bold text-white">
                   {publicTeams.length}
                 </p>
               </div>
