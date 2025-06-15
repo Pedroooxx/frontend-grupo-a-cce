@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, Edit, Trash2 } from "lucide-react";
 import type { DetailedPlayerStats } from "@/types/data-types";
+import Link from "next/link";
 
 interface ParticipantCardProps {
   player: DetailedPlayerStats;
@@ -150,12 +151,19 @@ const PlayerCard: React.FC<ParticipantCardProps> = ({ player, onEdit, onDelete }
           {Math.round(player.win_rate * 100)}%
         </span>
       </div>
+
+      <Link
+        href={`/dashboard/estatisticas/jogador/${player.participant_id}`}
+        className="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition-colors font-medium text-center block"
+      >
+        Ver Detalhes
+      </Link>
     </BaseParticipantCard>
   );
 };
 
 export const ParticipantCard: React.FC<ParticipantCardProps> = ({ player, onEdit, onDelete }) => {
-  return player.is_coach 
-    ? <CoachCard player={player} onEdit={onEdit} onDelete={onDelete} /> 
+  return player.is_coach
+    ? <CoachCard player={player} onEdit={onEdit} onDelete={onDelete} />
     : <PlayerCard player={player} onEdit={onEdit} onDelete={onDelete} />;
 };
