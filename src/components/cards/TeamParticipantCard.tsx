@@ -12,7 +12,7 @@ interface TeamParticipantCardProps {
 const TeamParticipantCard = ({ membro }: TeamParticipantCardProps) => {
   return (
     <div
-      className="bg-gray-800/50 rounded-lg p-4 text-center"
+      className="bg-gray-700/50 rounded-lg  p-4 text-center"
     >
       <div className="p-2 bg-gray-700 rounded-lg mb-3 mx-auto w-fit">
         <User className="w-6 h-6 text-gray-300" />

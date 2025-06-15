@@ -1,25 +1,12 @@
 import { Edit, Trash2, User, Users } from 'lucide-react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
-import { PublicTeam, PublicParticipant } from '@/types/data-types';
+import { TeamCardProps } from '@/types/teams';
 import TeamParticipantCard from './TeamParticipantCard';
 
-interface TeamCardProps {
-  equipe: {
-    id: number;
-    nome: string;
-    coach: string;
-    membros: Array<{
-      nickname: string;
-      nome: string;
-    }>;
-    campeonato: string;
-  }
-}
-
-const TeamCard = ({ equipe }: TeamCardProps) => {
+const TeamCard = ({ team, onEdit, onDelete }: TeamCardProps) => {
   return (
-    <Card key={equipe.id} className="dashboard-card border-gray-700 p-6">
+    <Card key={team.id} className="dashboard-card border-gray-700 p-6">
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center space-x-4">
           <div className="p-3 bg-blue-500/20 rounded-lg">
@@ -27,13 +14,13 @@ const TeamCard = ({ equipe }: TeamCardProps) => {
           </div>
           <div>
             <h3 className="text-xl font-bold text-white">
-              {equipe.nome}
+              {team.name}
             </h3>
             <p className="dashboard-text-muted">
-              Coach: {equipe.coach}
+              Coach: {team.coach}
             </p>
             <p className="dashboard-text-muted text-sm">
-              {equipe.campeonato}
+              {team.championship}
             </p>
           </div>
         </div>
@@ -44,7 +31,7 @@ const TeamCard = ({ equipe }: TeamCardProps) => {
               size="sm"
               variant="outline"
               className="border-gray-600 text-gray-300"
-              onClick={() => console.log('Edit team', equipe.id)}
+              onClick={() => onEdit && onEdit(team)}
             >
               <Edit className="w-4 h-4" />
             </Button>
@@ -52,6 +39,7 @@ const TeamCard = ({ equipe }: TeamCardProps) => {
               size="sm"
               variant="outline"
               className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+              onClick={() => onDelete && onDelete(team.id)}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -62,14 +50,17 @@ const TeamCard = ({ equipe }: TeamCardProps) => {
       {/* Membros da equipe */}
       <div>
         <h4 className="text-lg font-semibold text-white mb-4">
-          Membros da Equipe ({equipe.membros.length})
+          Membros da Equipe ({team.members.length})
         </h4>
-        {equipe.membros.length > 0 ? (
+        {team.members.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {equipe.membros.map((membro, index) => (
+            {team.members.map((member, index) => (
               <TeamParticipantCard
                 key={index}
-                membro={membro}
+                membro={{
+                  nickname: member.nickname,
+                  nome: member.name
+                }}
               />
             ))}
           </div>

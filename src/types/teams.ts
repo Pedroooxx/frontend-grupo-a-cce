@@ -1,4 +1,5 @@
 import { PublicTeam, PublicParticipant } from './data-types';
+import { z } from 'zod';
 
 // Basic team member type used in TeamCard
 export interface TeamMember {
@@ -18,6 +19,8 @@ export interface TeamDisplay {
 // Props for the TeamCard component
 export interface TeamCardProps {
   team: TeamDisplay;
+  onEdit?: (team: TeamDisplay) => void;
+  onDelete?: (id: string | number) => void;
 }
 
 /**
@@ -45,3 +48,12 @@ export function mapTeamToDisplay(
       : "Nenhum campeonato ativo",
   };
 }
+
+// Schema and types for team form
+export const teamSchema = z.object({
+  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(50, 'Nome muito longo'),
+  manager_name: z.string().min(2, 'Nome do técnico deve ter pelo menos 2 caracteres').max(50, 'Nome muito longo'),
+  member_ids: z.array(z.number()).default([])
+});
+
+export type TeamFormValues = z.infer<typeof teamSchema>;
