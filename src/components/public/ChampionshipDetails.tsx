@@ -45,7 +45,7 @@ export function ChampionshipDetails({
   matches, 
   teams 
 }: ChampionshipDetailsProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'matches' | 'teams'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'bracket' | 'matches' | 'teams'>('overview');
   const router = useRouter();
   
   const championship = getChampionshipById(championshipId);
@@ -86,6 +86,7 @@ export function ChampionshipDetails({
         <nav className="flex space-x-8">
           {[
             { id: 'overview', label: 'Visão Geral' },
+            { id: 'bracket', label: 'Chaveamento' },
             { id: 'matches', label: 'Partidas', count: matches.length },
             { id: 'teams', label: 'Equipes', count: teams.length }
           ].map((tab) => (
@@ -296,6 +297,328 @@ export function ChampionshipDetails({
               >
                 Ver Todas as Equipes
               </Button>
+            </div>
+          </Card>        </div>
+      )}      {activeTab === 'bracket' && (
+        <div className="space-y-8">
+          {/* Tournament Bracket */}
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 overflow-x-auto">
+            <h3 className="text-2xl font-bold text-white mb-8 text-center flex items-center justify-center">
+              <Trophy className="w-6 h-6 text-yellow-500 mr-2" />
+              Chaveamento do Torneio
+            </h3>
+            
+            {/* Bracket Container */}
+            <div className="min-w-[1200px] mx-auto relative">
+              {/* Round Labels */}
+              <div className="flex justify-between mb-8 text-center">
+                <div className="w-48 text-slate-400 font-semibold">Oitavas de Final</div>
+                <div className="w-32 text-slate-400 font-semibold">Quartas</div>
+                <div className="w-32 text-slate-400 font-semibold">Semifinal</div>
+                <div className="w-32 text-slate-400 font-semibold">Final</div>
+                <div className="w-32 text-slate-400 font-semibold">Semifinal</div>
+                <div className="w-32 text-slate-400 font-semibold">Quartas</div>
+                <div className="w-48 text-slate-400 font-semibold">Oitavas de Final</div>
+              </div>
+
+              {/* Bracket Structure */}
+              <div className="flex items-center justify-between relative">
+                {/* Left Side - Upper Bracket */}
+                <div className="space-y-4">
+                  {/* Round 1 - Left Side */}
+                  <div className="space-y-6">
+                    {/* Match 1 */}
+                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-slate-600 rounded">
+                          <span className="text-white font-medium">Valorant Kings</span>
+                          <span className="text-green-400 font-bold">13</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded">
+                          <span className="text-slate-300">Team Alpha</span>
+                          <span className="text-slate-400">8</span>
+                        </div>
+                      </div>
+                      <div className="absolute top-1/2 -right-6 w-6 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                    </div>
+
+                    {/* Match 2 */}
+                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-slate-600 rounded">
+                          <span className="text-white font-medium">Phoenix Squad</span>
+                          <span className="text-green-400 font-bold">13</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded">
+                          <span className="text-slate-300">Team Beta</span>
+                          <span className="text-slate-400">11</span>
+                        </div>
+                      </div>
+                      <div className="absolute top-1/2 -right-6 w-6 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                    </div>
+
+                    {/* Match 3 */}
+                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Sage Warriors</span>
+                          <span className="text-yellow-400">vs</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Team Gamma</span>
+                          <span className="text-yellow-400 text-sm">16:00</span>
+                        </div>
+                      </div>
+                      <div className="absolute top-1/2 -right-6 w-6 h-0.5 bg-yellow-500"></div>
+                    </div>
+
+                    {/* Match 4 */}
+                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Viper Elite</span>
+                          <span className="text-yellow-400">vs</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Team Delta</span>
+                          <span className="text-yellow-400 text-sm">18:00</span>
+                        </div>
+                      </div>
+                      <div className="absolute top-1/2 -right-6 w-6 h-0.5 bg-yellow-500"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quarter Finals - Left */}
+                <div className="space-y-12">
+                  {/* Quarter 1 */}
+                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 bg-slate-600 rounded">
+                        <span className="text-white text-sm">V. Kings</span>
+                        <span className="text-green-400 font-bold">13</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded">
+                        <span className="text-slate-300 text-sm">P. Squad</span>
+                        <span className="text-slate-400">9</span>
+                      </div>
+                    </div>
+                    <div className="absolute top-1/2 -right-4 w-4 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                  </div>
+
+                  {/* Quarter 2 */}
+                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white text-sm">TBD</span>
+                        <span className="text-yellow-400">vs</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white text-sm">TBD</span>
+                        <span className="text-yellow-400 text-xs">20:00</span>
+                      </div>
+                    </div>
+                    <div className="absolute top-1/2 -right-4 w-4 h-0.5 bg-yellow-500"></div>
+                  </div>
+                </div>
+
+                {/* Semi Final - Left */}
+                <div className="flex items-center">
+                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white text-sm">V. Kings</span>
+                        <span className="text-yellow-400">vs</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white text-sm">TBD</span>
+                        <span className="text-yellow-400 text-xs">Dom 19:00</span>
+                      </div>
+                    </div>
+                    <div className="absolute top-1/2 -right-4 w-4 h-0.5 bg-gradient-to-r from-pink-500 to-red-500"></div>
+                  </div>
+                </div>
+
+                {/* FINAL */}
+                <div className="flex items-center relative">
+                  <div className="w-40 bg-gradient-to-r from-yellow-900 to-yellow-800 rounded-lg border-2 border-yellow-500 p-4 relative shadow-lg shadow-yellow-500/20">
+                    <div className="text-center mb-3">
+                      <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-1" />
+                      <span className="text-yellow-400 font-bold text-sm">GRANDE FINAL</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white font-medium text-sm">TBD</span>
+                        <span className="text-yellow-400">vs</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white font-medium text-sm">TBD</span>
+                        <span className="text-yellow-400 text-xs">Dom 21:00</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Semi Final - Right */}
+                <div className="flex items-center">
+                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white text-sm">TBD</span>
+                        <span className="text-yellow-400">vs</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white text-sm">TBD</span>
+                        <span className="text-yellow-400 text-xs">Dom 19:00</span>
+                      </div>
+                    </div>
+                    <div className="absolute top-1/2 -left-4 w-4 h-0.5 bg-gradient-to-l from-pink-500 to-red-500"></div>
+                  </div>
+                </div>
+
+                {/* Quarter Finals - Right */}
+                <div className="space-y-12">
+                  {/* Quarter 3 */}
+                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white text-sm">TBD</span>
+                        <span className="text-yellow-400">vs</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white text-sm">TBD</span>
+                        <span className="text-yellow-400 text-xs">19:00</span>
+                      </div>
+                    </div>
+                    <div className="absolute top-1/2 -left-4 w-4 h-0.5 bg-yellow-500"></div>
+                  </div>
+
+                  {/* Quarter 4 */}
+                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white text-sm">TBD</span>
+                        <span className="text-yellow-400">vs</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                        <span className="text-white text-sm">TBD</span>
+                        <span className="text-yellow-400 text-xs">21:00</span>
+                      </div>
+                    </div>
+                    <div className="absolute top-1/2 -left-4 w-4 h-0.5 bg-yellow-500"></div>
+                  </div>
+                </div>
+
+                {/* Right Side - Lower Bracket */}
+                <div className="space-y-4">
+                  {/* Round 1 - Right Side */}
+                  <div className="space-y-6">
+                    {/* Match 5 */}
+                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Team Echo</span>
+                          <span className="text-yellow-400">vs</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Team Foxtrot</span>
+                          <span className="text-yellow-400 text-sm">14:00</span>
+                        </div>
+                      </div>
+                      <div className="absolute top-1/2 -left-6 w-6 h-0.5 bg-yellow-500"></div>
+                    </div>
+
+                    {/* Match 6 */}
+                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Team Golf</span>
+                          <span className="text-yellow-400">vs</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Team Hotel</span>
+                          <span className="text-yellow-400 text-sm">16:00</span>
+                        </div>
+                      </div>
+                      <div className="absolute top-1/2 -left-6 w-6 h-0.5 bg-yellow-500"></div>
+                    </div>
+
+                    {/* Match 7 */}
+                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Team India</span>
+                          <span className="text-yellow-400">vs</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Team Juliet</span>
+                          <span className="text-yellow-400 text-sm">18:00</span>
+                        </div>
+                      </div>
+                      <div className="absolute top-1/2 -left-6 w-6 h-0.5 bg-yellow-500"></div>
+                    </div>
+
+                    {/* Match 8 */}
+                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Team Kilo</span>
+                          <span className="text-yellow-400">vs</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
+                          <span className="text-white font-medium">Team Lima</span>
+                          <span className="text-yellow-400 text-sm">20:00</span>
+                        </div>
+                      </div>
+                      <div className="absolute top-1/2 -left-6 w-6 h-0.5 bg-yellow-500"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tournament Info */}
+              <div className="mt-12 text-center">
+                <div className="flex justify-center space-x-8 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                    <span className="text-slate-400">Partida Finalizada</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-0.5 bg-yellow-500"></div>
+                    <span className="text-slate-400">Partida Agendada</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Trophy className="w-4 h-4 text-yellow-500" />
+                    <span className="text-slate-400">Grande Final</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bracket Legend */}
+          <Card className="bg-slate-800 border-slate-700 p-6">
+            <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Target className="w-5 h-5 text-blue-500 mr-2" />
+              Formato do Torneio
+            </h4>
+            <div className="grid md:grid-cols-2 gap-6 text-slate-300">
+              <div>
+                <h5 className="font-medium text-white mb-2">Eliminação Dupla</h5>
+                <p className="text-sm leading-relaxed">
+                  O torneio segue o formato de eliminação dupla, onde as equipes têm uma segunda chance 
+                  na chave inferior antes da eliminação definitiva.
+                </p>
+              </div>
+              <div>
+                <h5 className="font-medium text-white mb-2">Cronograma</h5>
+                <ul className="text-sm space-y-1">
+                  <li>• Oitavas de Final: 15-16 Mar</li>
+                  <li>• Quartas de Final: 17-18 Mar</li>
+                  <li>• Semifinais: 19 Mar</li>
+                  <li>• Grande Final: 20 Mar</li>
+                </ul>
+              </div>
             </div>
           </Card>
         </div>
