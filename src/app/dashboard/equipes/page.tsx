@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useCallback } from "react";
+import { toast } from "react-hot-toast";
 import { DashboardLayout } from "../_components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -26,12 +27,17 @@ const GerenciarEquipes = () => {
     publicTeams.map((team) => mapTeamToDisplay(team, publicParticipants))
   );
 
-  const totalPlayers = publicParticipants.filter(
+  // Filter available coaches and players
+  const availableCoaches = publicParticipants.filter(
+    (participant) => participant.is_coach
+  );
+  
+  const availablePlayers = publicParticipants.filter(
     (player) => !player.is_coach
-  ).length;
-  const totalCoaches = publicParticipants.filter(
-    (player) => player.is_coach
-  ).length;
+  );
+
+  const totalPlayers = availablePlayers.length;
+  const totalCoaches = availableCoaches.length;
 
   // Find players for a specific team
   const getTeamPlayers = useCallback(
@@ -69,6 +75,14 @@ const GerenciarEquipes = () => {
 
       // Get the selected players
       const selectedPlayerIds = data.member_ids;
+      
+      // Ensure player limit
+      if (selectedPlayerIds.length > 5) {
+        toast.error("Uma equipe pode ter no máximo 5 jogadores.");
+        setIsLoading(false);
+        return;
+      }
+      
       const teamPlayers = publicParticipants
         .filter((player) => selectedPlayerIds.includes(player.participant_id))
         .map((player) => ({
@@ -79,7 +93,7 @@ const GerenciarEquipes = () => {
       const updatedTeam: TeamDisplay = {
         id: teamId,
         name: data.name,
-        coach: data.manager_name,
+        coach: data.manager_name || "Sem coach",
         members: teamPlayers,
         championship: editingTeam?.championship || "Nenhum campeonato ativo",
       };
@@ -185,9 +199,8 @@ const GerenciarEquipes = () => {
         isOpen={isOpen}
         onClose={closeModal}
         onSubmit={handleSaveTeam}
-        availablePlayers={publicParticipants.filter(
-          (player) => !player.is_coach
-        )}
+        availablePlayers={availablePlayers}
+        availableCoaches={availableCoaches}
         selectedPlayers={getSelectedPlayers()}
         defaultValues={
           editingTeam

@@ -1,10 +1,12 @@
-import { Edit, Trash2, User, Users } from 'lucide-react';
+import { Edit, Trash2, User, Users, AlertCircle } from 'lucide-react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { TeamCardProps } from '@/types/teams';
 import TeamParticipantCard from './TeamParticipantCard';
 
 const TeamCard = ({ team, onEdit, onDelete }: TeamCardProps) => {
+  const hasExcessPlayers = team.members.length > 5;
+
   return (
     <Card key={team.id} className="dashboard-card border-gray-700 p-6">
       <div className="flex items-start justify-between mb-6">
@@ -49,9 +51,18 @@ const TeamCard = ({ team, onEdit, onDelete }: TeamCardProps) => {
 
       {/* Membros da equipe */}
       <div>
-        <h4 className="text-lg font-semibold text-white mb-4">
-          Membros da Equipe ({team.members.length})
-        </h4>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold text-white">
+            Membros da Equipe ({team.members.length})
+          </h4>
+          {hasExcessPlayers && (
+            <div className="flex items-center text-orange-400 text-sm">
+              <AlertCircle className="w-4 h-4 mr-1" />
+              <span>Excede o limite de 5 jogadores</span>
+            </div>
+          )}
+        </div>
+        
         {team.members.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {team.members.map((member, index) => (

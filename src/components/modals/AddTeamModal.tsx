@@ -16,6 +16,7 @@ interface AddTeamModalProps {
   onClose: () => void;
   onSubmit: (data: TeamFormValues) => Promise<void>;
   availablePlayers: PublicParticipant[];
+  availableCoaches: PublicParticipant[];  // Nova prop
   selectedPlayers: PublicParticipant[];
   defaultValues?: Partial<TeamFormValues>;
 }
@@ -25,6 +26,7 @@ export function AddTeamModal({
   onClose, 
   onSubmit, 
   availablePlayers,
+  availableCoaches,  // Nova prop
   selectedPlayers,
   defaultValues 
 }: AddTeamModalProps) {
@@ -71,6 +73,7 @@ export function AddTeamModal({
           defaultValues={defaultValues}
           onCancel={onClose}
           availablePlayers={availablePlayers}
+          availableCoaches={availableCoaches}  // Passa a nova prop
           selectedPlayers={selectedPlayers}
         />
       </DialogContent>

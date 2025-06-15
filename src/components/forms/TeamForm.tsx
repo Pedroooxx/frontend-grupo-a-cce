@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { teamSchema, type TeamFormValues } from '@/types/teams';
+import { MAX_PLAYERS, teamSchema, type TeamFormValues } from '@/types/teams';
 import { Badge } from '@/components/ui/badge';
 import { PublicParticipant } from '@/types/data-types';
-import { X } from 'lucide-react';
+import { X, Check, AlertCircle } from 'lucide-react';
+
 
 interface TeamFormProps {
   onSubmit: (data: TeamFormValues) => Promise<void>;
@@ -19,6 +20,7 @@ interface TeamFormProps {
   onCancel?: () => void;
   availablePlayers: PublicParticipant[];
   selectedPlayers: PublicParticipant[];
+  availableCoaches: PublicParticipant[];
 }
 
 export function TeamForm({
@@ -28,10 +30,17 @@ export function TeamForm({
   onCancel,
   availablePlayers,
   selectedPlayers,
+  availableCoaches,
 }: TeamFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [teamPlayers, setTeamPlayers] = useState<PublicParticipant[]>(selectedPlayers);
   const [showPlayersList, setShowPlayersList] = useState(false);
+  const [showCoachesList, setShowCoachesList] = useState(false);
+  const [selectedCoach, setSelectedCoach] = useState<PublicParticipant | null>(
+    availableCoaches.find(coach => coach.name === defaultValues.manager_name) || null
+  );
+
+  const isAtMaxPlayers = teamPlayers.length >= MAX_PLAYERS;
 
   const {
     register,
@@ -42,7 +51,7 @@ export function TeamForm({
     resolver: zodResolver(teamSchema),
     defaultValues: {
       name: '',
-      manager_name: '',
+      manager_name: defaultValues.manager_name || undefined, // Make sure it's undefined if not provided
       member_ids: [],
       ...defaultValues,
     }
@@ -55,6 +64,11 @@ export function TeamForm({
   };
 
   const addPlayer = (player: PublicParticipant) => {
+    if (isAtMaxPlayers) {
+      toast.error(`Limite máximo de ${MAX_PLAYERS} jogadores atingido.`);
+      return;
+    }
+
     if (!teamPlayers.some(p => p.participant_id === player.participant_id)) {
       updateMemberIds([...teamPlayers, player]);
     }
@@ -64,10 +78,33 @@ export function TeamForm({
     updateMemberIds(teamPlayers.filter(p => p.participant_id !== playerId));
   };
 
+  const selectCoach = (coach: PublicParticipant) => {
+    setSelectedCoach(coach);
+    setValue('manager_name', coach.name);
+    setShowCoachesList(false);
+  };
+
+  const removeCoach = () => {
+    setSelectedCoach(null);
+    setValue('manager_name', undefined); // Set to undefined to make it optional
+  };
+
   const onSubmitForm = async (data: TeamFormValues) => {
     try {
       setSubmitting(true);
-      await onSubmit(data);
+      
+      if (teamPlayers.length > MAX_PLAYERS) {
+        toast.error(`Uma equipe pode ter no máximo ${MAX_PLAYERS} jogadores.`);
+        setSubmitting(false);
+        return;
+      }
+
+      const formData = {
+        ...data,
+        manager_name: data.manager_name || undefined // Ensure undefined instead of empty string
+      };
+
+      await onSubmit(formData);
     } catch (error) {
       toast.error('Erro ao salvar equipe');
       console.error(error);
@@ -96,15 +133,72 @@ export function TeamForm({
       </div>
 
       <div>
-        <Label htmlFor="manager_name">Nome do Técnico/Coach</Label>
-        <Input
-          id="manager_name"
-          placeholder="Nome do técnico"
-          {...register('manager_name')}
-          className="mt-1"
-          aria-required="true"
-          aria-describedby={errors.manager_name ? "manager-error" : undefined}
-        />
+        <Label htmlFor="manager_name" className="flex justify-between">
+          <span>Técnico/Coach</span> 
+          <span className="text-slate-400 text-xs">(Opcional)</span>
+        </Label>
+        <div className="relative">
+          {/* No need to register input here as we're handling it manually */}
+          
+          {selectedCoach ? (
+            <div className="flex justify-between items-center p-2 border border-slate-700 rounded-md mt-1">
+              <div className="flex items-center">
+                <span className="text-white">{selectedCoach.nickname}</span>
+                <span className="text-xs text-slate-400 ml-2">({selectedCoach.name})</span>
+              </div>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 text-red-400 hover:text-red-500"
+                onClick={removeCoach}
+              >
+                Remover
+              </Button>
+            </div>
+          ) : (
+            <div 
+              className="flex justify-between items-center p-2 border border-slate-700 rounded-md mt-1 cursor-pointer"
+              onClick={() => setShowCoachesList(!showCoachesList)}
+            >
+              <span className="text-slate-400">Selecione um coach (opcional)</span>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                className="h-7"
+              >
+                {showCoachesList ? 'Fechar' : 'Selecionar'}
+              </Button>
+            </div>
+          )}
+          
+          {showCoachesList && (
+            <div className="absolute z-10 mt-1 w-full max-h-[200px] overflow-y-auto border border-slate-700 bg-slate-900 rounded-md p-2">
+              <h4 className="text-sm font-medium text-slate-300 mb-2">Coaches disponíveis</h4>
+              <div className="space-y-2">
+                {availableCoaches.map(coach => (
+                  <div 
+                    key={coach.participant_id} 
+                    className="flex justify-between items-center p-2 hover:bg-slate-800 rounded-md cursor-pointer"
+                    onClick={() => selectCoach(coach)}
+                  >
+                    <div>
+                      <p className="text-white">{coach.nickname}</p>
+                      <p className="text-xs text-slate-400">{coach.name}</p>
+                    </div>
+                    {selectedCoach?.participant_id === coach.participant_id && (
+                      <Check className="h-4 w-4 text-green-500" />
+                    )}
+                  </div>
+                ))}
+                {availableCoaches.length === 0 && (
+                  <p className="text-slate-400 text-sm p-2">Nenhum coach disponível</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
         {errors.manager_name && (
           <p id="manager-error" className="text-red-500 text-sm mt-1" role="alert">
             {errors.manager_name.message}
@@ -113,7 +207,12 @@ export function TeamForm({
       </div>
 
       <div>
-        <Label>Jogadores da Equipe</Label>
+        <Label className="flex justify-between items-center">
+          <span>Jogadores da Equipe</span>
+          <span className={`text-xs ${isAtMaxPlayers ? 'text-orange-400' : 'text-slate-400'}`}>
+            {teamPlayers.length}/{MAX_PLAYERS} jogadores
+          </span>
+        </Label>
         <div className="mt-2 flex flex-wrap gap-2 border border-slate-700 rounded-md p-3 min-h-[100px]">
           {teamPlayers.length > 0 ? (
             teamPlayers.map(player => (
@@ -135,18 +234,28 @@ export function TeamForm({
             <p className="text-slate-400 text-sm">Nenhum jogador selecionado</p>
           )}
         </div>
+        
+        {isAtMaxPlayers && (
+          <div className="flex items-center gap-2 mt-2 text-orange-400 text-sm">
+            <AlertCircle className="h-4 w-4" />
+            <span>Limite máximo de {MAX_PLAYERS} jogadores atingido.</span>
+          </div>
+        )}
       </div>
 
       <Button 
         type="button" 
         variant="outline" 
-        className="w-full border-slate-700" 
-        onClick={() => setShowPlayersList(!showPlayersList)}
+        className={`w-full border-slate-700 ${isAtMaxPlayers ? 'opacity-50 cursor-not-allowed' : ''}`}
+        onClick={() => !isAtMaxPlayers && setShowPlayersList(!showPlayersList)}
+        disabled={isAtMaxPlayers}
       >
-        {showPlayersList ? 'Esconder jogadores disponíveis' : 'Mostrar jogadores disponíveis'}
+        {isAtMaxPlayers 
+          ? `Limite de ${MAX_PLAYERS} jogadores atingido` 
+          : (showPlayersList ? 'Esconder jogadores disponíveis' : 'Mostrar jogadores disponíveis')}
       </Button>
 
-      {showPlayersList && (
+      {showPlayersList && !isAtMaxPlayers && (
         <div className="max-h-[200px] overflow-y-auto border border-slate-700 rounded-md p-2">
           <h4 className="text-sm font-medium text-slate-300 mb-2">Jogadores disponíveis</h4>
           <div className="space-y-2">

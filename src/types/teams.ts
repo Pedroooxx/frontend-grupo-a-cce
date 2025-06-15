@@ -1,6 +1,9 @@
 import { PublicTeam, PublicParticipant } from './data-types';
 import { z } from 'zod';
 
+
+export const MAX_PLAYERS = 5;
+
 // Basic team member type used in TeamCard
 export interface TeamMember {
   nickname: string;
@@ -52,7 +55,7 @@ export function mapTeamToDisplay(
 // Schema and types for team form
 export const teamSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(50, 'Nome muito longo'),
-  manager_name: z.string().min(2, 'Nome do técnico deve ter pelo menos 2 caracteres').max(50, 'Nome muito longo'),
+  manager_name: z.string().optional(), // Changed to optional
   member_ids: z.array(z.number()).default([])
 });
 
