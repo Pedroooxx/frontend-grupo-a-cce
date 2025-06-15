@@ -3,6 +3,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { TeamCardProps } from '@/types/teams';
 import TeamParticipantCard from './TeamParticipantCard';
+import Link from 'next/link';
 
 const TeamCard = ({ team, onEdit, onDelete }: TeamCardProps) => {
   const hasExcessPlayers = team.members.length > 5;
@@ -62,7 +63,7 @@ const TeamCard = ({ team, onEdit, onDelete }: TeamCardProps) => {
             </div>
           )}
         </div>
-        
+
         {team.members.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {team.members.map((member, index) => (
@@ -81,6 +82,13 @@ const TeamCard = ({ team, onEdit, onDelete }: TeamCardProps) => {
           </p>
         )}
       </div>
+      <Link
+        href={`/dashboard/estatisticas/equipe/${team.id}`}
+        className="w-full mt-5 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition-colors font-medium text-center block"
+      >
+        Ver Detalhes
+      </Link>
+
     </Card>
   );
 }
