@@ -14,6 +14,7 @@ import { teams } from "@/data/teams";
 import { User, Edit, Trash2, Skull, Target } from "lucide-react";
 import { DashboardLayout } from "../_components/DashboardLayout";
 import type { DetailedPlayerStats } from "@/types/data-types";
+import { ParticipantCard } from "@/components/cards/ParticipantCard";
 
 export default function GerenciarJogadores() {
   const [jogadores, setJogadores] = useState<DetailedPlayerStats[]>(detailedPlayersStats.slice(0, 4));
@@ -50,8 +51,8 @@ export default function GerenciarJogadores() {
           nickname: data.nickname,
           birth_date: data.birth_date,
           phone: data.phone,
-          team_id: data.team_id,
-          team_name: teams.find((t) => t.team_id === data.team_id)?.name || "",
+          team_id: data.team_id ?? editingPlayer?.team_id ?? 0,
+          team_name: teams.find((t) => t.team_id === (data.team_id ?? editingPlayer?.team_id ?? 0))?.name || "",
           is_coach: data.is_coach ?? false,
           total_kills: editingPlayer?.total_kills || 0,
           total_deaths: editingPlayer?.total_deaths || 0,
@@ -133,50 +134,12 @@ export default function GerenciarJogadores() {
         {/* Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {jogadores.map((p) => (
-            <Card key={p.participant_id} className="dashboard-card border-gray-700 p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-blue-500/20 rounded-lg">
-                    <User className="w-8 h-8 text-blue-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{p.nickname}</h3>
-                    <p className="dashboard-text-muted text-sm">{p.name}</p>
-                    <p className="dashboard-text-muted text-xs">{p.team_name}</p>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(p)} className="border-gray-600 text-gray-300">
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleDelete(p.participant_id)} className="border-red-500 text-red-500">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="dashboard-text-muted text-sm">Contato</span>
-                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                    {p.phone}
-                  </Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="dashboard-text-muted text-sm">K/D/A</span>
-                  <span className="text-white font-medium">
-                    {p.total_kills}/{p.total_deaths}/{p.total_assists}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="dashboard-text-muted text-sm">KDA Ratio</span>
-                  <span className="text-green-400 font-medium">{p.kda_ratio}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="dashboard-text-muted text-sm">Win Rate</span>
-                  <span className="text-blue-400 font-medium">{Math.round(p.win_rate * 100)}%</span>
-                </div>
-              </div>
-            </Card>
+            <ParticipantCard
+              key={p.participant_id}
+              player={p}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
 
