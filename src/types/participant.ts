@@ -1,9 +1,14 @@
 import { z } from 'zod';
 
 export const participantSchema = z.object({
-  nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(50, 'Nome muito longo'),
-  nickname: z.string().min(2, 'Nickname deve ter pelo menos 2 caracteres').max(20, 'Nickname muito longo'),
-  birth_date: z.string().min(1, 'Data de nascimento é obrigatória')
+  nome: z.string()
+    .min(2, 'Nome deve ter pelo menos 2 caracteres')
+    .max(50, 'Nome muito longo'),
+  nickname: z.string()
+    .min(2, 'Nickname deve ter pelo menos 2 caracteres')
+    .max(20, 'Nickname muito longo'),
+  birth_date: z.string()
+    .min(1, 'Data de nascimento é obrigatória')
     .refine((date) => {
       const birthDate = new Date(date);
       const today = new Date();
@@ -14,10 +19,17 @@ export const participantSchema = z.object({
     .min(10, 'Telefone deve ter pelo menos 10 dígitos')
     .max(20, 'Telefone muito longo')
     .regex(/^\+?[0-9\s\-()]+$/, 'Formato de telefone inválido'),
-  team_id: z.union([z.string(), z.number()]).transform((val) => 
-    typeof val === 'string' ? parseInt(val, 10) : val
-  ).refine((val) => !isNaN(val) && val > 0, 'Selecione uma equipe válida'),
-  is_coach: z.boolean().default(false)
+  team_id: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) => {
+      if (val === '' || val === undefined) return undefined;
+      return typeof val === 'string' ? parseInt(val, 10) : val;
+    })
+    .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
+      message: 'Selecione uma equipe válida',
+    }),
+  is_coach: z.boolean().default(false),
 });
 
 // ✅ ADD: Runtime validation helper

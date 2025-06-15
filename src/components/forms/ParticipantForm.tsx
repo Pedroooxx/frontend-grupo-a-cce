@@ -161,7 +161,7 @@ export function ParticipantForm({
         error={errors.team_id}
         {...register('team_id')}
       >
-        <option value="">Selecione uma equipe</option>
+        <option value="">Sem equipe</option>
         {teams.map((team) => (
           <option key={team.team_id} value={team.team_id}>
             {team.name}
