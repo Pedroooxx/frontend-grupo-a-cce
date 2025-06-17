@@ -301,6 +301,13 @@ export function ChampionshipDetails({
         <div className="space-y-8">
           {/* Tournament Bracket */}
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 overflow-x-auto">
+            <div className="text-center mb-2">
+              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                {championship?.format === 'double_elimination' ? 'Eliminação Dupla' : 
+                 championship?.format === 'single_elimination' ? 'Eliminação Simples' : 
+                 championship?.format?.replace('_', ' ')}
+              </Badge>
+            </div>
             <h3 className="text-2xl font-bold text-white mb-8 text-center flex items-center justify-center">
               <Trophy className="w-6 h-6 text-yellow-500 mr-2" />
               Chaveamento do Torneio
