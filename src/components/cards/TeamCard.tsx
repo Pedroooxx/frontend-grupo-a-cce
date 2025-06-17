@@ -84,7 +84,7 @@ const TeamCard = ({ team, onEdit, onDelete }: TeamCardProps) => {
       </div>
       <Link
         href={`/dashboard/estatisticas/equipe/${team.id}`}
-        className="w-full mt-5 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition-colors font-medium text-center block"
+        className="w-[50%] max-w-90 mx-auto mt-5 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition-colors font-medium text-center block"
       >
         Ver Detalhes
       </Link>

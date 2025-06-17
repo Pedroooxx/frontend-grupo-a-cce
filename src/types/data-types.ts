@@ -19,6 +19,7 @@ export interface Championship {
 }
 
 export interface PublicChampionship {
+  prize: number;
   championship_id: number;
   name: string;
   description: string;
