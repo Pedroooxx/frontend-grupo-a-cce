@@ -39,15 +39,15 @@ interface ChampionshipDetailsProps {
   teams: Team[];
 }
 
-export function ChampionshipDetails({ 
-  championshipId, 
-  championshipName, 
-  matches, 
-  teams 
+export function ChampionshipDetails({
+  championshipId,
+  championshipName,
+  matches,
+  teams
 }: ChampionshipDetailsProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'bracket' | 'matches' | 'teams'>('overview');
   const router = useRouter();
-  
+
   const championship = getChampionshipById(championshipId);
   const standings = getStandingsByChampionshipId(championshipId);
 
@@ -61,7 +61,7 @@ export function ChampionshipDetails({
       upcoming: { color: 'bg-yellow-500/20 text-yellow-400', label: 'Em Breve' },
       ongoing: { color: 'bg-green-500/20 text-green-400', label: 'Em Andamento' }
     };
-    
+
     const config = statusConfig[status as keyof typeof statusConfig] || { color: 'bg-gray-500/20 text-gray-400', label: status };
     return (
       <Badge className={config.color}>
@@ -93,11 +93,10 @@ export function ChampionshipDetails({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`py-4 px-2 border-b-2 transition-colors ${
-                activeTab === tab.id
+              className={`py-4 px-2 border-b-2 transition-colors ${activeTab === tab.id
                   ? 'border-red-500 text-white'
                   : 'border-transparent text-slate-400 hover:text-white'
-              }`}
+                }`}
             >
               {tab.label} {tab.count ? `(${tab.count})` : ''}
             </button>
@@ -113,19 +112,19 @@ export function ChampionshipDetails({
               <div className="text-2xl font-bold text-white mb-1">{teams.length}</div>
               <div className="text-slate-400 text-sm">Equipes Participantes</div>
             </Card>
-            
+
             <Card className="bg-slate-800 border-slate-700 p-6 text-center">
               <Trophy className="w-8 h-8 text-green-500 mx-auto mb-3" />
               <div className="text-2xl font-bold text-white mb-1">{matches.length}</div>
               <div className="text-slate-400 text-sm">Partidas Totais</div>
             </Card>
-            
+
             <Card className="bg-slate-800 border-slate-700 p-6 text-center">
               <BarChart3 className="w-8 h-8 text-purple-500 mx-auto mb-3" />
               <div className="text-2xl font-bold text-white mb-1">{matches.filter(m => m.status === 'completed').length}</div>
               <div className="text-slate-400 text-sm">Partidas Finalizadas</div>
             </Card>
-            
+
             <Card className="bg-slate-800 border-slate-700 p-6 text-center">
               <Clock className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
               <div className="text-2xl font-bold text-white mb-1">{matches.filter(m => m.status === 'scheduled').length}</div>
@@ -187,12 +186,11 @@ export function ChampionshipDetails({
                   {standings.slice(0, 5).map((standing, index) => (
                     <div key={standing.team_id} className="flex items-center justify-between p-3 bg-slate-700 rounded-md">
                       <div className="flex items-center space-x-3">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          index === 0 ? 'bg-yellow-500 text-black' :
-                          index === 1 ? 'bg-gray-400 text-black' :
-                          index === 2 ? 'bg-amber-600 text-black' :
-                          'bg-slate-600 text-white'
-                        }`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-yellow-500 text-black' :
+                            index === 1 ? 'bg-gray-400 text-black' :
+                              index === 2 ? 'bg-amber-600 text-black' :
+                                'bg-slate-600 text-white'
+                          }`}>
                           {standing.position}
                         </div>
                         <span className="text-white font-medium">{standing.team_name}</span>
@@ -307,7 +305,7 @@ export function ChampionshipDetails({
               <Trophy className="w-6 h-6 text-yellow-500 mr-2" />
               Chaveamento do Torneio
             </h3>
-            
+
             {/* Bracket Container */}
             <div className="min-w-[1200px] mx-auto relative">
               {/* Round Labels */}
@@ -606,7 +604,7 @@ export function ChampionshipDetails({
               <div>
                 <h5 className="font-medium text-white mb-2">Eliminação Dupla</h5>
                 <p className="text-sm leading-relaxed">
-                  O torneio segue o formato de eliminação dupla, onde as equipes têm uma segunda chance 
+                  O torneio segue o formato de eliminação dupla, onde as equipes têm uma segunda chance
                   na chave inferior antes da eliminação definitiva.
                 </p>
               </div>
