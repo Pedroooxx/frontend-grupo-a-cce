@@ -1,26 +1,31 @@
 "use client";
-import React, { useState, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
-import { searchPlayers } from "@/data/search-functions";
-import { detailedPlayersStats } from "@/data/data-mock";
-import { SearchResult } from "@/hooks/useSearch";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useModal } from "@/hooks/useModal";
-import { AddParticipantModal } from "@/components/modals/AddParticipantModal";
-import type { ParticipantFormValues, Team } from "@/types/participant";
-import { teams } from "@/data/teams";
-import { User, Edit, Trash2, Skull, Target } from "lucide-react";
-import { DashboardLayout } from "../_components/DashboardLayout";
-import type { DetailedPlayerStats } from "@/types/data-types";
 import { ParticipantCard } from "@/components/cards/ParticipantCard";
+import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
+import { AddParticipantModal } from "@/components/modals/AddParticipantModal";
+import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { detailedPlayersStats } from "@/data/data-mock";
+import { searchPlayers } from "@/data/search-functions";
+import { teams } from "@/data/teams";
+import { useModal } from "@/hooks/useModal";
+import { SearchResult } from "@/hooks/useSearch";
+import type { DetailedPlayerStats } from "@/types/data-types";
+import type { ParticipantFormValues, Team } from "@/types/participant";
+import { Skull, Target, User } from "lucide-react";
+import { useCallback, useState } from "react";
+import { DashboardLayout } from "../_components/DashboardLayout";
 
 export default function GerenciarJogadores() {
   const [jogadores, setJogadores] = useState<DetailedPlayerStats[]>(detailedPlayersStats.slice(0, 4));
   const { isOpen, openModal, closeModal } = useModal();
   const [editingPlayer, setEditingPlayer] = useState<DetailedPlayerStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Add state for delete confirmation modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
+  const [deleteItemName, setDeleteItemName] = useState<string>("");
 
   const handleSearch = (result: SearchResult) => {
     console.log("Jogador selecionado:", result);
@@ -37,6 +42,28 @@ export default function GerenciarJogadores() {
     setEditingPlayer(p);
     openModal();
   };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (id: number, name: string) => {
+    setDeleteItemId(id);
+    setDeleteItemName(name);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Close delete confirmation modal
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setDeleteItemId(null);
+    setDeleteItemName("");
+  };
+
+  // Handle delete confirmation
+  const confirmDelete = useCallback(() => {
+    if (deleteItemId) {
+      setJogadores((prev) => prev.filter((x) => x.participant_id !== deleteItemId));
+    }
+    closeDeleteModal();
+  }, [deleteItemId]);
 
   // unified save: add or edit
   const handleSave = useCallback(
@@ -90,9 +117,13 @@ export default function GerenciarJogadores() {
     [editingPlayer, closeModal]
   );
 
+  // Modified handleDelete to open confirmation modal instead of directly deleting
   const handleDelete = useCallback((id: number) => {
-    setJogadores((prev) => prev.filter((x) => x.participant_id !== id));
-  }, []);
+    const player = jogadores.find((x) => x.participant_id === id);
+    if (player) {
+      openDeleteModal(id, player.nickname);
+    }
+  }, [jogadores]);
 
   return (
     <DashboardLayout
@@ -205,6 +236,16 @@ export default function GerenciarJogadores() {
               }
             : undefined
         }
+      />
+      
+      {/* Add delete confirmation modal */}
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+        title="Confirmar exclusão"
+        entityName={`o jogador ${deleteItemName}`}
+        isLoading={isLoading}
       />
     </DashboardLayout>
   );

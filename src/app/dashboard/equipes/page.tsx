@@ -15,12 +15,18 @@ import { useModal } from "@/hooks/useModal";
 import { AddTeamModal } from "@/components/modals/AddTeamModal";
 import { TeamDisplay, TeamFormValues, mapTeamToDisplay } from "@/types/teams";
 import { PublicTeam, PublicParticipant } from "@/types/data-types";
+import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
 
 const GerenciarEquipes = () => {
   const router = useRouter();
   const { isOpen, openModal, closeModal } = useModal();
   const [isLoading, setIsLoading] = useState(false);
   const [editingTeam, setEditingTeam] = useState<TeamDisplay | null>(null);
+
+  // Add state for delete confirmation modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState<string | number | null>(null);
+  const [deleteItemName, setDeleteItemName] = useState<string>("");
 
   // Convert PublicTeam to TeamDisplay for our component
   const [teams, setTeams] = useState<TeamDisplay[]>(
@@ -62,10 +68,36 @@ const GerenciarEquipes = () => {
     openModal();
   };
 
-  // Handle deleting a team
-  const handleDeleteTeam = (id: string | number) => {
-    setTeams(teams.filter((team) => team.id !== id));
+  // Open delete confirmation modal
+  const openDeleteModal = (id: string | number, name: string) => {
+    setDeleteItemId(id);
+    setDeleteItemName(name);
+    setIsDeleteModalOpen(true);
   };
+
+  // Close delete confirmation modal
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setDeleteItemId(null);
+    setDeleteItemName("");
+  };
+
+  // Modified to open confirmation dialog instead of deleting directly
+  const handleDeleteTeam = (id: string | number) => {
+    const team = teams.find(team => team.id === id);
+    if (team) {
+      openDeleteModal(id, team.name);
+    }
+  };
+
+  // Actual delete function after confirmation
+  const confirmDeleteTeam = useCallback(() => {
+    if (deleteItemId !== null) {
+      setTeams(teams.filter((team) => team.id !== deleteItemId));
+      toast.success("Equipe excluída com sucesso!");
+      closeDeleteModal();
+    }
+  }, [deleteItemId, teams]);
 
   // Handle saving a team (adding or updating)
   const handleSaveTeam = async (data: TeamFormValues) => {
@@ -213,6 +245,16 @@ const GerenciarEquipes = () => {
               }
             : undefined
         }
+      />
+
+      {/* Delete confirmation modal */}
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDeleteTeam}
+        title="Confirmar exclusão"
+        entityName={`a equipe ${deleteItemName}`}
+        isLoading={isLoading}
       />
     </DashboardLayout>
   );
