@@ -43,10 +43,12 @@ erDiagram
         date start_date
         date end_date
         string location
+        float prize 
         string status
         int user_id
     }
 
+// [MermaidChart: 2b332252-98ac-48ac-ac1b-3ace4474f9be]
     MATCH {
         int match_id
         int championship_id
@@ -65,9 +67,6 @@ erDiagram
         int championship_id
         int team_id
         date subscription_date
-        %%string status
-        int switching_code
-        int score
     }
 
     PARTICIPANT_STATISTICS {
@@ -82,8 +81,10 @@ erDiagram
         int spike_defuses
         boolean MVP
         int first_kill
-        %%boolean first_defuse
+        float kda 
+        int average_combat_score
         int total_score
+        %%kda, average_combat_score e total_score calculados pelo controller%%
     }
 
     AGENT {
