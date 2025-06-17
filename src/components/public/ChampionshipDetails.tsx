@@ -94,8 +94,8 @@ export function ChampionshipDetails({
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`py-4 px-2 border-b-2 transition-colors ${activeTab === tab.id
-                  ? 'border-red-500 text-white'
-                  : 'border-transparent text-slate-400 hover:text-white'
+                ? 'border-red-500 text-white'
+                : 'border-transparent text-slate-400 hover:text-white'
                 }`}
             >
               {tab.label} {tab.count ? `(${tab.count})` : ''}
@@ -187,9 +187,9 @@ export function ChampionshipDetails({
                     <div key={standing.team_id} className="flex items-center justify-between p-3 bg-slate-700 rounded-md">
                       <div className="flex items-center space-x-3">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-yellow-500 text-black' :
-                            index === 1 ? 'bg-gray-400 text-black' :
-                              index === 2 ? 'bg-amber-600 text-black' :
-                                'bg-slate-600 text-white'
+                          index === 1 ? 'bg-gray-400 text-black' :
+                            index === 2 ? 'bg-amber-600 text-black' :
+                              'bg-slate-600 text-white'
                           }`}>
                           {standing.position}
                         </div>
@@ -303,9 +303,11 @@ export function ChampionshipDetails({
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 overflow-x-auto">
             <div className="text-center mb-2">
               <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                {championship?.format === 'double_elimination' ? 'Eliminação Dupla' : 
-                 championship?.format === 'single_elimination' ? 'Eliminação Simples' : 
-                 championship?.format?.replace('_', ' ')}
+                {
+                  championship?.format === 'double_elimination' ? 'Eliminação Dupla' :
+                    championship?.format === 'single_elimination' ? 'Eliminação Simples' :
+                      championship?.format?.replace('_', ' ')
+                }
               </Badge>
             </div>
             <h3 className="text-2xl font-bold text-white mb-8 text-center flex items-center justify-center">
@@ -600,32 +602,6 @@ export function ChampionshipDetails({
               </div>
             </div>
           </div>
-
-          {/* Bracket Legend */}
-          <Card className="bg-slate-800 border-slate-700 p-6">
-            <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <Target className="w-5 h-5 text-blue-500 mr-2" />
-              Formato do Torneio
-            </h4>
-            <div className="grid md:grid-cols-2 gap-6 text-slate-300">
-              <div>
-                <h5 className="font-medium text-white mb-2">Eliminação Dupla</h5>
-                <p className="text-sm leading-relaxed">
-                  O torneio segue o formato de eliminação dupla, onde as equipes têm uma segunda chance
-                  na chave inferior antes da eliminação definitiva.
-                </p>
-              </div>
-              <div>
-                <h5 className="font-medium text-white mb-2">Cronograma</h5>
-                <ul className="text-sm space-y-1">
-                  <li>• Oitavas de Final: 15-16 Mar</li>
-                  <li>• Quartas de Final: 17-18 Mar</li>
-                  <li>• Semifinais: 19 Mar</li>
-                  <li>• Grande Final: 20 Mar</li>
-                </ul>
-              </div>
-            </div>
-          </Card>
         </div>
       )}
 
