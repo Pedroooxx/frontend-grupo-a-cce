@@ -23,7 +23,7 @@ export interface TeamDisplay {
 export interface TeamCardProps {
   team: TeamDisplay;
   onEdit?: (team: TeamDisplay) => void;
-  onDelete?: (id: string | number) => void;
+  onDelete?: (id: string | number) => void; // This is correct as is
 }
 
 /**
