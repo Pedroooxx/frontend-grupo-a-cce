@@ -1,44 +1,44 @@
 import type { Championship } from '@/types/subscription';
 
 export const championships: Championship[] = [
-  { 
-    championship_id: 1, 
+  {
+    championship_id: 1,
     name: "Liga de Verão 2024",
-    format: "Eliminação simples",
+    format: "double_elimination",
     start_date: "2024-01-15",
-    end_date: "2024-02-28",
-    location: "Online",
-    prize: 5000,
-    status: "Em andamento"
-  },
-  { 
-    championship_id: 2, 
-    name: "Torneio Regional",
-    format: "Grupos + Eliminação",
-    start_date: "2024-03-10",
-    end_date: "2024-04-20",
+    end_date: "2024-03-15",
     location: "São Paulo, SP",
-    prize: 3000,
-    status: "Inscrições abertas" 
+    prize: 50000,
+    status: "ongoing"
   },
-  { 
-    championship_id: 3, 
-    name: "Copa Universitária",
-    format: "Round Robin",
-    start_date: "2024-05-01",
-    end_date: "2024-06-15",
-    location: "Online",
-    prize: 2000,
-    status: "Inscrições abertas" 
+  {
+    championship_id: 2,
+    name: "Copa Regional",
+    format: "single_elimination", 
+    start_date: "2023-11-01",
+    end_date: "2023-12-15",
+    location: "Rio de Janeiro, RJ",
+    prize: 15000,
+    status: "completed"
   },
-  { 
-    championship_id: 4, 
+  {
+    championship_id: 3,
+    name: "Torneio Universitário",
+    format: "round_robin",
+    start_date: "2024-04-01", 
+    end_date: "2024-05-30",
+    location: "Brasília, DF",
+    prize: 20000,
+    status: "upcoming"
+  },
+  {
+    championship_id: 4,
     name: "Campeonato Nacional",
-    format: "Eliminação dupla",
+    format: "double_elimination",
     start_date: "2024-08-05",
     end_date: "2024-09-30",
     location: "Rio de Janeiro, RJ",
     prize: 10000,
-    status: "Planejado" 
-  },
+    status: "upcoming"
+  }
 ];
