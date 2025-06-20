@@ -2,24 +2,72 @@
 /**
  * Championship service with React Query
  */
-import { createReactQueryService } from './reactQueryService';
+import { createReactQueryService } from "./reactQueryService";
+import { PublicChampionship } from "@/types/data-types";
 
-export interface Championship {
+/**
+ * Championship API response interface based on backend schema
+ */
+export interface ApiChampionship {
   id: number;
   name: string;
   description: string;
-  format: string;
+  format: "double" | "simple";
   start_date: string;
   end_date: string;
   location: string;
-  status: string;
-  prize: string;
+  status: "ENCERRADO" | "ATIVO" | "PLANEJADO";
   user_id: number;
+  teams_count?: number;
+  matches_count?: number;
+  prize?: number;
 }
 
-export const championshipService = createReactQueryService<Championship>({
-  entityName: 'Campeonato',
-  endpoint: '/championship',
+/**
+ * Transform API championship to PublicChampionship format for compatibility
+ */
+export const transformApiChampionshipToPublic = (
+  apiChampionship: ApiChampionship
+): PublicChampionship => {  // Map API format to internal format
+  const formatMap: Record<string, PublicChampionship["format"]> = {
+    "double": "double",
+    "simple": "simple",
+  };
+  // Map API status to internal status - keep Portuguese values as expected by UI
+  const statusMap: Record<string, PublicChampionship["status"]> = {
+    "PLANEJADO": "PLANEJADO",
+    "ATIVO": "ATIVO", 
+    "ENCERRADO": "ENCERRADO",
+  };
+
+  // Format prize as currency if available
+  const formatPrize = (prize?: number): string => {
+    if (!prize) return "R$ 0,00";
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(prize);
+  };
+
+  return {
+    championship_id: apiChampionship.id,
+    name: apiChampionship.name,
+    description: apiChampionship.description || "",    format: formatMap[apiChampionship.format] || "simple",
+    start_date: apiChampionship.start_date,
+    end_date: apiChampionship.end_date,
+    location: apiChampionship.location,
+    status: statusMap[apiChampionship.status] || "PLANEJADO",
+    teams_count: apiChampionship.teams_count || 0,
+    matches_count: apiChampionship.matches_count || 0,
+    prize: apiChampionship.prize || 0,
+    prize_pool: formatPrize(apiChampionship.prize),
+    banner_image: undefined, // Not available from API yet
+  };
+};
+
+export const championshipService = createReactQueryService<ApiChampionship>({
+  entityName: "Campeonato",
+  endpoint: "/championships",
 });
 
 export const {
@@ -29,3 +77,43 @@ export const {
   useUpdate: useUpdateChampionship,
   useDelete: useDeleteChampionship,
 } = championshipService;
+
+/**
+ * Custom hook to get all championships with transformation to PublicChampionship format
+ */
+export const useGetAllPublicChampionships = (enabled = true) => {
+  const { data, isLoading, error, refetch } = useGetAllChampionships(enabled);
+
+  const transformedData = data?.map(transformApiChampionshipToPublic) || [];
+
+  return {
+    data: transformedData,
+    isLoading,
+    error,
+    refetch,
+  };
+};
+
+/**
+ * Custom hook to get championship by ID with transformation to PublicChampionship format
+ */
+export const useGetPublicChampionshipById = (
+  id: string | number,
+  enabled = true
+) => {
+  const { data, isLoading, error, refetch } = useGetChampionshipById(
+    id,
+    enabled
+  );
+
+  const transformedData = data
+    ? transformApiChampionshipToPublic(data)
+    : undefined;
+
+  return {
+    data: transformedData,
+    isLoading,
+    error,
+    refetch,
+  };
+};

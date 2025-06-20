@@ -1,0 +1,1143 @@
+{
+    "info": {
+        "name": "CCE-AS66A API",
+        "description": "API collection for testing and integrating with CCE-AS66A backend services",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "description": "User authentication endpoints",
+            "item": [
+                {
+                    "name": "Register",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/register",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "register"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+                        },
+                        "description": "Register a new user"
+                    }
+                },
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.token) {",
+                                    "    pm.environment.set(\"authToken\", jsonData.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "login"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+                        },
+                        "description": "Login with user credentials (saves token to environment)"
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/logout",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["auth", "logout"]
+                        },
+                        "description": "Logout the current user (requires authentication)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Users",
+            "description": "User management endpoints",
+            "item": [
+                {
+                    "name": "Get All Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/users",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["users"]
+                        },
+                        "description": "Get a list of all users"
+                    }
+                },
+                {
+                    "name": "Get User By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/users/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["users", "1"]
+                        },
+                        "description": "Get a specific user by ID"
+                    }
+                },
+                {
+                    "name": "Update User",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/users/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["users", "1"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated User Name\",\n    \"email\": \"updated@example.com\",\n    \"password\": \"newpassword123\"\n}"
+                        },
+                        "description": "Update a user's information (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Delete User",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/users/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["users", "1"]
+                        },
+                        "description": "Delete a user (requires authentication)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Championships",
+            "description": "Championship management endpoints",
+            "item": [
+                {
+                    "name": "Create Championship",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/championships",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championships"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test Championship\",\n    \"description\": \"A test championship\",\n    \"format\": \"single-elimination\",\n    \"start_date\": \"2025-07-01\",\n    \"end_date\": \"2025-07-15\",\n    \"location\": \"Test Location\",\n    \"status\": \"upcoming\",\n    \"user_id\": 1\n}"
+                        },
+                        "description": "Create a new championship (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Get All Championships",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/championships",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championships"]
+                        },
+                        "description": "Get a list of all championships"
+                    }
+                },
+                {
+                    "name": "Get Championship By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/championships/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championships", "1"]
+                        },
+                        "description": "Get a specific championship by ID"
+                    }
+                },
+                {
+                    "name": "Update Championship",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/championships/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championships", "1"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Championship\",\n    \"description\": \"An updated championship\",\n    \"format\": \"double-elimination\",\n    \"start_date\": \"2025-07-05\",\n    \"end_date\": \"2025-07-20\",\n    \"location\": \"Updated Location\",\n    \"status\": \"ongoing\",\n    \"user_id\": 1\n}"
+                        },
+                        "description": "Update a championship's information (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Delete Championship",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/championships/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championships", "1"]
+                        },
+                        "description": "Delete a championship (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Generate Bracket",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/championships/1/generate-bracket",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championships", "1", "generate-bracket"]
+                        },
+                        "description": "Generate the initial bracket for a championship (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Generate Next Phase",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/championships/1/generate-next-phase",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championships", "1", "generate-next-phase"]
+                        },
+                        "description": "Generate the next phase of matches for a championship (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Get Championship Matches",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/championships/1/matches",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championships", "1", "matches"]
+                        },
+                        "description": "Get all matches for a specific championship"
+                    }
+                },
+                {
+                    "name": "Bulk Update Matches",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/championships/1/matches/bulk-update",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championships", "1", "matches", "bulk-update"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"matches\": [\n        {\n            \"id\": 1,\n            \"winner_team_id\": 2,\n            \"score\": {\n                \"teamA\": 7,\n                \"teamB\": 13\n            }\n        },\n        {\n            \"id\": 2,\n            \"winner_team_id\": 3,\n            \"score\": {\n                \"teamA\": 13,\n                \"teamB\": 8\n            }\n        }\n    ]\n}"
+                        },
+                        "description": "Bulk update match results (requires authentication)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Teams",
+            "description": "Team management endpoints",
+            "item": [
+                {
+                    "name": "Create Team",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/teams",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["teams"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test Team\"\n}"
+                        },
+                        "description": "Create a new team (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Get All Teams",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/teams",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["teams"]
+                        },
+                        "description": "Get a list of all teams"
+                    }
+                },
+                {
+                    "name": "Get Team By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/teams/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["teams", "1"]
+                        },
+                        "description": "Get a specific team by ID"
+                    }
+                },
+                {
+                    "name": "Update Team",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/teams/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["teams", "1"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Team Name\"\n}"
+                        },
+                        "description": "Update a team's information (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Delete Team",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/teams/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["teams", "1"]
+                        },
+                        "description": "Delete a team (requires authentication and ownership)"
+                    }
+                },
+                {
+                    "name": "Validate Team",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/teams/1/validate",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["teams", "1", "validate"]
+                        },
+                        "description": "Validate if a team meets requirements for championships"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Agents",
+            "description": "Agent management endpoints",
+            "item": [
+                {
+                    "name": "Create Agent",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/agents",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["agents"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test Agent\"\n}"
+                        },
+                        "description": "Create a new agent (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Get All Agents",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/agents",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["agents"]
+                        },
+                        "description": "Get a list of all agents"
+                    }
+                },
+                {
+                    "name": "Get Agent By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/agents/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["agents", "1"]
+                        },
+                        "description": "Get a specific agent by ID"
+                    }
+                },
+                {
+                    "name": "Update Agent",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/agents/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["agents", "1"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Agent Name\"\n}"
+                        },
+                        "description": "Update an agent's information (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Delete Agent",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/agents/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["agents", "1"]
+                        },
+                        "description": "Delete an agent (requires authentication)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Matches",
+            "description": "Match management endpoints",
+            "item": [
+                {
+                    "name": "Get All Matches",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/matches",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["matches"]
+                        },
+                        "description": "Get a list of all matches"
+                    }
+                },
+                {
+                    "name": "Get Match By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/matches/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["matches", "1"]
+                        },
+                        "description": "Get a specific match by ID"
+                    }
+                },
+                {
+                    "name": "Bulk Update Matches",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/matches/bulk-update",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["matches", "bulk-update"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"matches\": [\n        {\n            \"id\": 1,\n            \"winner_team_id\": 2,\n            \"score\": {\n                \"teamA\": 7,\n                \"teamB\": 13\n            }\n        },\n        {\n            \"id\": 2,\n            \"winner_team_id\": 3,\n            \"score\": {\n                \"teamA\": 13,\n                \"teamB\": 8\n            }\n        }\n    ]\n}"
+                        },
+                        "description": "Update multiple match results in bulk (requires authentication)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Subscriptions",
+            "description": "Subscription management endpoints",
+            "item": [
+                {
+                    "name": "Create Subscription",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/subscriptions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["subscriptions"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"championship_id\": 1,\n    \"team_id\": 1\n}"
+                        },
+                        "description": "Create a new subscription (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Get All Subscriptions",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/subscriptions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["subscriptions"]
+                        },
+                        "description": "Get a list of all subscriptions"
+                    }
+                },
+                {
+                    "name": "Get Subscription By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/subscriptions/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["subscriptions", "1"]
+                        },
+                        "description": "Get a specific subscription by ID"
+                    }
+                },
+                {
+                    "name": "Update Subscription",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/subscriptions/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["subscriptions", "1"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"championship_id\": 2,\n    \"team_id\": 1\n}"
+                        },
+                        "description": "Update a subscription's information (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Delete Subscription",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/subscriptions/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["subscriptions", "1"]
+                        },
+                        "description": "Delete a subscription (requires authentication)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Participants",
+            "description": "Participant management endpoints",
+            "item": [
+                {
+                    "name": "Create Participant",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/participants",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participants"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test Participant\",\n    \"nickname\": \"TestP\",\n    \"birth_date\": \"2000-01-01\",\n    \"phone\": 123456789,\n    \"team_id\": 1,\n    \"is_coach\": false,\n    \"user_id\": 1\n}"
+                        },
+                        "description": "Create a new participant (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Get All Participants",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/participants",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participants"]
+                        },
+                        "description": "Get a list of all participants"
+                    }
+                },
+                {
+                    "name": "Get Participant By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/participants/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participants", "1"]
+                        },
+                        "description": "Get a specific participant by ID"
+                    }
+                },
+                {
+                    "name": "Update Participant",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/participants/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participants", "1"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Participant\",\n    \"nickname\": \"UPtest\",\n    \"birth_date\": \"2000-02-02\",\n    \"phone\": 987654321,\n    \"team_id\": 2,\n    \"is_coach\": true,\n    \"user_id\": 1\n}"
+                        },
+                        "description": "Update a participant's information (requires authentication and ownership)"
+                    }
+                },
+                {
+                    "name": "Delete Participant",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/participants/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participants", "1"]
+                        },
+                        "description": "Delete a participant (requires authentication and ownership)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Participant Statistics",
+            "description": "Participant statistics endpoints",
+            "item": [
+                {
+                    "name": "Create Participant Statistics",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/participant-stats",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participant-stats"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"match_id\": 1,\n    \"participant_id\": 1,\n    \"agent_id\": 1,\n    \"kills\": 15,\n    \"assists\": 8,\n    \"deaths\": 10,\n    \"spike_plants\": 2,\n    \"spike_defuses\": 1,\n    \"MVP\": true,\n    \"first_kill\": true\n}"
+                        },
+                        "description": "Create participant match statistics (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Get All Participant Statistics",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/participant-stats",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participant-stats"]
+                        },
+                        "description": "Get all participant statistics records"
+                    }
+                },
+                {
+                    "name": "Get Participant Statistics By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/participant-stats/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participant-stats", "1"]
+                        },
+                        "description": "Get participant statistics by ID"
+                    }
+                },
+                {
+                    "name": "Update Participant Statistics",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/participant-stats/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participant-stats", "1"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"match_id\": 1,\n    \"participant_id\": 1,\n    \"agent_id\": 2,\n    \"kills\": 20,\n    \"assists\": 10,\n    \"deaths\": 5,\n    \"spike_plants\": 3,\n    \"spike_defuses\": 0,\n    \"MVP\": true,\n    \"first_kill\": false\n}"
+                        },
+                        "description": "Update participant match statistics (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Delete Participant Statistics",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/participant-stats/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participant-stats", "1"]
+                        },
+                        "description": "Delete participant statistics record (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Get Stats By Player",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/participant-stats/player/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participant-stats", "player", "1"]
+                        },
+                        "description": "Get all statistics for a specific player"
+                    }
+                },
+                {
+                    "name": "Get Stats By Match",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/participant-stats/match/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participant-stats", "match", "1"]
+                        },
+                        "description": "Get all participant statistics for a specific match"
+                    }
+                },
+                {
+                    "name": "Get Top Players",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/participant-stats/top-players/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participant-stats", "top-players", "1"]
+                        },
+                        "description": "Get top players statistics for a specific championship"
+                    }
+                },
+                {
+                    "name": "Get Team Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/participant-stats/team/1/stats",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["participant-stats", "team", "1", "stats"]
+                        },
+                        "description": "Get aggregated statistics for a specific team"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Championship Statistics",
+            "description": "Championship statistics endpoints",
+            "item": [
+                {
+                    "name": "Create Championship Statistics",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/championship-stats",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championship-stats"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"championship_id\": 1,\n    \"participant_id\": 1,\n    \"team_id\": 1,\n    \"kills\": 50,\n    \"assists\": 30,\n    \"deaths\": 25,\n    \"spike_plants\": 10,\n    \"spike_defuses\": 5,\n    \"MVPs\": 3,\n    \"first_kills\": 8\n}"
+                        },
+                        "description": "Create championship statistics record (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Get All Championship Statistics",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/championship-stats",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championship-stats"]
+                        },
+                        "description": "Get all championship statistics records"
+                    }
+                },
+                {
+                    "name": "Get Championship Statistics By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/championship-stats/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championship-stats", "1"]
+                        },
+                        "description": "Get championship statistics by ID"
+                    }
+                },
+                {
+                    "name": "Update Championship Statistics",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/championship-stats/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championship-stats", "1"]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"championship_id\": 1,\n    \"participant_id\": 1,\n    \"team_id\": 1,\n    \"kills\": 65,\n    \"assists\": 35,\n    \"deaths\": 20,\n    \"spike_plants\": 12,\n    \"spike_defuses\": 6,\n    \"MVPs\": 5,\n    \"first_kills\": 10\n}"
+                        },
+                        "description": "Update championship statistics (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Delete Championship Statistics",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{authToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/championship-stats/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championship-stats", "1"]
+                        },
+                        "description": "Delete championship statistics record (requires authentication)"
+                    }
+                },
+                {
+                    "name": "Get Championship Overview",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/championship-stats/overview/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championship-stats", "overview", "1"]
+                        },
+                        "description": "Get overall statistics and summary for a championship"
+                    }
+                },
+                {
+                    "name": "Get Team Statistics",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/championship-stats/overview/1/teams",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championship-stats", "overview", "1", "teams"]
+                        },
+                        "description": "Get team statistics for a championship"
+                    }
+                },
+                {
+                    "name": "Get All Player Stats in Championship",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/championship-stats/overview/1/players",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championship-stats", "overview", "1", "players"]
+                        },
+                        "description": "Get all player statistics for a championship"
+                    }
+                },
+                {
+                    "name": "Get Stats By Player ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/championship-stats/player/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["championship-stats", "player", "1"]
+                        },
+                        "description": "Get championship statistics for a specific player"
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000",
+            "type": "string",
+            "description": "The base URL of your API (change this to match your deployment)"
+        }
+    ]
+}

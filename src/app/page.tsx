@@ -1,8 +1,9 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import { Search, Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, User } from "lucide-react";
+import { Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, User } from "lucide-react";
 import Link from "next/link";
-import { publicChampionships, publicMatches } from '@/data/data-mock';
+import { publicMatches } from '@/data/data-mock';
+import { useGetAllPublicChampionships } from '@/services/championshipService';
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar"; // Updated import
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -16,6 +17,9 @@ export default function HomePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  // Fetch championships from API
+  const { data: publicChampionships = [], isLoading: isLoadingChampionships } = useGetAllPublicChampionships();
+
   useEffect(() => {
     if (status !== 'loading') {
       setIsInitialLoad(false);
@@ -27,6 +31,33 @@ export default function HomePage() {
       // Don't auto-redirect, let user choose to go to dashboard
     }
   }, [status]);
+  // Helper function to render status badge
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      ATIVO: { color: 'bg-green-500/20 text-green-400', label: 'Ativo' },
+      ENCERRADO: { color: 'bg-blue-500/20 text-blue-400', label: 'Encerrado' },
+      PLANEJADO: { color: 'bg-purple-500/20 text-purple-400', label: 'Planejado' },
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PLANEJADO;
+    return (
+      <span className={`px-3 py-1 ${config.color} rounded-full text-sm`}>
+        {config.label}
+      </span>
+    );
+  };
+
+  // Helper function to get action text based on status
+  const getActionText = (status: string) => {
+    switch (status) {
+      case 'ENCERRADO':
+        return 'Ver Resultados';
+      case 'ATIVO':
+        return 'Ver Detalhes';
+      default:
+        return 'A seguir';
+    }
+  };
 
   const handleAuthAction = (action: 'signin' | 'signup' | 'dashboard') => {
     if (action === 'dashboard') {
@@ -35,9 +66,8 @@ export default function HomePage() {
       router.push(`/auth/${action}`);
     }
   };
-
-  // Only show loading on initial load when there's no session data
-  const shouldShowLoading = status === "loading" && isInitialLoad && !session;
+  // Only show loading on initial load when there's no session data or when championships are loading
+  const shouldShowLoading = (status === "loading" && isInitialLoad && !session) || (isInitialLoad && isLoadingChampionships);
 
   if (shouldShowLoading) {
     return (
@@ -66,7 +96,7 @@ export default function HomePage() {
         path = `/campeonatos/${result.id}`;
         break;
       case 'team':
-        const teamMatch = publicMatches.find(match => 
+        const teamMatch = publicMatches.find(match =>
           match.teamA.team_id === result.id || match.teamB.team_id === result.id
         );
         if (teamMatch) {
@@ -94,10 +124,10 @@ export default function HomePage() {
       {/* Hero Banner */}
       <section className="relative bg-gradient-to-b from-slate-800 to-slate-900 py-12 md:py-20 overflow-hidden">
         <div className="absolute inset-0 w-full h-full">
-          <video 
-            autoPlay 
-            muted 
-            loop 
+          <video
+            autoPlay
+            muted
+            loop
             playsInline
             className="w-full h-full object-cover opacity-20"
           >
@@ -121,20 +151,20 @@ export default function HomePage() {
                 </p>
               </div>
             )}
-            
+
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6">
-              Gerencie Campeonatos de 
+              Gerencie Campeonatos de
               <span className="text-red-500"> Valorant</span>
             </h1>
             <p className="text-base md:text-xl text-slate-300 mb-6 md:mb-8 leading-relaxed px-4">
-              A plataforma completa para criar, gerenciar e acompanhar campeonatos de Valorant. 
+              A plataforma completa para criar, gerenciar e acompanhar campeonatos de Valorant.
               Controle estatísticas, organize equipes e monitore o desempenho dos jogadores em tempo real.
             </p>
-              
+
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center mb-8 md:mb-12 px-4">
               {!session ? (
                 <>
-                  <button 
+                  <button
                     onClick={() => handleAuthAction('signup')}
                     className="w-full sm:w-auto px-6 md:px-8 py-3 bg-red-500 hover:bg-red-600 text-white transition-colors rounded-md flex items-center justify-center text-base md:text-lg"
                   >
@@ -147,7 +177,7 @@ export default function HomePage() {
                 </>
               ) : (
                 <>
-                  <button 
+                  <button
                     onClick={() => handleAuthAction('dashboard')}
                     className="w-full sm:w-auto px-6 md:px-8 py-3 bg-red-500 hover:bg-red-600 text-white transition-colors rounded-md flex items-center justify-center text-base md:text-lg"
                   >
@@ -164,7 +194,7 @@ export default function HomePage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-2xl mx-auto px-4">
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-red-500 mb-1 md:mb-2">15+</div>                
+                <div className="text-2xl md:text-3xl font-bold text-red-500 mb-1 md:mb-2">15+</div>
                 <div className="text-slate-400 text-xs md:text-sm">Campeonatos Ativos</div>
               </div>
               <div className="text-center">
@@ -187,91 +217,83 @@ export default function HomePage() {
       {/* Search Section */}
       <section id="campeonatos" className="py-12 md:py-16 bg-slate-900">
         <div className="container mx-auto px-4">          <div className="text-center mb-8 md:mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-              Encontre Campeonatos, Equipes e Partidas
-            </h2>            
-            <p className="text-slate-400 max-w-2xl mx-auto text-sm md:text-base px-4">
-              Busque por campeonatos ativos, equipes participantes ou partidas específicas. 
-              Acompanhe estatísticas em tempo real e veja os melhores desempenhos.
-            </p>
-          </div>          <div className="max-w-2xl mx-auto mb-8 md:mb-12 px-4">              
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            Encontre Campeonatos, Equipes e Partidas
+          </h2>
+          <p className="text-slate-400 max-w-2xl mx-auto text-sm md:text-base px-4">
+            Busque por campeonatos ativos, equipes participantes ou partidas específicas.
+            Acompanhe estatísticas em tempo real e veja os melhores desempenhos.
+          </p>
+        </div>          <div className="max-w-2xl mx-auto mb-8 md:mb-12 px-4">
             <UniversalSearchBar
               searchFunction={searchPublicCatalog}
               config={searchConfig}
               onResultClick={handleResultClick} // Handle click on search results
               className="w-full"
             />
-          </div>{/* Featured Championships */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col min-h-[280px]">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-white">Liga de Verão 2024</h3>
-                <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">
-                  Em andamento
-                </span>
+          </div>{/* Featured Championships */}          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {isLoadingChampionships ? (
+              // Loading state
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="bg-slate-800 border border-slate-700 p-6 rounded-md animate-pulse">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="h-6 bg-slate-600 rounded w-3/4"></div>
+                    <div className="h-6 bg-slate-600 rounded w-20"></div>
+                  </div>
+                  <div className="h-4 bg-slate-600 rounded w-full mb-2"></div>
+                  <div className="h-4 bg-slate-600 rounded w-2/3 mb-6"></div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="h-4 bg-slate-600 rounded w-16"></div>
+                    <div className="h-4 bg-slate-600 rounded w-16"></div>
+                  </div>
+                  <div className="h-10 bg-slate-600 rounded w-full"></div>
+                </div>
+              ))
+            ) : publicChampionships.length > 0 ? (
+              // Display first 3 championships from API
+              publicChampionships.slice(0, 3).map((championship) => (
+                <div
+                  key={championship.championship_id}
+                  className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col min-h-[280px]"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-semibold text-white">{championship.name}</h3>
+                    {getStatusBadge(championship.status)}
+                  </div>
+                  <p className="text-slate-400 mb-6 flex-1">
+                    {championship.description || 'Campeonato em andamento'}
+                  </p>
+                  <div className="flex items-center justify-between text-sm text-slate-400 mb-6">
+                    <span>
+                      <Users className="w-4 h-4 inline mr-1" />
+                      {championship.teams_count > 0 ? `${championship.teams_count} equipes` : 'Equipes TBD'}
+                    </span>
+                    <span>
+                      <Calendar className="w-4 h-4 inline mr-1" />
+                      {championship.matches_count > 0 ? `${championship.matches_count} partidas` : 'Partidas TBD'}
+                    </span>
+                  </div>
+                  <Link
+                    href={`/campeonatos/${championship.championship_id}`}
+                    className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-3 rounded-md flex items-center justify-center mt-auto"
+                  >
+                    {getActionText(championship.status)} <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </div>
+              ))
+            ) : (
+              // Empty state
+              <div className="col-span-full text-center py-12">
+                <Trophy className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-slate-300 mb-2">Nenhum campeonato encontrado</h3>
+                <p className="text-slate-400">Novos campeonatos serão exibidos aqui em breve.</p>
               </div>
-              <p className="text-slate-400 mb-6 flex-1">
-                Campeonato principal da temporada com 32 equipes participantes
-              </p>
-              <div className="flex items-center justify-between text-sm text-slate-400 mb-6">
-                <span><Users className="w-4 h-4 inline mr-1" />32 equipes</span>
-                <span><Calendar className="w-4 h-4 inline mr-1" />12 partidas</span>
-              </div>
-              <Link 
-                href="/campeonatos/1"
-                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-3 rounded-md flex items-center justify-center mt-auto"
-              >
-                Ver Detalhes <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </div>
-
-            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col min-h-[280px]">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-white">Copa Regional</h3>
-                <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
-                  Finalizado
-                </span>
-              </div>
-              <p className="text-slate-400 mb-6 flex-1">
-                Torneio regional com foco em equipes emergentes
-              </p>
-              <div className="flex items-center justify-between text-sm text-slate-400 mb-6">
-                <span><Users className="w-4 h-4 inline mr-1" />16 equipes</span>
-                <span><Calendar className="w-4 h-4 inline mr-1" />8 partidas</span>
-              </div>
-              <Link 
-                href="/campeonatos/2"
-                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-3 rounded-md flex items-center justify-center mt-auto"
-              >
-                Ver Resultados <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </div>
-
-            <div className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col min-h-[280px]">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-white">Torneio Universitário</h3>
-                <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
-                  Inscrições Abertas
-                </span>
-              </div>
-              <p className="text-slate-400 mb-6 flex-1">
-                Competição exclusiva para equipes universitárias
-              </p>
-              <div className="flex items-center justify-between text-sm text-slate-400 mb-6">
-                <span><Users className="w-4 h-4 inline mr-1" />24 vagas</span>
-                <span><Calendar className="w-4 h-4 inline mr-1" />Início em breve</span>
-              </div>
-              <Link 
-                href="/campeonatos/3"
-                className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-3 rounded-md flex items-center justify-center mt-auto"
-              >
-                Inscrever-se <ArrowRight className="w-4 h-4 ml-2" />              </Link>
-            </div>
+            )}
           </div>
-          
+
           {/* View All Link */}
           <div className="text-center mt-8">
-            <Link 
+            <Link
               href="/campeonatos"
               className="inline-flex items-center px-6 py-3 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors rounded-md"
             >
@@ -299,7 +321,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg md:text-xl font-semibold text-white mb-3">Gestão de Campeonatos</h3>
               <p className="text-slate-400 text-sm md:text-base">
-                Crie e gerencie campeonatos completos com chaveamentos automáticos, 
+                Crie e gerencie campeonatos completos com chaveamentos automáticos,
                 controle de inscrições e acompanhamento de resultados.
               </p>
             </div>
@@ -310,7 +332,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg md:text-xl font-semibold text-white mb-3">Estatísticas Detalhadas</h3>
               <p className="text-slate-400 text-sm md:text-base">
-                Acompanhe KDA, MVPs, performance por mapa e agente. 
+                Acompanhe KDA, MVPs, performance por mapa e agente.
                 Análises completas para jogadores e equipes.
               </p>
             </div>
@@ -321,7 +343,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg md:text-xl font-semibold text-white mb-3">Gestão de Equipes</h3>
               <p className="text-slate-400 text-sm md:text-base">
-                Organize equipes, gerencie jogadores e coaches. 
+                Organize equipes, gerencie jogadores e coaches.
                 Controle completo sobre participantes e permissões.
               </p>
             </div>
@@ -334,7 +356,7 @@ export default function HomePage() {
             {!session ? 'Pronto para Começar?' : 'Continue Organizando'}
           </h2>
           <p className="text-slate-400 mb-8 max-w-2xl mx-auto">
-            {!session 
+            {!session
               ? 'Crie sua conta gratuitamente e comece a organizar seus próprios campeonatos de Valorant hoje mesmo.'
               : 'Acesse seu dashboard para continuar gerenciando seus campeonatos e equipes.'
             }
@@ -342,14 +364,14 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {!session ? (
               <>
-                <button 
+                <button
                   onClick={() => handleAuthAction('signup')}
                   className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white transition-colors rounded-md flex items-center justify-center text-lg"
                 >
                   <UserPlus className="w-5 h-5 mr-2" />
                   Criar Conta Gratuita
                 </button>
-                <button 
+                <button
                   onClick={() => handleAuthAction('signin')}
                   className="px-8 py-3 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors rounded-md flex items-center justify-center text-lg"
                 >
@@ -358,7 +380,7 @@ export default function HomePage() {
                 </button>
               </>
             ) : (
-              <button 
+              <button
                 onClick={() => handleAuthAction('dashboard')}
                 className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white transition-colors rounded-md flex items-center justify-center text-lg"
               >
@@ -422,9 +444,9 @@ export default function HomePage() {
                   </div>
                 </Link>
               </div>
-              
-              <Link 
-                href="/campeonatos" 
+
+              <Link
+                href="/campeonatos"
                 className="inline-flex items-center mt-6 text-red-500 hover:text-red-400 transition-colors"
               >
                 Ver todos os campeonatos
