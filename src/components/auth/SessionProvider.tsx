@@ -1,6 +1,7 @@
 'use client'
 
 import { SessionProvider as NextAuthSessionProvider } from 'next-auth/react'
+import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
 
 export function SessionProvider({ 
   children 
@@ -9,7 +10,9 @@ export function SessionProvider({
 }) {
   return (
     <NextAuthSessionProvider>
-      {children}
+      <ReactQueryProvider>
+        {children}
+      </ReactQueryProvider>
     </NextAuthSessionProvider>
   )
 }
