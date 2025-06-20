@@ -36,17 +36,28 @@ Before you begin, ensure you have the following installed:
 3. **Set up environment variables:**
 
    ```bash
-   cp .env.example .env
+   cp .env.example .env.local
    ```
 
-   Edit the `.env` file and configure the required variables:
+   Edit the `.env.local` file and configure the required variables:
 
    ```bash
    # Generate a secure secret for NextAuth
    openssl rand -base64 32
+   
+   # Configure your backend API URL
+   NEXT_PUBLIC_API_URL=http://localhost:3001
    ```
 
-   Update your `.env` file with the generated secret and other configurations.
+   Update your `.env.local` file with the generated secret and other configurations.
+   
+   Different environments use different env files:
+   
+   ```bash
+   .env.local         # Local overrides for all environments
+   .env.development   # Development environment (when running pnpm dev)
+   .env.production    # Production environment (when running pnpm build/start)
+   ```
 
 4. **Approve build scripts (if needed):**
 
@@ -181,3 +192,21 @@ Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+## 🧩 Git Integration
+
+For better Git integration and commit management, follow these steps:
+
+1. **Stage changes interactively**:
+
+   ```bash
+   git add -p
+   ```
+
+   This command allows you to stage changes interactively, helping you separate your current changes into different commits.
+
+2. **Commit your changes**:
+
+   ```bash
+   git commit -m "Your commit message here"
+   ```
