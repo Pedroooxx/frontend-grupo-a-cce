@@ -1,5 +1,6 @@
 import NextAuth, { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import config from "@/lib/config"
 
 const authOptions: NextAuthOptions = {
   providers: [
@@ -10,55 +11,82 @@ const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // TODO: Replace with actual authentication logic
-        // This is a mock implementation for development
-        if (credentials?.email === "admin@esports.com" && credentials?.password === "admin123") {
-          return {
-            id: "1",
-            email: "admin@esports.com",
-            name: "Admin User",
-            role: "admin"
+        try {
+          console.log("NextAuth authorize with:", credentials);
+          
+          // Support for the demo credentials in UI
+          if (credentials?.email === "admin@esports.com" && credentials?.password === "admin123") {
+            console.log("Using demo credentials");
+            return {
+              id: "demo-1",
+              email: "admin@esports.com",
+              name: "Admin User",
+              role: "admin"
+            };
           }
-        }
-        
-        // For demo purposes, accept any email/password combo
-        if (credentials?.email && credentials?.password) {
-          return {
-            id: "2",
-            email: credentials.email,
-            name: credentials.email.split('@')[0],
-            role: "user"
+          
+          // Call the actual API for authentication using config
+          const response = await fetch(`${config.apiUrl}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: credentials?.email,
+              password: credentials?.password
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || "Authentication failed");
           }
+          
+          // Return user data with token
+          if (data && data.token) {
+            return {
+              id: data.user?.id?.toString() || "0",
+              email: credentials?.email || "",
+              name: data.user?.name || credentials?.email?.split('@')[0] || "",
+              role: "user", // You can add role handling if your API provides roles
+              token: data.token // Store the token in the user object
+            };
+          }
+          
+          return null;
+        } catch (error) {
+          console.error("Auth error:", error);
+          return null;
         }
-        
-        return null
       }
     })
   ],
   pages: {
     signIn: '/auth/signin',
-    signUp: '/auth/signup',
+    // NextAuth doesn't have a signUp page by default
+    // We'll handle registration separately
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
+        token.role = user.role;
+        token.token = user.token; // Store the API token in the JWT
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
-      if (token) {
+      if (token && session.user) {
         session.user.id = token.sub!
         session.user.role = token.role as string
+        session.user.token = token.token as string
       }
       return session
     }
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: config.auth.sessionMaxAge, // Use from config
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: config.auth.secret,
 }
 
 const handler = NextAuth(authOptions)
