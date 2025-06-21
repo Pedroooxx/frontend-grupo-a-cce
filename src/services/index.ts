@@ -11,6 +11,7 @@ export * from './participantService';
 export * from './teamService';
 export * from './championshipService';
 export * from './subscriptionService';
+export * from './matchService';
 
 // Base services (used by other services)
 export * from './reactQueryService';

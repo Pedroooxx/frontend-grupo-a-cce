@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { Search, Trophy, Users, Calendar, Target, ArrowRight, UserPlus, LogIn, User } from "lucide-react";
 import Link from "next/link";
-import { publicChampionships, publicMatches } from '@/data/data-mock';
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar"; // Updated import
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -13,6 +12,7 @@ import { SearchConfig, SearchResult } from "@/hooks/useSearch"; // Import Search
 import { useGetAllChampionships, type Championship } from "@/services/championshipService";
 import { useGetAllSubscriptions } from "@/services/subscriptionService";
 import { useGetAllTeams } from "@/services/teamService";
+import { useGetAllMatches, type Match } from "@/services/matchService";
 
 export default function HomePage() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -31,13 +31,19 @@ export default function HomePage() {
     isLoading: isLoadingSubscriptions,
     isError: isSubscriptionsError,
   } = useGetAllSubscriptions();
-
   // Fetch teams data
   const {
     data: teamsData = [],
     isLoading: isLoadingTeams,
     isError: isTeamsError,
   } = useGetAllTeams();
+
+  // Fetch matches data
+  const {
+    data: matchesData = [],
+    isLoading: isLoadingMatches,
+    isError: isMatchesError,
+  } = useGetAllMatches();
 
   useEffect(() => {
     if (status !== 'loading') {
@@ -58,19 +64,19 @@ export default function HomePage() {
       console.log('No subscriptions data available');
       return 0;
     }
-    
+
     // Filter subscriptions by championship_id to get unique teams
     const championshipSubscriptions = subscriptionsData.filter(
       subscription => subscription.championship_id === championshipId
     );
-    
+
     console.log(`Championship ${championshipId} subscriptions:`, championshipSubscriptions);
-    
+
     // Get unique team IDs for this championship
     const uniqueTeamIds = new Set(championshipSubscriptions.map(sub => sub.team_id));
-    
+
     console.log(`Championship ${championshipId} unique team IDs:`, Array.from(uniqueTeamIds));
-    
+
     return uniqueTeamIds.size;
   };
 
@@ -110,10 +116,9 @@ export default function HomePage() {
     switch (result.type) {
       case 'championship':
         path = `/campeonatos/${result.id}`;
-        break;
-      case 'team':
-        const teamMatch = publicMatches.find(match =>
-          match.teamA.team_id === result.id || match.teamB.team_id === result.id
+        break; case 'team':
+        const teamMatch = matchesData.find((match: Match) =>
+          match.teamA_id === result.id || match.teamB_id === result.id
         );
         if (teamMatch) {
           path = `/campeonatos/${teamMatch.championship_id}/equipes/${result.id}`;
@@ -122,7 +127,7 @@ export default function HomePage() {
         }
         break;
       case 'match':
-        const match = publicMatches.find(m => m.match_id === result.id);
+        const match = matchesData.find((m: Match) => m.match_id === result.id);
         if (match) {
           path = `/campeonatos/${match.championship_id}/partidas/${result.id}`;
         }
@@ -175,9 +180,7 @@ export default function HomePage() {
             <p className="text-base md:text-xl text-slate-300 mb-6 md:mb-8 leading-relaxed px-4">
               A plataforma completa para criar, gerenciar e acompanhar campeonatos de Valorant.
               Controle estatísticas, organize equipes e monitore o desempenho dos jogadores em tempo real.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center mb-8 md:mb-12 px-4">
+            </p>            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center mb-8 md:mb-12 px-4">
               {!session ? (
                 <>
                   <button
@@ -187,8 +190,11 @@ export default function HomePage() {
                     <Trophy className="w-4 md:w-5 h-4 md:h-5 mr-2" />
                     Criar Meu Campeonato
                   </button>
-                  <button className="w-full sm:w-auto px-6 md:px-8 py-3 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors rounded-md text-base md:text-lg">
-                    Ver Campeonatos Ativos
+                  <button 
+                    onClick={() => router.push('/campeonatos')}
+                    className="w-full sm:w-auto px-6 md:px-8 py-3 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors rounded-md text-base md:text-lg"
+                  >
+                    Ver Campeonatos
                   </button>
                 </>
               ) : (
@@ -200,8 +206,11 @@ export default function HomePage() {
                     <Trophy className="w-4 md:w-5 h-4 md:h-5 mr-2" />
                     Ir para Dashboard
                   </button>
-                  <button className="w-full sm:w-auto px-6 md:px-8 py-3 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors rounded-md text-base md:text-lg">
-                    Ver Campeonatos Ativos
+                  <button 
+                    onClick={() => router.push('/campeonatos')}
+                    className="w-full sm:w-auto px-6 md:px-8 py-3 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors rounded-md text-base md:text-lg"
+                  >
+                    Ver Campeonatos
                   </button>
                 </>
               )}
@@ -248,7 +257,7 @@ export default function HomePage() {
               className="w-full"
             />
           </div>          {/* Featured Championships */}          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {isLoadingChampionships || isLoadingSubscriptions || isLoadingTeams ? (
+            {isLoadingChampionships || isLoadingSubscriptions || isLoadingTeams || isLoadingMatches ? (
               // Loading state
               Array.from({ length: 3 }).map((_, index) => (
                 <div key={index} className="bg-slate-800 border border-slate-700 p-6 rounded-md flex flex-col min-h-[280px] animate-pulse">
@@ -263,16 +272,16 @@ export default function HomePage() {
                   </div>
                   <div className="h-10 bg-slate-700 rounded"></div>
                 </div>
-              ))            ) : isChampionshipsError || isSubscriptionsError || isTeamsError ? (
-              // Error state
-              <div className="col-span-full text-center py-12">
-                <p className="text-red-400 text-lg">Erro ao carregar dados</p>
-              </div>
-            ) : championshipsData.length === 0 ? (
-              // Empty state
-              <div className="col-span-full text-center py-12">
-                <p className="text-slate-400 text-lg">Nenhum campeonato encontrado</p>
-              </div>            ) : (
+              ))) : isChampionshipsError || isSubscriptionsError || isTeamsError ? (
+                // Error state
+                <div className="col-span-full text-center py-12">
+                  <p className="text-red-400 text-lg">Erro ao carregar dados</p>
+                </div>
+              ) : championshipsData.length === 0 ? (
+                // Empty state
+                <div className="col-span-full text-center py-12">
+                  <p className="text-slate-400 text-lg">Nenhum campeonato encontrado</p>
+                </div>) : (
               // Render championships from API
               championshipsData.slice(0, 3).map((championship: Championship) => {
                 const getStatusDisplay = (status: string) => {
@@ -282,7 +291,7 @@ export default function HomePage() {
                     'PLANEJADO': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' }
                   };
                   return statusMap[status as keyof typeof statusMap] || { label: status, color: 'bg-gray-500/20 text-gray-400' };
-                };                const statusDisplay = getStatusDisplay(championship.status);
+                }; const statusDisplay = getStatusDisplay(championship.status);
                 // Calculate actual team count from subscriptions
                 const teamCount = getTeamCountForChampionship(championship.championship_id);
                 const matchCount = championship.matches_count;
@@ -431,48 +440,96 @@ export default function HomePage() {
               <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
                 <div className="w-3 h-3 bg-red-500 rounded-full mr-3 animate-pulse"></div>
                 Partidas em Destaque
-              </h3>
-              <div className="space-y-4">
-                <Link href="/campeonatos/1/partidas/3" className="block bg-slate-700 rounded-md p-4 hover:bg-slate-600 transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-slate-400 text-sm">Final - Liga de Verão</span>
-                    <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">Finalizada</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-white">
-                      <span>Valorant Kings</span>
-                      <span className="ml-2 text-red-500 font-semibold">13</span>
+              </h3>              <div className="space-y-4">
+                {isLoadingMatches ? (
+                  // Loading state
+                  Array.from({ length: 2 }).map((_, index) => (
+                    <div key={index} className="bg-slate-700 rounded-md p-4 animate-pulse">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="h-4 bg-slate-600 rounded w-1/3"></div>
+                        <div className="h-6 bg-slate-600 rounded w-16"></div>
+                      </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="h-6 bg-slate-600 rounded w-1/4"></div>
+                        <div className="h-4 bg-slate-600 rounded w-8"></div>
+                        <div className="h-6 bg-slate-600 rounded w-1/4"></div>
+                      </div>
+                      <div className="h-4 bg-slate-600 rounded w-1/2"></div>
                     </div>
-                    <div className="text-slate-400 text-sm">VS</div>
-                    <div className="text-white text-right">
-                      <span className="mr-2 text-red-500 font-semibold">9</span>
-                      <span>Sage Warriors</span>
-                    </div>
+                  ))
+                ) : isMatchesError ? (
+                  <div className="text-center text-slate-400 py-4">
+                    Erro ao carregar partidas
                   </div>
-                  <div className="text-slate-400 text-sm mt-2">
-                    Ascent • 18/02 19:00
+                ) : matchesData.length === 0 ? (
+                  <div className="text-center text-slate-400 py-4">
+                    Nenhuma partida encontrada
                   </div>
-                </Link>
+                ) : (                  // Render first 2 matches from API
+                  matchesData.slice(0, 2).map((match: Match) => {
+                    const getStatusDisplay = (status: string) => {
+                      const statusMap: Record<string, { label: string; color: string }> = {
+                        'Pre-Agendada': { label: 'À Agendar', color: 'bg-orange-500/20 text-orange-400' },
+                        'Agendada': { label: 'Agendada', color: 'bg-yellow-500/20 text-yellow-400' },
+                        'Encerrada': { label: 'Finalizada', color: 'bg-green-500/20 text-green-400' },
+                      };
+                      return statusMap[status] || { label: status, color: 'bg-blue-500/20 text-blue-400' };
+                    };
 
-                <Link href="/campeonatos/1/partidas/1" className="block bg-slate-700 rounded-md p-4 hover:bg-slate-600 transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-slate-400 text-sm">Semifinal - Liga de Verão</span>
-                    <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">Finalizada</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-white">
-                      <span>Valorant Kings</span>
-                      <span className="ml-2 text-red-500 font-semibold">13</span>
-                    </div>
-                    <div className="text-slate-400 text-sm">VS</div>
-                    <div className="text-white text-right">
-                      <span className="mr-2 text-red-500 font-semibold">11</span>
-                      <span>Phoenix Squad</span>
-                    </div>
-                  </div>                  <div className="text-slate-400 text-sm mt-2">
-                    Haven • 15/02 19:00
-                  </div>
-                </Link>
+                    const statusDisplay = getStatusDisplay(match.status);
+
+                    // Only format date/time if not Pre-Agendada
+                    let dateTimeDisplay = "Sem data definida";
+                    if (match.status !== "Agendada") {
+                      const matchDate = new Date(match.date);
+                      const formattedDate = matchDate.toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                      });
+                      const formattedTime = matchDate.toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
+                      dateTimeDisplay = `${formattedDate} ${formattedTime}`;
+                    }
+
+                    return (
+                      <Link
+                        key={match.match_id}
+                        href={`/campeonatos/${match.championship_id}/partidas/${match.match_id}`}
+                        className="block bg-slate-700 rounded-md p-4 hover:bg-slate-600 transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-slate-400 text-sm">{match.stage}</span>
+                          <span className={`px-2 py-1 rounded text-xs ${statusDisplay.color}`}>
+                            {statusDisplay.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-white">
+                            <span>{match.TeamA.name}</span>
+                            {match.score && (
+                              <span className="ml-2 text-red-500 font-semibold">
+                                {match.score.teamA}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-slate-400 text-sm">VS</div>
+                          <div className="text-white text-right">
+                            {match.score && (
+                              <span className="mr-2 text-red-500 font-semibold">
+                                {match.score.teamB}
+                              </span>
+                            )}
+                            <span>{match.TeamB.name}</span>
+                          </div>
+                        </div>                        <div className="text-slate-400 text-sm mt-2">
+                          {match.map} • {dateTimeDisplay}
+                        </div>
+                      </Link>
+                    );
+                  })
+                )}
               </div>
 
               <Link
