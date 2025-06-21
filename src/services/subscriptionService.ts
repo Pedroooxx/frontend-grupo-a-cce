@@ -1,8 +1,6 @@
-/**
- * Subscription service with React Query
- */
-import { useQuery } from '@tanstack/react-query';
+
 import { apiClient, ApiError } from '@/lib/apiClient';
+import { useQuery } from '@tanstack/react-query';
 import { createReactQueryService } from './reactQueryService';
 
 export interface Subscription {
@@ -17,18 +15,26 @@ interface SubscriptionResponse {
   subscriptions: Subscription[];
 }
 
-export const subscriptionService = createReactQueryService<Subscription>({
+
+// Reuse generic CRUD hooks for other operations
+const subscriptionService = createReactQueryService<Subscription>({
   entityName: 'Inscrição',
   endpoint: '/subscriptions',
+  idField: 'subscription_id',
 });
 
-// Custom hook for getting all subscriptions that handles the API response format
+/**
+ * Fetch all subscriptions, extracting from response wrapper
+ */
 export const useGetAllSubscriptions = (enabled = true) => {
   return useQuery<Subscription[], ApiError>({
     queryKey: ['subscriptions'],
     queryFn: async () => {
-      const response = await apiClient.get<SubscriptionResponse>('/subscriptions', { withAuth: true });
-      return response.subscriptions; // Extract the subscriptions array from the response
+      const result = await apiClient.get<SubscriptionResponse>(
+        '/subscriptions',
+        { withAuth: true }
+      );
+      return Array.isArray(result.subscriptions) ? result.subscriptions : [];
     },
     enabled,
   });

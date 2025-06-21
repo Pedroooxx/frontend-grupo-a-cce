@@ -1,18 +1,17 @@
 "use client";
 import { ParticipantCard } from "@/components/cards/ParticipantCard";
+import { AddParticipantModal } from "@/components/modals/AddParticipantModal";
+import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useGetAllParticipants, useCreateParticipant, useUpdateParticipant, useDeleteParticipant, type Participant } from "@/services/participantService";
-import { useGetAllTeams, type Team } from "@/services/teamService";
 import { useModal } from "@/hooks/useModal";
-import { SearchResult } from "@/hooks/useSearch";
+import { useCreateParticipant, useDeleteParticipant, useGetAllParticipants, useUpdateParticipant, type Participant } from "@/services/participantService";
+import { useGetAllTeams, type Team } from "@/services/teamService";
 import type { DetailedPlayerStats } from "@/types/data-types";
 import type { ParticipantFormValues } from "@/types/participant";
 import { Skull, Target, User } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { DashboardLayout } from "../_components/DashboardLayout";
-import { AddParticipantModal } from "@/components/modals/AddParticipantModal";
-import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
 
 export default function GerenciarJogadores() {
   const { isOpen, openModal, closeModal } = useModal();
@@ -38,6 +37,12 @@ export default function GerenciarJogadores() {
 
   // Map participants to DetailedPlayerStats
   const jogadores = useMemo((): DetailedPlayerStats[] => {
+    // Ensure jogadoresData is an array before mapping
+    if (!Array.isArray(jogadoresData)) {
+      console.error('jogadoresData is not an array:', jogadoresData);
+      return [];
+    }
+    
     return jogadoresData.map((p: Participant) => ({
       participant_id: p.id,
       user_id: p.user_id,

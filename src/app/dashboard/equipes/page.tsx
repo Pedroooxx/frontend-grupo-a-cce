@@ -1,26 +1,25 @@
 "use client";
-import React, { useState, useCallback } from "react";
-import { toast } from "react-hot-toast";
-import { DashboardLayout } from "../_components/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
-import { searchTeams } from "@/data/search-functions";
-import { SearchResult } from "@/hooks/useSearch";
-import { publicTeams, publicParticipants } from "@/data/data-mock";
 import TeamCard from "@/components/cards/TeamCard";
 import TeamFooterCard from "@/components/cards/TeamFooterCard";
-import { useModal } from "@/hooks/useModal";
+import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { AddTeamModal } from "@/components/modals/AddTeamModal";
-import { TeamDisplay, TeamFormValues, mapTeamToDisplay } from "@/types/teams";
-import { PublicTeam, PublicParticipant } from "@/types/data-types";
 import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
+import { Button } from "@/components/ui/button";
+import { searchTeams } from "@/data/search-functions";
+import { useModal } from "@/hooks/useModal";
+import { SearchResult } from "@/hooks/useSearch";
+import { TeamDisplay, TeamFormValues } from "@/types/teams";
+import { PublicParticipant } from "@/types/data-types";
+import { useGetAllTeams, useCreateTeam, useUpdateTeam, useDeleteTeam, Team, TeamParticipant } from "@/services/teamService";
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useState, useMemo, useEffect } from "react";
+import { toast } from "react-hot-toast";
+import { DashboardLayout } from "../_components/DashboardLayout";
 
 const GerenciarEquipes = () => {
   const router = useRouter();
   const { isOpen, openModal, closeModal } = useModal();
-  const [isLoading, setIsLoading] = useState(false);
   const [editingTeam, setEditingTeam] = useState<TeamDisplay | null>(null);
 
   // Add state for delete confirmation modal
@@ -28,33 +27,80 @@ const GerenciarEquipes = () => {
   const [deleteItemId, setDeleteItemId] = useState<string | number | null>(null);
   const [deleteItemName, setDeleteItemName] = useState<string>("");
 
-  // Convert PublicTeam to TeamDisplay for our component
-  const [teams, setTeams] = useState<TeamDisplay[]>(
-    publicTeams.map((team) => mapTeamToDisplay(team, publicParticipants))
-  );
+  // Fetch teams via service hooks (includes nested participants)
+  const {
+    data: teamsData = [],
+    isLoading: isLoadingTeams,
+    isError: isTeamsError,
+    error: teamsError,
+  } = useGetAllTeams();
 
-  // Filter available coaches and players
-  const availableCoaches = publicParticipants.filter(
-    (participant) => participant.is_coach
-  );
+  const isLoadingGet = isLoadingTeams;
+
+  // Mutation hooks
+  const createTeam = useCreateTeam();
+  const updateTeam = useUpdateTeam();
+  const deleteTeam = useDeleteTeam();
+  const isMutating =
+    createTeam.status === "pending" ||
+    updateTeam.status === "pending" ||
+    deleteTeam.status === "pending";
+
+  // Error handling effects
+  useEffect(() => {
+    if (isTeamsError && teamsError) {
+      toast.error(`Erro ao carregar equipes: ${teamsError.message}`);
+    }
+  }, [isTeamsError, teamsError]);
+
+  // Convert API data to TeamDisplay format
+  const teams = useMemo((): TeamDisplay[] => {
+    // Ensure teamsData is an array before mapping
+    if (!Array.isArray(teamsData)) {
+      console.error('teamsData is not an array:', teamsData);
+      return [];
+    }
+    
+    return teamsData.map((team: Team) => {
+      const coach = team.Participants.find((p: TeamParticipant) => p.is_coach);
+      const members = team.Participants
+        .filter((p: TeamParticipant) => !p.is_coach)
+        .map((p: TeamParticipant) => ({
+          nickname: p.nickname,
+          name: p.name,
+        }));
+
+      return {
+        id: team.team_id,
+        name: team.name,
+        coach: coach?.name || "Sem técnico",
+        members,
+        championship: "Campeonato Ativo", // This would come from championship data
+      };
+    });
+  }, [teamsData]);
+
+  // Extract all participants from teams and filter available coaches and players
+  const allParticipants = useMemo(() => {
+    return teamsData.flatMap((team: Team) => 
+      team.Participants.map((participant: TeamParticipant) => ({
+        ...participant,
+        team_id: team.team_id,
+        team_name: team.name,
+      }))
+    );
+  }, [teamsData]);
+
+  const availableCoaches = useMemo(() => {
+    return allParticipants.filter((participant) => participant.is_coach);
+  }, [allParticipants]);
   
-  const availablePlayers = publicParticipants.filter(
-    (player) => !player.is_coach
-  );
+  const availablePlayers = useMemo(() => {
+    return allParticipants.filter((player) => !player.is_coach);
+  }, [allParticipants]);
 
   const totalPlayers = availablePlayers.length;
   const totalCoaches = availableCoaches.length;
-
-  // Find players for a specific team
-  const getTeamPlayers = useCallback(
-    (teamId: number | string) => {
-      return publicParticipants.filter((player) => {
-        const id = typeof teamId === "string" ? parseInt(teamId) : teamId;
-        return player.team_id === id && !player.is_coach;
-      });
-    },
-    []
-  );
 
   // Open modal for creating a new team
   const handleAddTeam = () => {
@@ -76,11 +122,11 @@ const GerenciarEquipes = () => {
   };
 
   // Close delete confirmation modal
-  const closeDeleteModal = () => {
+  const closeDeleteModal = useCallback(() => {
     setIsDeleteModalOpen(false);
     setDeleteItemId(null);
     setDeleteItemName("");
-  };
+  }, []);
 
   // Modified to open confirmation dialog instead of deleting directly
   const handleDeleteTeam = (id: string | number) => {
@@ -91,62 +137,45 @@ const GerenciarEquipes = () => {
   };
 
   // Actual delete function after confirmation
-  const confirmDeleteTeam = useCallback(() => {
+  const confirmDeleteTeam = useCallback(async () => {
     if (deleteItemId !== null) {
-      setTeams(teams.filter((team) => team.id !== deleteItemId));
-      toast.success("Equipe excluída com sucesso!");
-      closeDeleteModal();
+      try {
+        await deleteTeam.mutateAsync(deleteItemId);
+        toast.success(`Equipe "${deleteItemName}" excluída com sucesso!`);
+        closeDeleteModal();
+      } catch (error) {
+        console.error('Error deleting team:', error);
+        toast.error('Erro ao excluir equipe');
+      }
     }
-  }, [deleteItemId, teams]);
+  }, [deleteItemId, deleteItemName, deleteTeam, closeDeleteModal]);
 
   // Handle saving a team (adding or updating)
   const handleSaveTeam = async (data: TeamFormValues) => {
-    setIsLoading(true);
     try {
-      const teamId = editingTeam?.id || Date.now();
-
-      // Get the selected players
-      const selectedPlayerIds = data.member_ids;
-      
-      // Ensure player limit
-      if (selectedPlayerIds.length > 5) {
-        toast.error("Uma equipe pode ter no máximo 5 jogadores.");
-        setIsLoading(false);
-        return;
-      }
-      
-      const teamPlayers = publicParticipants
-        .filter((player) => selectedPlayerIds.includes(player.participant_id))
-        .map((player) => ({
-          nickname: player.nickname,
-          name: player.name,
-        }));
-
-      const updatedTeam: TeamDisplay = {
-        id: teamId,
+      const teamData = {
         name: data.name,
-        coach: data.manager_name || "Sem coach",
-        members: teamPlayers,
-        championship: editingTeam?.championship || "Nenhum campeonato ativo",
+        manager_name: data.manager_name,
       };
 
       if (editingTeam) {
         // Update existing team
-        setTeams(
-          teams.map((team) =>
-            team.id === updatedTeam.id ? updatedTeam : team
-          )
-        );
+        await updateTeam.mutateAsync({
+          id: editingTeam.id,
+          data: teamData
+        });
+        toast.success(`Equipe "${data.name}" atualizada com sucesso!`);
       } else {
-        // Add new team
-        setTeams([updatedTeam, ...teams]);
+        // Create new team
+        await createTeam.mutateAsync(teamData);
+        toast.success(`Equipe "${data.name}" criada com sucesso!`);
       }
-
       closeModal();
     } catch (error) {
-      console.error("Error saving team:", error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error saving team:', error);
+      const errorMessage = editingTeam ? 'Erro ao atualizar equipe' : 'Erro ao criar equipe';
+      toast.error(errorMessage);
+      throw error; // Re-throw to let the form handle it
     }
   };
 
@@ -156,15 +185,46 @@ const GerenciarEquipes = () => {
     }
   };
 
+  // Convert TeamParticipant to PublicParticipant format for TeamForm compatibility
+  const mapParticipantToPublic = useCallback((participant: TeamParticipant & { team_id: number; team_name: string }): PublicParticipant => {
+    return {
+      participant_id: participant.participant_id,
+      name: participant.name,
+      nickname: participant.nickname,
+      birth_date: "", // Not available in TeamParticipant
+      team_id: participant.team_id,
+      team_name: participant.team_name,
+      is_coach: participant.is_coach,
+      kda_ratio: 0, // Default values for statistics
+      total_kills: 0,
+      total_deaths: 0,
+      total_assists: 0,
+      win_rate: 0,
+      mvp_count: 0,
+      phone: "", // Not available in TeamParticipant
+    };
+  }, []);
+
+  // Convert arrays for TeamForm compatibility
+  const publicAvailableCoaches = useMemo(() => {
+    return availableCoaches.map(mapParticipantToPublic);
+  }, [availableCoaches, mapParticipantToPublic]);
+
+  const publicAvailablePlayers = useMemo(() => {
+    return availablePlayers.map(mapParticipantToPublic);
+  }, [availablePlayers, mapParticipantToPublic]);
+
   // Get selected players for the editing team
   const getSelectedPlayers = useCallback(() => {
     if (!editingTeam) return [];
 
-    // Find actual PublicParticipant objects matching the member names in the team
-    return publicParticipants.filter((player) =>
+    // Find actual participants matching the member names in the team
+    const selectedParticipants = allParticipants.filter((player) =>
       editingTeam.members.some((member) => member.nickname === player.nickname)
     );
-  }, [editingTeam]);
+    
+    return selectedParticipants.map(mapParticipantToPublic);
+  }, [editingTeam, allParticipants, mapParticipantToPublic]);
 
   return (
     <DashboardLayout
@@ -182,6 +242,7 @@ const GerenciarEquipes = () => {
           <Button
             className="bg-red-500 hover:bg-red-600 text-white"
             onClick={handleAddTeam}
+            disabled={isLoadingGet || isMutating}
           >
             <Plus className="w-4 h-4 mr-2" />
             Criar Equipe
@@ -204,26 +265,52 @@ const GerenciarEquipes = () => {
           />
         </div>
 
+        {/* Loading State */}
+        {isLoadingGet && (
+          <div className="flex justify-center py-8">
+            <div className="text-white">Carregando equipes...</div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {isTeamsError && (
+          <div className="flex justify-center py-8">
+            <div className="text-red-400">
+              Erro ao carregar dados: {teamsError?.message}
+            </div>
+          </div>
+        )}
+
         {/* Lista de equipes */}
-        <div className="space-y-6">
-          {teams.map((team) => (
-            <TeamCard
-              key={team.id}
-              team={team}
-              onEdit={handleEditTeam}
-              onDelete={handleDeleteTeam}
-            />
-          ))}
-        </div>
+        {!isLoadingGet && !isTeamsError && (
+          <div className="space-y-6">
+            {teams.length > 0 ? (
+              teams.map((team) => (
+                <TeamCard
+                  key={team.id}
+                  team={team}
+                  onEdit={handleEditTeam}
+                  onDelete={handleDeleteTeam}
+                />
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                Nenhuma equipe encontrada. Crie uma nova equipe para começar.
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Stats das equipes */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <TeamFooterCard
-            totalTeams={teams.length}
-            totalPlayers={totalPlayers}
-            totalCoaches={totalCoaches}
-          />
-        </div>
+        {!isLoadingGet && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <TeamFooterCard
+              totalTeams={teams.length}
+              totalPlayers={totalPlayers}
+              totalCoaches={totalCoaches}
+            />
+          </div>
+        )}
       </div>
 
       {/* Add/Edit Team Modal */}
@@ -231,16 +318,16 @@ const GerenciarEquipes = () => {
         isOpen={isOpen}
         onClose={closeModal}
         onSubmit={handleSaveTeam}
-        availablePlayers={availablePlayers}
-        availableCoaches={availableCoaches}
+        availablePlayers={publicAvailablePlayers}
+        availableCoaches={publicAvailableCoaches}
         selectedPlayers={getSelectedPlayers()}
         defaultValues={
           editingTeam
             ? {
                 name: editingTeam.name,
-                manager_name: editingTeam.coach,
+                manager_name: editingTeam.coach !== "Sem técnico" ? editingTeam.coach : undefined,
                 member_ids: getSelectedPlayers().map(
-                  (p) => p.participant_id
+                  (p: PublicParticipant) => p.participant_id
                 ),
               }
             : undefined
@@ -254,7 +341,7 @@ const GerenciarEquipes = () => {
         onConfirm={confirmDeleteTeam}
         title="Confirmar exclusão"
         entityName={`a equipe ${deleteItemName}`}
-        isLoading={isLoading}
+        isLoading={isMutating}
       />
     </DashboardLayout>
   );

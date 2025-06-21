@@ -1,4 +1,4 @@
-/**
+ /**
  * Participant service with React Query
  */
 import { createReactQueryService } from './reactQueryService';

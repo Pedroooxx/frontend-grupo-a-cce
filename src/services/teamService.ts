@@ -1,20 +1,27 @@
-/**
- * Team service with React Query
- */
+import { apiClient, ApiError } from '@/lib/apiClient';
+import { useQuery } from '@tanstack/react-query';
 import { createReactQueryService } from './reactQueryService';
 
-export interface Team {
-  team_id: number;
-  name: string;
-  user_id: number;
-  Participants?: Participant[];
-}
 
-interface Participant {
+
+/**
+ * Participant interface as returned by the teams API
+ */
+export interface TeamParticipant {
   participant_id: number;
   name: string;
   nickname: string;
   is_coach: boolean;
+}
+
+/**
+ * Team interface as returned by the teams API with nested participants
+ */
+export interface Team {
+  team_id: number;
+  name: string;
+  user_id: number;
+  Participants?: TeamParticipant[];
 }
 
 export const teamService = createReactQueryService<Team>({
@@ -30,10 +37,6 @@ export const {
   useUpdate: useUpdateTeam,
   useDelete: useDeleteTeam,
 } = teamService;
-
-// Additional team-specific operations
-import { useQuery } from '@tanstack/react-query';
-import { apiClient, ApiError } from '@/lib/apiClient';
 
 /**
  * Validates if a team meets the requirements to participate in a championship
