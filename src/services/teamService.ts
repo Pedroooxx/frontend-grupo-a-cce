@@ -4,13 +4,23 @@
 import { createReactQueryService } from './reactQueryService';
 
 export interface Team {
-  id: number;
+  team_id: number;
   name: string;
+  user_id: number;
+  Participants?: Participant[];
+}
+
+interface Participant {
+  participant_id: number;
+  name: string;
+  nickname: string;
+  is_coach: boolean;
 }
 
 export const teamService = createReactQueryService<Team>({
   entityName: 'Equipe',
   endpoint: '/teams',
+  idField: 'team_id',
 });
 
 export const {
@@ -28,6 +38,7 @@ import { apiClient, ApiError } from '@/lib/apiClient';
 /**
  * Validates if a team meets the requirements to participate in a championship
  */
+
 export const useValidateTeam = (teamId: number | string, enabled = true) => {
   return useQuery<{ isValid: boolean; message: string }, ApiError>({
     queryKey: ['teams', teamId, 'validate'],

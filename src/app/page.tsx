@@ -11,12 +11,13 @@ import Footer from "@/components/layout/Footer";
 import { searchPublicCatalog } from "@/data/search-functions"; // Import the search function
 import { SearchConfig, SearchResult } from "@/hooks/useSearch"; // Import SearchConfig and SearchResult
 import { useGetAllChampionships, type Championship } from "@/services/championshipService";
+import { useGetAllSubscriptions } from "@/services/subscriptionService";
+import { useGetAllTeams } from "@/services/teamService";
 
 export default function HomePage() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { data: session, status } = useSession();
   const router = useRouter();
-
   // Fetch championships from API
   const {
     data: championshipsData = [],
@@ -24,17 +25,54 @@ export default function HomePage() {
     isError: isChampionshipsError,
   } = useGetAllChampionships();
 
+  // Fetch subscriptions to count teams per championship
+  const {
+    data: subscriptionsData = [],
+    isLoading: isLoadingSubscriptions,
+    isError: isSubscriptionsError,
+  } = useGetAllSubscriptions();
+
+  // Fetch teams data
+  const {
+    data: teamsData = [],
+    isLoading: isLoadingTeams,
+    isError: isTeamsError,
+  } = useGetAllTeams();
+
   useEffect(() => {
     if (status !== 'loading') {
       setIsInitialLoad(false);
     }
   }, [status]);
-
   useEffect(() => {
     if (status === "authenticated") {
       // Don't auto-redirect, let user choose to go to dashboard
     }
   }, [status]);
+
+  /**
+   * Count teams for a specific championship using subscription data
+   */
+  const getTeamCountForChampionship = (championshipId: number): number => {
+    if (!subscriptionsData.length) {
+      console.log('No subscriptions data available');
+      return 0;
+    }
+    
+    // Filter subscriptions by championship_id to get unique teams
+    const championshipSubscriptions = subscriptionsData.filter(
+      subscription => subscription.championship_id === championshipId
+    );
+    
+    console.log(`Championship ${championshipId} subscriptions:`, championshipSubscriptions);
+    
+    // Get unique team IDs for this championship
+    const uniqueTeamIds = new Set(championshipSubscriptions.map(sub => sub.team_id));
+    
+    console.log(`Championship ${championshipId} unique team IDs:`, Array.from(uniqueTeamIds));
+    
+    return uniqueTeamIds.size;
+  };
 
   const handleAuthAction = (action: 'signin' | 'signup' | 'dashboard') => {
     if (action === 'dashboard') {
@@ -209,9 +247,8 @@ export default function HomePage() {
               onResultClick={handleResultClick} // Handle click on search results
               className="w-full"
             />
-          </div>          {/* Featured Championships */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {isLoadingChampionships ? (
+          </div>          {/* Featured Championships */}          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {isLoadingChampionships || isLoadingSubscriptions || isLoadingTeams ? (
               // Loading state
               Array.from({ length: 3 }).map((_, index) => (
                 <div key={index} className="bg-slate-800 border border-slate-700 p-6 rounded-md flex flex-col min-h-[280px] animate-pulse">
@@ -226,30 +263,35 @@ export default function HomePage() {
                   </div>
                   <div className="h-10 bg-slate-700 rounded"></div>
                 </div>
-              ))
-            ) : isChampionshipsError ? (
+              ))            ) : isChampionshipsError || isSubscriptionsError || isTeamsError ? (
               // Error state
               <div className="col-span-full text-center py-12">
-                <p className="text-red-400 text-lg">Erro ao carregar campeonatos</p>
+                <p className="text-red-400 text-lg">Erro ao carregar dados</p>
               </div>
             ) : championshipsData.length === 0 ? (
               // Empty state
               <div className="col-span-full text-center py-12">
                 <p className="text-slate-400 text-lg">Nenhum campeonato encontrado</p>
-              </div>
-            ) : (
+              </div>            ) : (
               // Render championships from API
               championshipsData.slice(0, 3).map((championship: Championship) => {
                 const getStatusDisplay = (status: string) => {
                   const statusMap = {
-                    'ATIVO': { label: 'Em andamento', color: 'bg-green-500/20 text-green-400' },
+                    'ATIVO': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
                     'FINALIZADO': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
-                    'PLANEJADO': { label: 'Inscrições Abertas', color: 'bg-yellow-500/20 text-yellow-400' }
+                    'PLANEJADO': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' }
                   };
                   return statusMap[status as keyof typeof statusMap] || { label: status, color: 'bg-gray-500/20 text-gray-400' };
-                }; const statusDisplay = getStatusDisplay(championship.status);
-                const teamCount = championship.teams_count; // Use API data
-                const matchCount = championship.matches_count; // Use API data
+                };                const statusDisplay = getStatusDisplay(championship.status);
+                // Calculate actual team count from subscriptions
+                const teamCount = getTeamCountForChampionship(championship.championship_id);
+                const matchCount = championship.matches_count;
+                // Format championship start date
+                const startDate = new Date(championship.start_date).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric'
+                });
 
                 return (
                   <div key={championship.championship_id} className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col min-h-[280px]">
@@ -261,10 +303,9 @@ export default function HomePage() {
                     </div>
                     <p className="text-slate-400 mb-6 flex-1">
                       {championship.description || 'Campeonato emocionante com equipes competitivas'}
-                    </p>
-                    <div className="flex items-center justify-between text-sm text-slate-400 mb-6">
+                    </p>                    <div className="flex items-center justify-between text-sm text-slate-400 mb-6">
                       <span><Users className="w-4 h-4 inline mr-1" />{teamCount} equipes</span>
-                      <span><Calendar className="w-4 h-4 inline mr-1" />{matchCount} partidas</span>
+                      <span><Calendar className="w-4 h-4 inline mr-1" />Início: {startDate}</span>
                     </div>
                     <Link
                       href={`/campeonatos/${championship.championship_id}`}
