@@ -29,7 +29,7 @@ export const createReactQueryService = <T extends Record<string, any>>({
   const useGetAll = (enabled = true) => {
     return useQuery<T[], ApiError>({
       queryKey: baseQueryKey,
-      queryFn: () => apiClient.get<T[]>(`/${normalizedEndpoint}`),
+      queryFn: () => apiClient.get<T[]>(`/${normalizedEndpoint}`, { withAuth: true }),
       enabled,
     });
   };
@@ -38,7 +38,7 @@ export const createReactQueryService = <T extends Record<string, any>>({
   const useGetById = (id: string | number, enabled = true) => {
     return useQuery<T, ApiError>({
       queryKey: [...baseQueryKey, id],
-      queryFn: () => apiClient.get<T>(`/${normalizedEndpoint}/${id}`),
+      queryFn: () => apiClient.get<T>(`/${normalizedEndpoint}/${id}`, { withAuth: true }),
       enabled: enabled && !!id,
     });
   };

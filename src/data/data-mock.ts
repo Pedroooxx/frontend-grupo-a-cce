@@ -1,24 +1,23 @@
 import {
-  Player,
-  Team,
-  GeneralStat,
-  MapData,
+  Agent,
+  AgentUsage,
+  ChampionshipParticipation,
+  ChampionshipPlayerRanking,
+  ChampionshipStandings,
+  ChampionshipTeamRanking,
+  DetailedChampionshipStats,
   DetailedPlayerStats,
   DetailedTeamStats,
-  ChampionshipParticipation,
-  AgentUsage,
+  GeneralStat,
+  MapData,
   MapPerformance,
-  SearchResult,
-  DetailedChampionshipStats,
-  ChampionshipTeamRanking,
-  ChampionshipPlayerRanking,
+  ParticipantStatistics,
+  Player,
   PublicChampionship,
   PublicMatch,
-  PublicTeam,
   PublicParticipant,
-  ChampionshipStandings,
-  ParticipantStatistics,
-  Agent,
+  PublicTeam,
+  Team
 } from "@/types/data-types";
 
 // Mock data for public championships
@@ -26,8 +25,7 @@ export const publicChampionships: PublicChampionship[] = [
   {
     championship_id: 1,
     name: "Liga de Verão 2024",
-    description:
-      "Campeonato principal da temporada com as melhores equipes do cenário nacional. Formato eliminação dupla com premiação de R$ 50.000.",
+    description: "Campeonato principal da temporada com as melhores equipes do cenário nacional. Formato eliminação dupla com premiação de R$ 50.000.",
     format: "double_elimination",
     start_date: "2024-01-15",
     end_date: "2024-03-15",
@@ -37,12 +35,12 @@ export const publicChampionships: PublicChampionship[] = [
     matches_count: 89,
     prize_pool: "R$ 50.000",
     banner_image: "/images/championships/liga-verao-2024.jpg",
+    prize: 0
   },
   {
     championship_id: 2,
     name: "Copa Regional",
-    description:
-      "Torneio regional focado em equipes emergentes e desenvolvimento de novos talentos.",
+    description: "Torneio regional focado em equipes emergentes e desenvolvimento de novos talentos.",
     format: "single_elimination",
     start_date: "2023-11-01",
     end_date: "2023-12-15",
@@ -51,12 +49,12 @@ export const publicChampionships: PublicChampionship[] = [
     teams_count: 16,
     matches_count: 31,
     prize_pool: "R$ 15.000",
+    prize: 0
   },
   {
     championship_id: 3,
     name: "Torneio Universitário",
-    description:
-      "Competição exclusiva para equipes universitárias de todo o Brasil.",
+    description: "Competição exclusiva para equipes universitárias de todo o Brasil.",
     format: "round_robin",
     start_date: "2024-04-01",
     end_date: "2024-05-30",
@@ -65,6 +63,7 @@ export const publicChampionships: PublicChampionship[] = [
     teams_count: 24,
     matches_count: 0,
     prize_pool: "R$ 20.000",
+    prize: 0
   },
 ];
 

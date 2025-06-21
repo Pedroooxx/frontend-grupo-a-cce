@@ -1,35 +1,77 @@
 "use client";
 import { ParticipantCard } from "@/components/cards/ParticipantCard";
-import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
-import { AddParticipantModal } from "@/components/modals/AddParticipantModal";
-import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { detailedPlayersStats } from "@/data/data-mock";
-import { searchPlayers } from "@/data/search-functions";
-import { teams } from "@/data/teams";
+import { useGetAllParticipants, useCreateParticipant, useUpdateParticipant, useDeleteParticipant, type Participant } from "@/services/participantService";
+import { useGetAllTeams, type Team } from "@/services/teamService";
 import { useModal } from "@/hooks/useModal";
 import { SearchResult } from "@/hooks/useSearch";
 import type { DetailedPlayerStats } from "@/types/data-types";
-import type { ParticipantFormValues, Team } from "@/types/participant";
+import type { ParticipantFormValues } from "@/types/participant";
 import { Skull, Target, User } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { DashboardLayout } from "../_components/DashboardLayout";
+import { AddParticipantModal } from "@/components/modals/AddParticipantModal";
+import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
 
 export default function GerenciarJogadores() {
-  const [jogadores, setJogadores] = useState<DetailedPlayerStats[]>(detailedPlayersStats.slice(0, 4));
   const { isOpen, openModal, closeModal } = useModal();
-  const [editingPlayer, setEditingPlayer] = useState<DetailedPlayerStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Add state for delete confirmation modal
+  const [editingPlayer, setEditingPlayer] = useState<Participant | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
   const [deleteItemName, setDeleteItemName] = useState<string>("");
 
-  const handleSearch = (result: SearchResult) => {
-    console.log("Jogador selecionado:", result);
-  };
+  // Fetch participants and teams via service hooks
+  const {
+    data: jogadoresData = [],
+    isLoading: isLoadingParticipants,
+    isError: isParticipantsError,
+    error: participantsError,
+  } = useGetAllParticipants();
+  const {
+    data: teams = [],
+    isLoading: isLoadingTeams,
+    isError: isTeamsError,
+    error: teamsError,
+  } = useGetAllTeams();
+  const isLoadingGet = isLoadingParticipants || isLoadingTeams;
+
+  // Map participants to DetailedPlayerStats
+  const jogadores = useMemo((): DetailedPlayerStats[] => {
+    return jogadoresData.map((p: Participant) => ({
+      participant_id: p.id,
+      user_id: p.user_id,
+      name: p.name,
+      nickname: p.nickname,
+      birth_date: p.birth_date,
+      phone: p.phone.toString(),
+      team_id: p.team_id,
+      team_name: teams.find((t: Team) => t.id === p.team_id)?.name ?? "",
+      is_coach: p.is_coach,
+      total_kills: 0,
+      total_deaths: 0,
+      total_assists: 0,
+      kda_ratio: 0,
+      win_rate: 0,
+      total_matches: 0,
+      total_spike_plants: 0,
+      total_spike_defuses: 0,
+      total_mvps: 0,
+      total_first_kills: 0,
+      avg_score: 0,
+      favorite_agent: "",
+      favorite_map: "",
+    }));
+  }, [jogadoresData, teams]);
+
+  // Mutation hooks
+  const createParticipant = useCreateParticipant();
+  const updateParticipant = useUpdateParticipant();
+  const deleteParticipant = useDeleteParticipant();
+  const isMutating =
+    createParticipant.status === "pending" ||
+    updateParticipant.status === "pending" ||
+    deleteParticipant.status === "pending";
 
   // open modal for NEW
   const openAdd = () => {
@@ -38,10 +80,20 @@ export default function GerenciarJogadores() {
   };
 
   // open modal for EDIT
-  const handleEdit = (p: DetailedPlayerStats) => {
-    setEditingPlayer(p);
+  const handleEdit = useCallback((p: DetailedPlayerStats) => {
+    // map DetailedPlayerStats to Participant shape
+    setEditingPlayer({
+      id: p.participant_id,
+      user_id: p.user_id,
+      name: p.name,
+      nickname: p.nickname,
+      birth_date: p.birth_date,
+      phone: Number(p.phone),
+      team_id: p.team_id,
+      is_coach: p.is_coach,
+    });
     openModal();
-  };
+  }, [openModal]);
 
   // Open delete confirmation modal
   const openDeleteModal = (id: number, name: string) => {
@@ -58,72 +110,51 @@ export default function GerenciarJogadores() {
   };
 
   // Handle delete confirmation
-  const confirmDelete = useCallback(() => {
-    if (deleteItemId) {
-      setJogadores((prev) => prev.filter((x) => x.participant_id !== deleteItemId));
+  const confirmDelete = useCallback(async () => {
+    if (deleteItemId != null) {
+      try {
+        await deleteParticipant.mutateAsync(deleteItemId);
+      } catch (err: unknown) {
+        console.error('Erro ao excluir participante:', err);
+      }
     }
     closeDeleteModal();
-  }, [deleteItemId]);
+  }, [deleteItemId, deleteParticipant, closeDeleteModal]);
 
-  // unified save: add or edit
+  /**
+   * Handle create or update participant with correct API payload.
+   */
   const handleSave = useCallback(
-    async (data: ParticipantFormValues) => {
-      setIsLoading(true);
+    async (form: ParticipantFormValues) => {
+      // Build API payload: rename and convert types
+      const payload = {
+        name: form.nome,
+        nickname: form.nickname,
+        birth_date: form.birth_date,
+        phone: Number(form.phone.replace(/\D/g, '')),
+        team_id: form.team_id!,
+        is_coach: form.is_coach,
+      } as const;
       try {
-        // map form to DetailedPlayerStats
-        const mapped: DetailedPlayerStats = {
-          participant_id: editingPlayer?.participant_id || Date.now(),
-          user_id: editingPlayer?.user_id || Date.now(),
-          name: data.nome,
-          nickname: data.nickname,
-          birth_date: data.birth_date,
-          phone: data.phone,
-          team_id: data.team_id ?? editingPlayer?.team_id ?? 0,
-          team_name: teams.find((t) => t.team_id === (data.team_id ?? editingPlayer?.team_id ?? 0))?.name || "",
-          is_coach: data.is_coach ?? false,
-          total_kills: editingPlayer?.total_kills || 0,
-          total_deaths: editingPlayer?.total_deaths || 0,
-          total_assists: editingPlayer?.total_assists || 0,
-          kda_ratio: editingPlayer?.kda_ratio || 0,
-          win_rate: editingPlayer?.win_rate || 0,
-          total_matches: editingPlayer?.total_matches || 0,
-          total_spike_plants: editingPlayer?.total_spike_plants || 0,
-          total_spike_defuses: editingPlayer?.total_spike_defuses || 0,
-          total_mvps: editingPlayer?.total_mvps || 0,
-          total_first_kills: editingPlayer?.total_first_kills || 0,
-          avg_score: editingPlayer?.avg_score || 0,
-          favorite_agent: editingPlayer?.favorite_agent || "",
-          favorite_map: editingPlayer?.favorite_map || "",
-        };
-
-        setJogadores((prev) => {
-          if (editingPlayer) {
-            // update existing
-            return prev.map((x) =>
-              x.participant_id === mapped.participant_id ? mapped : x
-            );
-          }
-          // add new
-          return [mapped, ...prev];
-        });
-
+        if (editingPlayer) {
+          // Update existing participant
+          await updateParticipant.mutateAsync({ id: editingPlayer.id, data: payload });
+        } else {
+          // Create new participant
+          await createParticipant.mutateAsync(payload);
+        }
         closeModal();
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+      } catch (err: unknown) {
+        console.error('Erro ao salvar participante:', err);
       }
     },
-    [editingPlayer, closeModal]
+    [editingPlayer, createParticipant, updateParticipant, closeModal]
   );
 
-  // Modified handleDelete to open confirmation modal instead of directly deleting
   const handleDelete = useCallback((id: number) => {
-    const player = jogadores.find((x) => x.participant_id === id);
-    if (player) {
-      openDeleteModal(id, player.nickname);
-    }
-  }, [jogadores]);
+    const player = jogadores.find((p) => p.participant_id === id);
+    if (player) openDeleteModal(id, player.nickname);
+  }, [jogadores, openDeleteModal]);
 
   return (
     <DashboardLayout
@@ -149,7 +180,7 @@ export default function GerenciarJogadores() {
         </div>
 
         {/* Search */}
-        <UniversalSearchBar
+        {/* <UniversalSearchBar
           searchFunction={searchPlayers}
           config={{
             searchTypes: ["player"],
@@ -160,18 +191,26 @@ export default function GerenciarJogadores() {
           }}
           onResultClick={handleSearch}
           className="max-w-xl mx-auto mb-6"
-        />
+        /> */}
 
         {/* Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {jogadores.map((p) => (
-            <ParticipantCard
-              key={p.participant_id}
-              player={p}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))}
+          {isParticipantsError || isTeamsError ? (
+            <p className="text-red-500">
+              Erro ao carregar dados: {participantsError?.message || teamsError?.message}
+            </p>
+          ) : isLoadingGet ? (
+            <p className="text-white">Carregando jogadores...</p>
+          ) : (
+            jogadores.map((p: DetailedPlayerStats) => (
+              <ParticipantCard
+                key={p.participant_id}
+                player={p}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))
+          )}
         </div>
 
         {/* Stats */}
@@ -223,14 +262,16 @@ export default function GerenciarJogadores() {
         isOpen={isOpen}
         onClose={closeModal}
         onSubmit={handleSave}
-        teams={teams as Team[]}
+        // map API teams to form's Team interface
+        teams={teams.map((t: Team) => ({ team_id: t.id, name: t.name }))}
         defaultValues={
           editingPlayer
             ? {
                 nome: editingPlayer.name,
                 nickname: editingPlayer.nickname,
                 birth_date: editingPlayer.birth_date,
-                phone: editingPlayer.phone,
+                // phone as string for input
+                phone: editingPlayer.phone.toString(),
                 team_id: editingPlayer.team_id,
                 is_coach: editingPlayer.is_coach,
               }
@@ -238,14 +279,13 @@ export default function GerenciarJogadores() {
         }
       />
       
-      {/* Add delete confirmation modal */}
       <ConfirmDeleteModal
         isOpen={isDeleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={confirmDelete}
         title="Confirmar exclusão"
         entityName={`o jogador ${deleteItemName}`}
-        isLoading={isLoading}
+        isLoading={isMutating}
       />
     </DashboardLayout>
   );
