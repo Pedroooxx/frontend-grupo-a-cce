@@ -4,7 +4,7 @@
 import { createReactQueryService } from './reactQueryService';
 
 export interface Championship {
-  id: number;
+  championship_id: number;
   name: string;
   description: string;
   format: string;
@@ -14,11 +14,15 @@ export interface Championship {
   status: string;
   prize: string;
   user_id: number;
+  teams_count: number;
+  matches_count: number;
+  prize_pool?: string;
 }
 
 export const championshipService = createReactQueryService<Championship>({
   entityName: 'Campeonato',
-  endpoint: '/championship',
+  endpoint: '/championships',
+  idField: 'championships/id',
 });
 
 export const {
