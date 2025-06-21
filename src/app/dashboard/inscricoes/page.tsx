@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { DashboardLayout } from "../_components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,41 +10,81 @@ import { SearchResult } from "@/hooks/useSearch";
 import { useModal } from "@/hooks/useModal";
 import { AddSubscriptionModal } from "@/components/modals/AddSubscriptionModal";
 import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
-import { teams } from "@/data/teams";
-import { championships } from "@/data/championships";
+import { useGetAllSubscriptions, useCreateSubscription, useUpdateSubscription, useDeleteSubscription } from "@/services/subscriptionService";
+import { useGetAllTeams } from "@/services/teamService";
+import type { Team } from "@/services/teamService";
+import { useGetAllChampionships } from "@/services/championshipService";
+import type { Championship } from "@/services/championshipService";
 import type { Subscription, SubscriptionFormValues } from "@/types/subscription";
 import { toast } from "react-hot-toast";
 
-// Create a temporary search function for inscriptions
-const searchInscriptions = (query: string, types: string[] = ["inscription"]): SearchResult[] => {
-  if (!query.trim() || !types.includes("inscription")) return [];
-  // Return empty array since we don't have inscription data
-  return [];
-};
-
-// Mock data for inscriptions
-const initialInscriptions: Subscription[] = [
-  {
-    subscription_id: 1,
-    championship_id: 1,
-    team_id: 1,
-    subscription_date: "2024-01-10",
-    championship_name: "Liga de Verão 2024",
-    team_name: "Valorant Kings",
-  },
-  {
-    subscription_id: 2,
-    championship_id: 1,
-    team_id: 2,
-    subscription_date: "2024-01-12",
-    championship_name: "Liga de Verão 2024",
-    team_name: "Phoenix Squad",
-  },
-];
-
 const Inscricoes = () => {
   const router = useRouter();
-  const [inscricoes, setInscricoes] = useState<Subscription[]>(initialInscriptions);
+  // Data fetching hooks
+  const { data: subscriptionsData = [], isLoading: isLoadingSubscriptions, isError: isGetSubscriptionsError, error: getSubscriptionsError } = useGetAllSubscriptions();
+  const { data: teamsData = [], isLoading: isLoadingTeams, isError: isGetTeamsError, error: getTeamsError } = useGetAllTeams();
+  const { data: championshipsData = [], isLoading: isLoadingChampionships, isError: isGetChampionshipsError, error: getChampionshipsError } = useGetAllChampionships();
+  const isLoadingGet = isLoadingSubscriptions || isLoadingTeams || isLoadingChampionships;
+
+  // Mutation hooks
+  const createSubscription = useCreateSubscription();
+  const updateSubscription = useUpdateSubscription();
+  const deleteSubscription = useDeleteSubscription();
+
+  // Error handling effects
+  useEffect(() => {
+    if (isGetSubscriptionsError && getSubscriptionsError) {
+      toast.error(`Erro ao carregar inscrições: ${getSubscriptionsError.message}`);
+    }
+  }, [isGetSubscriptionsError, getSubscriptionsError]);
+  useEffect(() => {
+    if (isGetTeamsError && getTeamsError) {
+      toast.error(`Erro ao carregar equipes: ${getTeamsError.message}`);
+    }
+  }, [isGetTeamsError, getTeamsError]);
+  useEffect(() => {
+    if (isGetChampionshipsError && getChampionshipsError) {
+      toast.error(`Erro ao carregar campeonatos: ${getChampionshipsError.message}`);
+    }
+  }, [isGetChampionshipsError, getChampionshipsError]);
+
+  // Map API data to display format
+  const inscricoes = useMemo(() => {
+    return subscriptionsData.map((sub: Subscription) => {
+      const team = teamsData.find((t: Team) => t.team_id === sub.team_id);
+      const championship = championshipsData.find((c: Championship) => c.id === sub.championship_id);
+      return {
+        subscription_id: sub.subscription_id,
+        championship_id: sub.championship_id,
+        team_id: sub.team_id,
+        subscription_date: sub.subscription_date,
+        team_name: team?.name || "",
+        championship_name: championship?.name || "",
+      };
+    });
+  }, [subscriptionsData, teamsData, championshipsData]);
+
+  // Search function using current data
+  const searchSubscriptions = useCallback(
+    (query: string, types: string[] = ["inscription"]): SearchResult[] => {
+      if (!query.trim() || !types.includes("inscription")) return [];
+      const q = query.toLowerCase();
+      return inscricoes
+        .filter((ins: Subscription) =>
+            (ins.team_name ?? '').toLowerCase().includes(q) ||
+            (ins.championship_name ?? '').toLowerCase().includes(q)
+        )
+        .map((ins: Subscription) => ({
+          id: ins.subscription_id,
+          name: `${ins.team_name} - ${ins.championship_name}`,
+          type: "inscription",
+          subtitle: `Inscrito em ${new Date(ins.subscription_date).toLocaleDateString("pt-BR")}`,
+          metadata: ins,
+        }));
+    },
+    [inscricoes]
+  );
+
   const { isOpen, openModal, closeModal } = useModal();
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -81,71 +121,37 @@ const Inscricoes = () => {
   };
 
   // Handle delete confirmation
-  const confirmDelete = useCallback(() => {
-    if (deleteItemId) {
-      setInscricoes((prev) => prev.filter((x) => x.subscription_id !== deleteItemId));
-      toast.success("Inscrição excluída com sucesso!");
+  const confirmDelete = useCallback(async () => {
+    if (deleteItemId !== null) {
+      try {
+        await deleteSubscription.mutateAsync(deleteItemId);
+        toast.success(`Inscrição de ${deleteItemName} excluída com sucesso!`);
+      } catch (err) {
+        console.error(err);
+        toast.error('Erro ao excluir inscrição');
+      }
+      closeDeleteModal();
     }
-    closeDeleteModal();
-  }, [deleteItemId]);
+  }, [deleteItemId, deleteItemName, deleteSubscription, closeDeleteModal]);
 
   // SAVE handler (for both add and edit)
   const handleSave = useCallback(
     async (data: SubscriptionFormValues) => {
-      setIsLoading(true);
       try {
-        // Find championship and team
-        const championship = championships.find(c => c.championship_id === data.championship_id);
-        const team = teams.find(t => t.team_id === data.team_id);
-        
-        // Validate that both exist
-        if (!championship) {
-          toast.error("Campeonato não encontrado. Por favor, selecione um campeonato válido.");
-          return;
+        if (editingSubscription) {
+          await updateSubscription.mutateAsync({ id: editingSubscription.subscription_id, data });
+          toast.success('Inscrição atualizada com sucesso!');
+        } else {
+          await createSubscription.mutateAsync(data);
+          toast.success('Inscrição criada com sucesso!');
         }
-        
-        if (!team) {
-          toast.error("Equipe não encontrada. Por favor, selecione uma equipe válida.");
-          return;
-        }
-        
-        // Map form to Subscription with validated data
-        const mapped: Subscription = {
-          subscription_id: editingSubscription?.subscription_id || Date.now(),
-          championship_id: data.championship_id,
-          team_id: data.team_id,
-          subscription_date: data.subscription_date,
-          championship_name: championship.name,
-          team_name: team.name,
-        };
-
-        setInscricoes((prev) => {
-          if (editingSubscription) {
-            // Update existing
-            return prev.map((x) =>
-              x.subscription_id === mapped.subscription_id ? mapped : x
-            );
-          }
-          // Add new
-          return [mapped, ...prev];
-        });
-
-        // Show success message
-        toast.success(
-          editingSubscription 
-            ? "Inscrição atualizada com sucesso!" 
-            : "Inscrição registrada com sucesso!"
-        );
-
         closeModal();
       } catch (err) {
         console.error(err);
-        toast.error("Erro ao processar a inscrição");
-      } finally {
-        setIsLoading(false);
+        toast.error('Erro ao salvar inscrição');
       }
     },
-    [editingSubscription, closeModal]
+    [editingSubscription, closeModal, createSubscription, updateSubscription]
   );
 
   const handleSearchResultClick = (result: SearchResult) => {
@@ -159,6 +165,26 @@ const Inscricoes = () => {
     ? [...inscricoes].sort((a, b) => new Date(b.subscription_date).getTime() - new Date(a.subscription_date).getTime())[0] 
     : null;
 
+  // Error or loading states
+  if (isGetSubscriptionsError || isGetTeamsError || isGetChampionshipsError) {
+    return (
+      <DashboardLayout title="GERENCIAR" subtitle="INSCRIÇÕES" breadcrumbs={[]}>
+        <p className="text-red-500">Erro ao carregar dados: {getSubscriptionsError?.message || getTeamsError?.message || getChampionshipsError?.message}</p>
+      </DashboardLayout>
+    );
+  }
+  if (isLoadingGet) {
+    return (
+      <DashboardLayout title="GERENCIAR" subtitle="INSCRIÇÕES" breadcrumbs={[]}>
+        <p className="text-white">Carregando inscrições...</p>
+      </DashboardLayout>
+    );
+  }
+  
+  const isMutating =
+    createSubscription.status === 'pending' ||
+    updateSubscription.status === 'pending' ||
+    deleteSubscription.status === 'pending';
   return (
     <DashboardLayout
       title="GERENCIAR"
@@ -184,7 +210,7 @@ const Inscricoes = () => {
 
         <div className="flex justify-center my-6">
           <UniversalSearchBar
-            searchFunction={searchInscriptions}
+            searchFunction={searchSubscriptions}
             config={{
               searchTypes: ["inscription"],
               placeholder: "Buscar inscrições por equipe, campeonato ou coach...",
@@ -281,8 +307,8 @@ const Inscricoes = () => {
         isOpen={isOpen}
         onClose={closeModal}
         onSubmit={handleSave}
-        teams={teams}
-        championships={championships}
+        teams={teamsData.map((t) => ({ team_id: t.team_id, name: t.name }))}
+        championships={championshipsData.map((c) => ({ championship_id: c.id, name: c.name }))}
         defaultValues={
           editingSubscription ? {
             championship_id: editingSubscription.championship_id,
@@ -298,7 +324,7 @@ const Inscricoes = () => {
         onConfirm={confirmDelete}
         title="Confirmar exclusão"
         entityName={`inscrição de ${deleteItemName}`}
-        isLoading={isLoading}
+        isLoading={isMutating}
       />
     </DashboardLayout>
   );
