@@ -29,7 +29,11 @@ export const createReactQueryService = <T extends Record<string, any>>({
   const useGetAll = (enabled = true) => {
     return useQuery<T[], ApiError>({
       queryKey: baseQueryKey,
-      queryFn: () => apiClient.get<T[]>(`/${normalizedEndpoint}`, { withAuth: true }),
+      queryFn: async () => {
+        const result = await apiClient.get<T[]>(`/${normalizedEndpoint}`, { withAuth: true });
+        // Ensure we always return an array
+        return Array.isArray(result) ? result : [];
+      },
       enabled,
     });
   };

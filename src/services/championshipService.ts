@@ -18,7 +18,7 @@ export interface Championship {
 
 export const championshipService = createReactQueryService<Championship>({
   entityName: 'Campeonato',
-  endpoint: '/championship',
+  endpoint: '/championships',
 });
 
 export const {

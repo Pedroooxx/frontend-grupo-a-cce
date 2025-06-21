@@ -55,6 +55,12 @@ const GerenciarEquipes = () => {
 
   // Convert API data to TeamDisplay format
   const teams = useMemo((): TeamDisplay[] => {
+    // Ensure teamsData is an array before mapping
+    if (!Array.isArray(teamsData)) {
+      console.error('teamsData is not an array:', teamsData);
+      return [];
+    }
+    
     return teamsData.map((team: Team) => {
       const coach = team.Participants.find((p: TeamParticipant) => p.is_coach);
       const members = team.Participants

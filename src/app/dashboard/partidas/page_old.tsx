@@ -1,32 +1,28 @@
 "use client";
-import React, { useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { DashboardLayout } from "../_components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, Trophy, Target } from "lucide-react";
+import { Calendar, Plus, Edit, Clock, MapPin, Trophy, Trash2, Target } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { SearchResult } from "@/hooks/useSearch";
+import { useModal } from "@/hooks/useModal";
+import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
 import { toast } from "react-hot-toast";
 import { 
   useGetAllMatches, 
+  useBulkUpdateMatches,
   useUpdateMatchResult,
   Match 
 } from "@/services/matchService";
 import { useGetAllTeams, Team } from "@/services/teamService";
 import { useGetAllChampionships, Championship } from "@/services/championshipService";
 
-/**
- * Create a search function for matches using API data
- * @param query - Search query string
- * @param types - Array of search types to include
- * @param matches - Array of matches data
- * @param teams - Array of teams data
- * @returns Array of search results
- */
+// Create a search function for matches using API data
 const searchMatches = (query: string, types: string[] = ["match"], matches: Match[] = [], teams: Team[] = []): SearchResult[] => {
-  if (!query.trim() || !types.includes("match") || !Array.isArray(matches) || !Array.isArray(teams)) return [];
+  if (!query.trim() || !types.includes("match")) return [];
 
   const searchQuery = query.toLowerCase();
 
@@ -61,13 +57,15 @@ const searchMatches = (query: string, types: string[] = ["match"], matches: Matc
     });
 };
 
-/**
- * Dashboard page for managing matches (partidas)
- * Displays match data with team information, scores, and statistics
- * Includes search functionality and error handling for API responses
- */
 const GerenciarPartidas = () => {
   const router = useRouter();
+  const { isOpen, openModal, closeModal } = useModal();
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+
+  // Delete confirmation modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
+  const [deleteItemName, setDeleteItemName] = useState<string>("");
 
   // Fetch data via service hooks
   const {
@@ -93,10 +91,13 @@ const GerenciarPartidas = () => {
 
   const isLoadingGet = isLoadingMatches || isLoadingTeams || isLoadingChampionships;
 
-  // Mutation hooks (only result update is available)
+  // Mutation hooks (only bulk update and individual result update are available)
+  const bulkUpdateMatches = useBulkUpdateMatches();
   const updateMatchResult = useUpdateMatchResult();
   
-  const isMutating = updateMatchResult.status === "pending";
+  const isMutating =
+    bulkUpdateMatches.status === "pending" ||
+    updateMatchResult.status === "pending";
 
   // Error handling effects
   useEffect(() => {
@@ -117,18 +118,43 @@ const GerenciarPartidas = () => {
     }
   }, [isChampionshipsError, championshipsError]);
 
+  // Convert teams data for modal compatibility
+  const convertedTeams = useMemo(() => {
+    return teamsData.map(team => ({
+      team_id: team.team_id,
+      name: team.name,
+      manager_name: team.name, // Default manager name
+      logo: undefined,
+      wins: 0,
+      losses: 0,
+      win_rate: 0,
+      participants_count: team.Participants?.length || 0,
+      championships_participated: 0,
+      championships_won: 0,
+    }));
+  }, [teamsData]);
+
+  // Convert championships data for modal compatibility
+  const convertedChampionships = useMemo(() => {
+    return championshipsData.map(championship => ({
+      championship_id: championship.id,
+      name: championship.name,
+      description: championship.description,
+      format: championship.format as 'single_elimination' | 'double_elimination' | 'round_robin',
+      start_date: championship.start_date,
+      end_date: championship.end_date,
+      location: championship.location,
+      status: championship.status as 'upcoming' | 'ongoing' | 'completed' | 'cancelled',
+      user_id: championship.user_id,
+    }));
+  }, [championshipsData]);
+
   // Convert API data to display format
   const partidas = useMemo(() => {
-    // Ensure matchesData is an array before mapping
-    if (!Array.isArray(matchesData)) {
-      console.error('matchesData is not an array:', matchesData);
-      return [];
-    }
-    
     return matchesData.map(match => {
-      const teamA = Array.isArray(teamsData) ? teamsData.find(t => t.team_id === match.teamA_id) : undefined;
-      const teamB = Array.isArray(teamsData) ? teamsData.find(t => t.team_id === match.teamB_id) : undefined;
-      const championship = Array.isArray(championshipsData) ? championshipsData.find(c => c.id === match.championship_id) : undefined;
+      const teamA = teamsData.find(t => t.team_id === match.teamA_id);
+      const teamB = teamsData.find(t => t.team_id === match.teamB_id);
+      const championship = championshipsData.find(c => c.id === match.championship_id);
       
       return {
         match_id: match.match_id,
@@ -136,8 +162,6 @@ const GerenciarPartidas = () => {
         team_b: teamB?.name || `Team ${match.teamB_id}`,
         score_a: match.score?.teamA,
         score_b: match.score?.teamB,
-        players_a: teamA?.Participants?.filter(p => !p.is_coach).length || 0,
-        players_b: teamB?.Participants?.filter(p => !p.is_coach).length || 0,
         map: match.map,
         date: new Date(match.date).toLocaleDateString('pt-BR'),
         tournament: championship?.name || `Championship ${match.championship_id}`,
@@ -150,17 +174,58 @@ const GerenciarPartidas = () => {
     });
   }, [matchesData, teamsData, championshipsData]);
 
+  // Handle updating match result
+  const handleUpdateResult = useCallback(async (matchId: number, winnerId: number, score: { teamA: number; teamB: number }) => {
+    try {
+      await updateMatchResult.mutateAsync({
+        id: matchId,
+        winner_team_id: winnerId,
+        score
+      });
+      toast.success("Resultado da partida atualizado com sucesso!");
+    } catch (error) {
+      console.error("Error updating match result:", error);
+      toast.error("Erro ao atualizar resultado da partida");
+    }
+  }, [updateMatchResult]);
+
+  // Close delete confirmation modal
+  const closeDeleteModal = useCallback(() => {
+    setIsDeleteModalOpen(false);
+    setDeleteItemId(null);
+    setDeleteItemName("");
+  }, []);
+
+
+  const renderData = (data: string | null | undefined) => {
+    if (!data) {
+      return (
+        <div className="flex items-center space-x-1">
+          <Clock className="w-4 h-4 text-green-500" />
+          <span className="text-green-400 text-sm font-medium">
+            Necessário agendar
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center space-x-1">
+        <Clock className="w-4 h-4 text-blue-500" />
+        <span className="text-white text-sm">{data}</span>
+      </div>
+    );
+  };
+
   const handleSearchResultClick = (result: SearchResult) => {
     if (result.type === "match") {
-      router.push(`/campeonatos/${result.metadata?.championshipId}/partidas/${result.id}`);
+      router.push(`/dashboard/partidas/${result.id}`);
     }
   };
 
   // Create search function with current data
   const searchMatchesWithData = useCallback((query: string, types: string[] = ["match"]) => {
-    const safeMatchesData = Array.isArray(matchesData) ? matchesData : [];
-    const safeTeamsData = Array.isArray(teamsData) ? teamsData : [];
-    return searchMatches(query, types, safeMatchesData, safeTeamsData);
+    return searchMatches(query, types, matchesData, teamsData);
   }, [matchesData, teamsData]);
 
   const getStatusBadge = (status: string | undefined) => {
@@ -220,6 +285,13 @@ const GerenciarPartidas = () => {
             <Button variant="outline" className="border-gray-600 text-gray-300">
               Filtrar por Status
             </Button>
+            <Button 
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleAddMatch}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Agendar Partida
+            </Button>
           </div>
         </div>
 
@@ -276,9 +348,6 @@ const GerenciarPartidas = () => {
                           <h3 className="text-lg font-bold text-white">
                             {partida.team_a}
                           </h3>
-                          <p className="text-sm text-gray-400">
-                            {partida.players_a} jogadores
-                          </p>
                           {partida.winner === partida.team_a && (
                             <Trophy className="w-5 h-5 text-yellow-500 mx-auto mt-1" />
                           )}
@@ -297,9 +366,6 @@ const GerenciarPartidas = () => {
                           <h3 className="text-lg font-bold text-white">
                             {partida.team_b}
                           </h3>
-                          <p className="text-sm text-gray-400">
-                            {partida.players_b} jogadores
-                          </p>
                           {partida.winner === partida.team_b && (
                             <Trophy className="w-5 h-5 text-yellow-500 mx-auto mt-1" />
                           )}
@@ -325,79 +391,156 @@ const GerenciarPartidas = () => {
 
                       <div className="text-center">
                         <p className="dashboard-text-muted text-xs">Fase</p>
-                        <span className="text-white font-medium block">
+                        <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
                           {partida.stage}
-                        </span>
+                        </Badge>
                       </div>
 
                       <div className="text-center">
                         <p className="dashboard-text-muted text-xs">Status</p>
-                        {getStatusBadge(partida.status)}
+                        {getStatusBadge(partida.status)} 
                       </div>
 
-                      <div className="text-center">
-                        <p className="dashboard-text-muted text-xs">Campeonato</p>
-                        <span className="text-white font-medium block">
-                          {partida.tournament}
-                        </span>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-gray-600 text-gray-300"
+                          onClick={() => handleEditMatch(partida.fullMatch)}
+                          disabled={isMutating}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        
+                        {partida.status === 'scheduled' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-green-600 text-green-300"
+                            onClick={() => handleAddResult(partida.fullMatch)}
+                            disabled={isMutating}
+                          >
+                            <Target className="w-4 h-4" />
+                          </Button>
+                        )}
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-red-500 text-red-500"
+                          onClick={() => handleDeleteMatch(partida.match_id)}
+                          disabled={isMutating}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-gray-600 text-gray-300"
-                        onClick={() => router.push(`/campeonatos/${partida.fullMatch.championship_id}/partidas/${partida.match_id}`)}
-                      >
-                        <Target className="w-4 h-4" />
-                        Ver Detalhes
-                      </Button>
+                  <div className="mt-4 pt-4 border-t border-gray-700">
+                    <div className="flex justify-between items-center">
+                      <p className="dashboard-text-muted text-sm">
+                        {partida.tournament}
+                      </p>
+                      {partida.status === 'scheduled' && !partida.winner && (
+                        <Button
+                          size="sm"
+                          className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                          onClick={() => handleAddResult(partida.fullMatch)}
+                          disabled={isMutating}
+                        >
+                          Informar Resultado
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </Card>
               ))
             ) : (
               <div className="text-center py-8 text-gray-400">
-                Nenhuma partida encontrada.
+                Nenhuma partida encontrada. Agende uma nova partida para começar.
               </div>
             )}
           </div>
         )}
 
-        {/* Statistics */}
+        {/* Stats das partidas */}
         {!isLoadingGet && (
-          <div className="mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
             <Card className="dashboard-card border-gray-700 p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Estatísticas das Partidas</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-400">{partidas.length}</p>
-                  <p className="text-sm text-gray-400">Total de Partidas</p>
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-yellow-500/20 rounded-lg">
+                  <Calendar className="w-6 h-6 text-yellow-500" />
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-green-400">
-                    {partidas.filter(p => p.status === 'completed').length}
-                  </p>
-                  <p className="text-sm text-gray-400">Finalizadas</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-yellow-400">
-                    {partidas.filter(p => p.status === 'live').length}
-                  </p>
-                  <p className="text-sm text-gray-400">Ao Vivo</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-purple-400">
+                <div>
+                  <p className="dashboard-text-muted text-sm">Agendadas</p>
+                  <p className="text-2xl font-bold text-white">
                     {partidas.filter(p => p.status === 'scheduled').length}
                   </p>
-                  <p className="text-sm text-gray-400">Agendadas</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="dashboard-card border-gray-700 p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-blue-500/20 rounded-lg">
+                  <Clock className="w-6 h-6 text-blue-500" />
+                </div>
+                <div>
+                  <p className="dashboard-text-muted text-sm">Ao Vivo</p>
+                  <p className="text-2xl font-bold text-white">
+                    {partidas.filter(p => p.status === 'live').length}
+                  </p>
+                </div>
+              </div>
+            </Card>
+            <Card className="dashboard-card border-gray-700 p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-gray-500/20 rounded-lg">
+                  <Trophy className="w-6 h-6 text-gray-500" />
+                </div>
+                <div>
+                  <p className="dashboard-text-muted text-sm">Finalizadas</p>
+                  <p className="text-2xl font-bold text-white">
+                    {partidas.filter(p => p.status === 'completed').length}
+                  </p>
+                </div>
+              </div>
+            </Card>
+            <Card className="dashboard-card border-gray-700 p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-green-500/20 rounded-lg">
+                  <Calendar className="w-6 h-6 text-green-500" />
+                </div>
+                <div>
+                  <p className="dashboard-text-muted text-sm">Total</p>
+                  <p className="text-2xl font-bold text-white">{partidas.length}</p>
                 </div>
               </div>
             </Card>
           </div>
         )}
       </div>
+
+      {/* Add/Edit/Result Match Modal */}
+      <AddMatchModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        onSubmit={handleSaveMatch}
+        teams={teamsData}
+        championships={championshipsData}
+        defaultValues={getDefaultValues()}
+        mode={modalMode}
+      />
+
+      {/* Delete confirmation modal */}
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+        title="Confirmar exclusão"
+        entityName={`a partida ${deleteItemName}`}
+        isLoading={isMutating}
+      />
     </DashboardLayout>
   );
 };

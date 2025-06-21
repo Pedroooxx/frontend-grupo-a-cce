@@ -17,6 +17,7 @@ export interface TeamParticipant {
  * Team interface as returned by the teams API with nested participants
  */
 export interface Team {
+  id: number;
   team_id: number;
   name: string;
   user_id: number;

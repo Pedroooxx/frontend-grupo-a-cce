@@ -37,6 +37,12 @@ export default function GerenciarJogadores() {
 
   // Map participants to DetailedPlayerStats
   const jogadores = useMemo((): DetailedPlayerStats[] => {
+    // Ensure jogadoresData is an array before mapping
+    if (!Array.isArray(jogadoresData)) {
+      console.error('jogadoresData is not an array:', jogadoresData);
+      return [];
+    }
+    
     return jogadoresData.map((p: Participant) => ({
       participant_id: p.id,
       user_id: p.user_id,
