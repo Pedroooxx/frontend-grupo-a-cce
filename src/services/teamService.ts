@@ -3,14 +3,30 @@
  */
 import { createReactQueryService } from './reactQueryService';
 
-export interface Team {
-  id: number;
+/**
+ * Participant interface as returned by the teams API
+ */
+export interface TeamParticipant {
+  participant_id: number;
   name: string;
+  nickname: string;
+  is_coach: boolean;
+}
+
+/**
+ * Team interface as returned by the teams API with nested participants
+ */
+export interface Team {
+  team_id: number;
+  name: string;
+  user_id: number;
+  Participants: TeamParticipant[];
 }
 
 export const teamService = createReactQueryService<Team>({
   entityName: 'Equipe',
   endpoint: '/teams',
+  idField: 'team_id',
 });
 
 export const {
