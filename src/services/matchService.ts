@@ -49,6 +49,18 @@ export const matchService = createReactQueryService<Match>({
   idField: 'match_id',
 });
 
+// Override the useGetById to handle the API response structure
+export const useGetMatchById = (id: string | number, enabled = true) => {
+  return useQuery<Match, ApiError>({
+    queryKey: ['matches', id],
+    queryFn: async () => {
+      const response = await apiClient.get<{success: boolean, data: Match}>(`/matches/${id}`, { withAuth: true });
+      return response.data; // Extract the data field from the response
+    },
+    enabled: enabled && !!id,
+  });
+};
+
 
 // Note: CREATE, UPDATE, DELETE are not available in the API according to the postman collection
 
