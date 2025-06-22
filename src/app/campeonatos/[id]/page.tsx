@@ -1,6 +1,8 @@
 'use client';
 import { notFound } from 'next/navigation';
-import { getChampionshipById, getMatchesByChampionshipId, getTeamsByChampionshipId } from '@/data/search-functions';
+import { useGetChampionshipById, useGetChampionshipMatches } from '@/services/championshipService';
+import { useGetAllSubscriptions } from '@/services/subscriptionService';
+import { getMatchesByChampionshipId, getTeamsByChampionshipId } from '@/data/search-functions';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { ChampionshipDetails } from '@/components/public/ChampionshipDetails';
 import { Calendar, MapPin, Trophy, Users, Crown } from 'lucide-react';
@@ -14,22 +16,79 @@ interface PageProps {
 
 export default function ChampionshipPublicPage({ params }: PageProps) {
   const championshipId = parseInt(params.id);
-  const championship = getChampionshipById(championshipId);
+  
+  // Fetch championship data using React Query (API)
+  const {
+    data: championship,
+    isLoading: isLoadingChampionship,
+    isError: isChampionshipError,
+  } = useGetChampionshipById(championshipId);
+
+  // Fetch subscriptions to count teams for this championship
+  const {
+    data: subscriptionsData = [],
+    isLoading: isLoadingSubscriptions,
+    isError: isSubscriptionsError,
+  } = useGetAllSubscriptions();
+
+  // Fetch matches for this championship to count them
+  const {
+    data: championshipMatches = [],
+    isLoading: isLoadingMatches,
+    isError: isMatchesError,
+  } = useGetChampionshipMatches(championshipId);
+
+  // For now, keep using mock data for matches and teams as requested for ChampionshipDetails component
   const matches = getMatchesByChampionshipId(championshipId);
   const teams = getTeamsByChampionshipId(championshipId);
 
-  if (!championship) {
+  /**
+   * Count teams for this championship using subscription data
+   */
+  const getTeamCountForChampionship = (championshipId: number): number => {
+    if (!subscriptionsData.length) {
+      return 0;
+    }
+
+    // Filter subscriptions by championship_id to get unique teams
+    const championshipSubscriptions = subscriptionsData.filter(
+      subscription => subscription.championship_id === championshipId
+    );
+
+    // Get unique team IDs for this championship
+    const uniqueTeamIds = new Set(championshipSubscriptions.map(sub => sub.team_id));
+
+    return uniqueTeamIds.size;
+  };
+
+  const teamsCount = getTeamCountForChampionship(championshipId);
+  const matchesCount = championshipMatches.length;
+  // Show loading state
+  if (isLoadingChampionship || isLoadingSubscriptions || isLoadingMatches) {
+    return (
+      <PublicLayout title="Carregando...">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+              <p className="text-slate-600">Carregando campeonato...</p>
+            </div>
+          </div>
+        </div>
+      </PublicLayout>
+    );
+  }  // Show error state
+  if (isChampionshipError || !championship) {
     notFound();
   }
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      upcoming: { color: 'bg-yellow-500/20 text-yellow-400', label: 'Em Breve' },
-      ongoing: { color: 'bg-green-500/20 text-green-400', label: 'Em Andamento' },
-      completed: { color: 'bg-blue-500/20 text-blue-400', label: 'Finalizado' },
-      cancelled: { color: 'bg-red-500/20 text-red-400', label: 'Cancelado' }
+      'ATIVO': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
+      'FINALIZADO': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
+      'PLANEJADO': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
     };
-    
+
     const config = statusConfig[status as keyof typeof statusConfig] || { color: 'bg-gray-500/20 text-gray-400', label: status };
     return (
       <Badge className={config.color}>
@@ -60,19 +119,17 @@ export default function ChampionshipPublicPage({ params }: PageProps) {
                   </h1>
                   {getStatusBadge(championship.status)}
                 </div>
-                
+
                 <p className="text-slate-300 mb-6 leading-relaxed">
                   {championship.description}
-                </p>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                </p>                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="flex items-center space-x-2 text-slate-300">
                     <Users className="w-4 h-4 text-red-500" />
-                    <span className="text-sm">{championship.teams_count} equipes</span>
+                    <span className="text-sm">{teamsCount} equipes</span>
                   </div>
                   <div className="flex items-center space-x-2 text-slate-300">
                     <Trophy className="w-4 h-4 text-red-500" />
-                    <span className="text-sm">{championship.matches_count} partidas</span>
+                    <span className="text-sm">{matchesCount} partidas</span>
                   </div>
                   <div className="flex items-center space-x-2 text-slate-300">
                     <Calendar className="w-4 h-4 text-red-500" />
@@ -83,12 +140,11 @@ export default function ChampionshipPublicPage({ params }: PageProps) {
                     <span className="text-sm">{championship.location}</span>
                   </div>
                 </div>
-                
-                {championship.prize_pool && (
+                {(championship.prize_pool || championship.prize) && (
                   <div className="mt-4 flex items-center space-x-2">
                     <Crown className="w-5 h-5 text-yellow-500" />
                     <span className="text-yellow-500 font-semibold">
-                      Premiação: {championship.prize_pool}
+                      Premiação: {championship.prize_pool || championship.prize}
                     </span>
                   </div>
                 )}
@@ -100,7 +156,7 @@ export default function ChampionshipPublicPage({ params }: PageProps) {
 
       {/* Championship Details with Search */}
       <div className="container mx-auto px-4 py-8">
-        <ChampionshipDetails 
+        <ChampionshipDetails
           championshipId={championshipId}
           championshipName={championship.name}
           matches={matches}

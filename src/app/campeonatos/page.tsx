@@ -271,7 +271,6 @@ export default function ChampionshipsListPage() {
                     'ATIVO': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
                     'FINALIZADO': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
                     'PLANEJADO': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
-                    'CANCELADO': { label: 'Cancelado', color: 'bg-red-500/20 text-red-400' }
                   };
                   return statusMap[status as keyof typeof statusMap] || { label: status, color: 'bg-gray-500/20 text-gray-400' };
                 };
