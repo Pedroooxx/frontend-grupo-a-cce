@@ -23,11 +23,11 @@ export interface PublicChampionship {
   championship_id: number;
   name: string;
   description: string;
-  format: 'single_elimination' | 'double_elimination' | 'round_robin' | 'swiss';
+  format: 'simple' | 'double';
   start_date: string;
   end_date: string;
   location: string;
-  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  status: "ATIVO" | "PLANEJADO" | "FINALIZADO";
   teams_count: number;
   matches_count: number;
   prize_pool?: string;

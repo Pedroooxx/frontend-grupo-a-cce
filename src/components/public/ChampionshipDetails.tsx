@@ -319,10 +319,10 @@ export function ChampionshipDetails({
                 ))}
               </div>
             ) : (() => {
-              const upcomingMatches = championshipMatches.filter(m => 
+              const upcomingMatches = championshipMatches.filter(m =>
                 m.status === 'Agendada' || m.status === 'Marcada'
               );
-              
+
               if (upcomingMatches.length === 0) {
                 return (
                   <div className="text-center py-8">
@@ -330,7 +330,7 @@ export function ChampionshipDetails({
                   </div>
                 );
               }
-              
+
               return (
                 <div className="space-y-4">
                   {upcomingMatches.slice(0, 3).map((match) => (
@@ -371,12 +371,11 @@ export function ChampionshipDetails({
                                 {match.status === 'Agendada' ? 'À Agendar' : formatDateTime(match.date)}
                               </span>
                             </div>
-                            <Badge 
-                              className={`${
-                                match.status === 'Agendada' 
-                                  ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' 
+                            <Badge
+                              className={`${match.status === 'Agendada'
+                                  ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
                                   : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                              }`}
+                                }`}
                             >
                               {match.status}
                             </Badge>
@@ -471,8 +470,8 @@ export function ChampionshipDetails({
             <div className="text-center mb-2">
               <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
                 {
-                  championship?.format === 'double_elimination' ? 'Eliminação Dupla' :
-                    championship?.format === 'single_elimination' ? 'Eliminação Simples' :
+                  championship?.format === 'double' ? 'Eliminação Dupla' :
+                    championship?.format === 'simple' ? 'Eliminação Simples' :
                       championship?.format?.replace('_', ' ')
                 }
               </Badge>
