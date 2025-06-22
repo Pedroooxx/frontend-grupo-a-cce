@@ -284,11 +284,10 @@ export default function HomePage() {
                 </div>) : (
               // Render championships from API
               championshipsData.slice(0, 3).map((championship: Championship) => {
-                const getStatusDisplay = (status: string) => {
-                  const statusMap = {
-                    'ATIVO': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
-                    'FINALIZADO': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
-                    'PLANEJADO': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' }
+                const getStatusDisplay = (status: string) => {                  const statusMap = {
+                    'ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
+                    'finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
+                    'planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' }
                   };
                   return statusMap[status as keyof typeof statusMap] || { label: status, color: 'bg-gray-500/20 text-gray-400' };
                 }; const statusDisplay = getStatusDisplay(championship.status);

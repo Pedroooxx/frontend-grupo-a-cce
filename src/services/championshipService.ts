@@ -19,7 +19,6 @@ export interface Championship {
   user_id: number;
   teams_count: number;
   matches_count: number;
-  prize_pool?: string;
 }
 
 export const championshipService = createReactQueryService<Championship>({

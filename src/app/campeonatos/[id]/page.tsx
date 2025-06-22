@@ -81,12 +81,11 @@ export default function ChampionshipPublicPage({ params }: PageProps) {
   if (isChampionshipError || !championship) {
     notFound();
   }
-
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      'ATIVO': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
-      'FINALIZADO': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
-      'PLANEJADO': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
+      'ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
+      'finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
+      'planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || { color: 'bg-gray-500/20 text-gray-400', label: status };

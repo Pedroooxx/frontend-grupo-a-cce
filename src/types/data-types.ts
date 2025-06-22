@@ -27,7 +27,7 @@ export interface PublicChampionship {
   start_date: string;
   end_date: string;
   location: string;
-  status: "ATIVO" | "PLANEJADO" | "FINALIZADO";
+  status: "ativo" | "planejado" | "finalizado";
   teams_count: number;
   matches_count: number;
   prize_pool?: string;

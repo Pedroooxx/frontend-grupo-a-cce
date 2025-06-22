@@ -72,15 +72,14 @@ export default function ChampionshipsListPage() {
       return 0;
     }
     return matchesData.filter(match => match.championship_id === championshipId).length;
-  };
-  // Map API status to filter status
+  };  // Map API status to filter status
   const mapApiStatusToFilter = (apiStatus: string): 'upcoming' | 'ongoing' | 'completed' => {
     switch (apiStatus) {
-      case 'PLANEJADO':
+      case 'planejado':
         return 'upcoming';
-      case 'ATIVO':
+      case 'ativo':
         return 'ongoing';
-      case 'FINALIZADO':
+      case 'finalizado':
         return 'completed';
       default:
         return 'upcoming'; // default
@@ -268,9 +267,9 @@ export default function ChampionshipsListPage() {
               filteredChampionships.map((championship: Championship) => {
                 const getStatusDisplay = (status: string) => {
                   const statusMap = {
-                    'ATIVO': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
-                    'FINALIZADO': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
-                    'PLANEJADO': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
+                    'ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
+                    'finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
+                    'planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
                   };
                   return statusMap[status as keyof typeof statusMap] || { label: status, color: 'bg-gray-500/20 text-gray-400' };
                 };
@@ -344,9 +343,8 @@ export default function ChampionshipsListPage() {
                     <Link
                       href={`/campeonatos/${championship.championship_id}`}
                       className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-3 rounded-md flex items-center justify-center mt-auto"
-                    >
-                      {championship.status === 'FINALIZADO' ? 'Ver Resultados' :
-                        championship.status === 'PLANEJADO' ? 'Ver Detalhes' : 'Ver Detalhes'}
+                    >                      {championship.status === 'finalizado' ? 'Ver Resultados' :
+                        championship.status === 'planejado' ? 'Ver Detalhes' : 'Ver Detalhes'}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                   </div>
