@@ -15,7 +15,8 @@ export interface Championship {
 export interface ChampionshipFormValues {
   championship_id?: number;
   name: string;
-  description?: string;  format: "simple" | "double";
+  description?: string;
+  format: "simple" | "double";
   start_date: string;
   end_date: string;
   location: string;

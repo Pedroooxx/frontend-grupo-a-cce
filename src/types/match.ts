@@ -86,14 +86,15 @@ export interface Match {
   teamA_id: number;
   teamB_id: number;
   date: string;
-  stage: string;
+  stage: "Oitavas de Final" | "Quartas de Final" | "Semifinal" | "Final";
   bracket: "upper" | "lower";
   winner_team_id: number | null;
   score: {
     teamA: number;
     teamB: number;
-  } | null;  map: string;
-  status: "Agendada" | "Marcada" | "Encerrada";
+  } | null;
+  map: string;
+  status: "Agendada" | "Marcada" | "Finalizada";
   next_match_id: number | null;
   TeamA: {
     team_id: number;
@@ -135,12 +136,10 @@ export const AVAILABLE_MAPS = [
 
 // Available stages
 export const AVAILABLE_STAGES = [
-  "Fase de Grupos",
   "Oitavas de final",
   "Quartas de final",
   "Semifinal",
   "Final",
-  "Terceiro lugar",
 ] as const;
 
 // Runtime validation helpers
