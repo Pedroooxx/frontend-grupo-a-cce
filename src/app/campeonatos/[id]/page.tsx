@@ -16,7 +16,7 @@ interface PageProps {
 
 export default function ChampionshipPublicPage({ params }: PageProps) {
   const championshipId = parseInt(params.id);
-  
+
   // Fetch championship data using React Query (API)
   const {
     data: championship,
@@ -140,11 +140,11 @@ export default function ChampionshipPublicPage({ params }: PageProps) {
                     <span className="text-sm">{championship.location}</span>
                   </div>
                 </div>
-                {(championship.prize_pool || championship.prize) && (
+                {(championship.prize) && (
                   <div className="mt-4 flex items-center space-x-2">
                     <Crown className="w-5 h-5 text-yellow-500" />
                     <span className="text-yellow-500 font-semibold">
-                      Premiação: {championship.prize_pool || championship.prize}
+                      Premiação: {championship.prize}
                     </span>
                   </div>
                 )}
