@@ -207,9 +207,9 @@ export default function GerenciarJogadores() {
           ) : isLoadingGet ? (
             <p className="text-white">Carregando jogadores...</p>
           ) : (
+            // Render participant cards with unique keys
             jogadores.map((p: DetailedPlayerStats) => (
-              <ParticipantCard
-                key={p.participant_id}
+              <ParticipantCard key={`player-${p.participant_id}`}
                 player={p}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
