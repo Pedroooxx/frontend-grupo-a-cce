@@ -1,16 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, MapPin, Trophy, Users, Clock, Star, Target, Crown, Zap, BarChart3 } from 'lucide-react';
+import { MapPin, Trophy, Users, Clock, Star, Target, Crown, Zap, BarChart3 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { getStandingsByChampionshipId, getChampionshipById } from '@/data/search-functions';
 import { useGetChampionshipMatches, useGetChampionshipById } from '@/services/championshipService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
-import { useGetAllTeams, Team } from '@/services/teamService';
-import { Match } from '@/types/match';
+import { useGetAllTeams } from '@/services/teamService';
 import { PublicMatch } from '@/types/data-types';
 import { useMemo } from 'react';
 
@@ -32,10 +30,7 @@ interface ChampionshipDetailsProps {
 }
 
 export function ChampionshipDetails({
-  championshipId,
-  championshipName,
-  matches,
-  teams
+  championshipId
 }: ChampionshipDetailsProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'bracket' | 'matches' | 'teams'>('overview');
   const router = useRouter();
@@ -123,10 +118,53 @@ export function ChampionshipDetails({
 
     return uniqueTeamIds.size;
   }; const teamsCount = getTeamCountForChampionship(championshipId);
-  const matchesCount = championshipMatches.length; const completedMatches = championshipMatches.filter(m => m.status === 'Finalizada').length;
+  const matchesCount = championshipMatches.length;  const completedMatches = championshipMatches.filter(m => m.status === 'Finalizada').length;
   const futureMatches = championshipMatches.filter(m => m.status === 'Agendada' || m.status === 'Planejada').length;
+  
+  /**
+   * Get bracket structure based on number of teams
+   */
+  const getBracketStructure = (teamCount: number) => {
+    const rounds = [];
+    let teamsInRound = teamCount;
+    let roundNumber = 1;
 
-  const standings = getStandingsByChampionshipId(championshipId);
+    while (teamsInRound > 1) {
+      const matchesInRound = teamsInRound / 2;
+      let roundName = '';
+
+      switch (teamsInRound) {
+        case 16:
+          roundName = 'Oitavas de Final';
+          break;
+        case 8:
+          roundName = 'Quartas de Final';
+          break;
+        case 4:
+          roundName = 'Semifinal';
+          break;
+        case 2:
+          roundName = 'Final';
+          break;
+        default:
+          roundName = `Rodada ${roundNumber}`;
+      }
+
+      rounds.push({
+        name: roundName,
+        matches: matchesInRound,
+        teams: teamsInRound
+      });
+
+      teamsInRound = teamsInRound / 2;
+      roundNumber++;
+    }
+
+    return rounds;
+  };
+
+  const bracketStructure = getBracketStructure(teamsCount);
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       'Agendada': { color: 'bg-yellow-500/20 text-yellow-400', label: 'Agendada' },
@@ -244,8 +282,12 @@ export function ChampionshipDetails({
                   <label className="text-slate-400 text-sm">Formato</label>
                   <p className="text-white font-medium">
                     {championshipData.format === 'double' ? 'Eliminação Dupla' :
+                      championshipData.format === 'single' ? 'Eliminação Simples' :
                       championshipData.format === 'simple' ? 'Eliminação Simples' :
-                        championshipData.format}
+                      championshipData.format === 'single_elimination' ? 'Eliminação Simples' :
+                      championshipData.format === 'double_elimination' ? 'Eliminação Dupla' :
+                      championshipData.format === 'round_robin' ? 'Pontos Corridos' :
+                        championshipData.format || 'Formato não definido'}
                   </p>
                 </div>
                   <div>
@@ -484,312 +526,186 @@ export function ChampionshipDetails({
               </Button>
             </div>
           </Card></div>
-      )}
-      {activeTab === 'bracket' && (
+      )}      {activeTab === 'bracket' && (
         <div className="space-y-8">
           {/* Tournament Bracket */}
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 overflow-x-auto">
-            <div className="text-center mb-2">              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">                {
-              championshipData?.format === 'double' ? 'Eliminação Dupla' :
-                championshipData?.format === 'simple' ? 'Eliminação Simples' :
-                  ''
-            }
-            </Badge>
+            <div className="text-center mb-2">              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                {championshipData?.format === 'double' ? 'Eliminação Dupla' :
+                  championshipData?.format === 'single' ? 'Eliminação Simples' :
+                  championshipData?.format === 'simple' ? 'Eliminação Simples' :
+                  championshipData?.format === 'single_elimination' ? 'Eliminação Simples' :
+                  championshipData?.format === 'double_elimination' ? 'Eliminação Dupla' :
+                  championshipData?.format === 'round_robin' ? 'Pontos Corridos' :
+                  'Formato do Torneio'}
+              </Badge>
             </div>
             <h3 className="text-2xl font-bold text-white mb-8 text-center flex items-center justify-center">
               <Trophy className="w-6 h-6 text-yellow-500 mr-2" />
               Chaveamento do Torneio
             </h3>
 
-            {/* Bracket Container */}
-            <div className="min-w-[1200px] mx-auto relative">
-              {/* Round Labels */}
-              <div className="flex justify-between mb-8 text-center">
-                <div className="w-48 text-slate-400 font-semibold">Oitavas de Final</div>
-                <div className="w-32 text-slate-400 font-semibold">Quartas</div>
-                <div className="w-32 text-slate-400 font-semibold">Semifinal</div>
-                <div className="w-32 text-slate-400 font-semibold">Final</div>
-                <div className="w-32 text-slate-400 font-semibold">Semifinal</div>
-                <div className="w-32 text-slate-400 font-semibold">Quartas</div>
-                <div className="w-48 text-slate-400 font-semibold">Oitavas de Final</div>
-              </div>
-
-              {/* Bracket Structure */}
-              <div className="flex items-center justify-between relative">
-                {/* Left Side - Upper Bracket */}
-                <div className="space-y-4">
-                  {/* Round 1 - Left Side */}
-                  <div className="space-y-6">
-                    {/* Match 1 */}
-                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-slate-600 rounded">
-                          <span className="text-white font-medium">Valorant Kings</span>
-                          <span className="text-green-400 font-bold">13</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded">
-                          <span className="text-slate-300">Team Alpha</span>
-                          <span className="text-slate-400">8</span>
-                        </div>
-                      </div>
-                      <div className="absolute top-1/2 -right-6 w-6 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+            {/* Dynamic Bracket Container */}
+            {bracketStructure.length > 0 ? (
+              <div className={`mx-auto relative ${bracketStructure.length === 1 ? 'max-w-md' : bracketStructure.length === 2 ? 'max-w-2xl' : bracketStructure.length === 3 ? 'max-w-4xl' : 'min-w-[1200px]'}`}>
+                {/* Round Labels */}
+                <div className={`flex ${bracketStructure.length === 1 ? 'justify-center' : 'justify-between'} mb-8 text-center`}>
+                  {bracketStructure.map((round, index) => (
+                    <div key={index} className={`${bracketStructure.length === 1 ? 'w-64' : bracketStructure.length === 2 ? 'w-48' : bracketStructure.length === 3 ? 'w-40' : 'w-32'} text-slate-400 font-semibold`}>
+                      {round.name}
                     </div>
-
-                    {/* Match 2 */}
-                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-slate-600 rounded">
-                          <span className="text-white font-medium">Phoenix Squad</span>
-                          <span className="text-green-400 font-bold">13</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded">
-                          <span className="text-slate-300">Team Beta</span>
-                          <span className="text-slate-400">11</span>
-                        </div>
-                      </div>
-                      <div className="absolute top-1/2 -right-6 w-6 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                    </div>
-
-                    {/* Match 3 */}
-                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Sage Warriors</span>
-                          <span className="text-yellow-400">vs</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Team Gamma</span>
-                          <span className="text-yellow-400 text-sm">16:00</span>
-                        </div>
-                      </div>
-                      <div className="absolute top-1/2 -right-6 w-6 h-0.5 bg-yellow-500"></div>
-                    </div>
-
-                    {/* Match 4 */}
-                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Viper Elite</span>
-                          <span className="text-yellow-400">vs</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Team Delta</span>
-                          <span className="text-yellow-400 text-sm">18:00</span>
-                        </div>
-                      </div>
-                      <div className="absolute top-1/2 -right-6 w-6 h-0.5 bg-yellow-500"></div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
-                {/* Quarter Finals - Left */}
-                <div className="space-y-12">
-                  {/* Quarter 1 */}
-                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 bg-slate-600 rounded">
-                        <span className="text-white text-sm">V. Kings</span>
-                        <span className="text-green-400 font-bold">13</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded">
-                        <span className="text-slate-300 text-sm">P. Squad</span>
-                        <span className="text-slate-400">9</span>
-                      </div>
+                {/* Bracket Structure */}
+                <div className={`flex items-center ${bracketStructure.length === 1 ? 'justify-center' : 'justify-between'} relative`}>
+                  {bracketStructure.map((round, roundIndex) => (
+                    <div key={roundIndex} className={`${roundIndex === bracketStructure.length - 1 ? 'flex items-center' : 'space-y-6'}`}>
+                      {/* Final round special styling */}
+                      {roundIndex === bracketStructure.length - 1 ? (
+                        <div className={`${bracketStructure.length === 1 ? 'w-64' : 'w-40'} bg-gradient-to-r from-yellow-900 to-yellow-800 rounded-lg border-2 border-yellow-500 p-4 relative shadow-lg shadow-yellow-500/20`}>
+                          <div className="text-center mb-3">
+                            <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-1" />
+                            <span className="text-yellow-400 font-bold text-sm">{round.name.toUpperCase()}</span>
+                          </div>
+                          <div className="space-y-2">
+                            {/* Get final match from championship matches */}
+                            {(() => {
+                              const finalMatch = championshipMatches.find(m => 
+                                m.stage?.toLowerCase().includes('final') || 
+                                m.stage === 'Final'
+                              );
+                              
+                              if (finalMatch) {
+                                return (
+                                  <>
+                                    <div className={`flex items-center justify-between p-2 ${finalMatch.winner_team_id === finalMatch.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${finalMatch.status !== 'Finalizada' ? 'border border-yellow-500' : ''}`}>
+                                      <span className="text-white font-medium text-sm">{finalMatch.TeamA?.name || 'TBD'}</span>
+                                      <span className={finalMatch.status === 'Finalizada' ? (finalMatch.winner_team_id === finalMatch.teamA_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400'}>
+                                        {finalMatch.status === 'Finalizada' ? (finalMatch.score?.teamA || '0') : 'vs'}
+                                      </span>
+                                    </div>
+                                    <div className={`flex items-center justify-between p-2 ${finalMatch.winner_team_id === finalMatch.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${finalMatch.status !== 'Finalizada' ? 'border border-yellow-500' : ''}`}>
+                                      <span className="text-white font-medium text-sm">{finalMatch.TeamB?.name || 'TBD'}</span>
+                                      <span className={finalMatch.status === 'Finalizada' ? (finalMatch.winner_team_id === finalMatch.teamB_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400 text-xs'}>
+                                        {finalMatch.status === 'Finalizada' ? (finalMatch.score?.teamB || '0') : formatDateTime(finalMatch.date || '')}
+                                      </span>
+                                    </div>
+                                  </>
+                                );
+                              } else {
+                                return (
+                                  <>
+                                    <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                                      <span className="text-white font-medium text-sm">TBD</span>
+                                      <span className="text-yellow-400">vs</span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                                      <span className="text-white font-medium text-sm">TBD</span>
+                                      <span className="text-yellow-400 text-xs">A definir</span>
+                                    </div>
+                                  </>
+                                );
+                              }
+                            })()}
+                          </div>
+                        </div>
+                      ) : (
+                        /* Regular rounds */
+                        <div className="space-y-6">
+                          {Array.from({ length: round.matches }).map((_, matchIndex) => {
+                            // Try to find actual match data for this round
+                            const roundMatches = championshipMatches.filter(m => {
+                              if (round.name === 'Semifinal') return m.stage?.toLowerCase().includes('semifinal');
+                              if (round.name === 'Quartas de Final') return m.stage?.toLowerCase().includes('quartas') || m.stage?.toLowerCase().includes('quarter');
+                              if (round.name === 'Oitavas de Final') return m.stage?.toLowerCase().includes('oitavas') || m.stage?.toLowerCase().includes('round 1') || m.stage?.toLowerCase().includes('rodada 1');
+                              return false;
+                            });
+                            
+                            const match = roundMatches[matchIndex];
+                            
+                            return (
+                              <div key={matchIndex} className={`${bracketStructure.length === 2 ? 'w-48' : bracketStructure.length === 3 ? 'w-40' : 'w-32'} bg-slate-700 rounded-lg border border-slate-600 p-3 relative`}>
+                                <div className="space-y-2">
+                                  {match ? (
+                                    <>
+                                      <div className={`flex items-center justify-between p-2 ${match.winner_team_id === match.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${match.status !== 'Finalizada' ? 'border-2 border-yellow-500' : ''}`}>
+                                        <span className="text-white font-medium text-sm truncate pr-2">{match.TeamA?.name || `Team ${match.teamA_id}`}</span>
+                                        <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamA_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400'}>
+                                          {match.status === 'Finalizada' ? (match.score?.teamA || '0') : 'vs'}
+                                        </span>
+                                      </div>
+                                      <div className={`flex items-center justify-between p-2 ${match.winner_team_id === match.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${match.status !== 'Finalizada' ? 'border-2 border-yellow-500' : ''}`}>
+                                        <span className="text-white font-medium text-sm truncate pr-2">{match.TeamB?.name || `Team ${match.teamB_id}`}</span>
+                                        <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamB_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400 text-xs'}>
+                                          {match.status === 'Finalizada' ? (match.score?.teamB || '0') : (match.date ? formatDateTime(match.date) : 'TBD')}
+                                        </span>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    /* Placeholder for matches not yet created */
+                                    <>
+                                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-slate-500">
+                                        <span className="text-slate-400 text-sm">TBD</span>
+                                        <span className="text-slate-500">vs</span>
+                                      </div>
+                                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-slate-500">
+                                        <span className="text-slate-400 text-sm">TBD</span>
+                                        <span className="text-slate-500 text-xs">-</span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                                {/* Connection lines - only if not the last round */}
+                                {roundIndex < bracketStructure.length - 1 && (
+                                  <div className={`absolute top-1/2 -right-4 w-4 h-0.5 ${match?.status === 'Finalizada' ? 'bg-gradient-to-r from-blue-500 to-purple-500' : match ? 'bg-yellow-500' : 'bg-slate-600'}`}></div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                    <div className="absolute top-1/2 -right-4 w-4 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"></div>
-                  </div>
-
-                  {/* Quarter 2 */}
-                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white text-sm">TBD</span>
-                        <span className="text-yellow-400">vs</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white text-sm">TBD</span>
-                        <span className="text-yellow-400 text-xs">20:00</span>
-                      </div>
-                    </div>
-                    <div className="absolute top-1/2 -right-4 w-4 h-0.5 bg-yellow-500"></div>
-                  </div>
+                  ))}
                 </div>
 
-                {/* Semi Final - Left */}
-                <div className="flex items-center">
-                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white text-sm">V. Kings</span>
-                        <span className="text-yellow-400">vs</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white text-sm">TBD</span>
-                        <span className="text-yellow-400 text-xs">Dom 19:00</span>
-                      </div>
+                {/* Tournament Info */}
+                <div className="mt-12 text-center">
+                  <div className="flex justify-center space-x-8 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                      <span className="text-slate-400">Partida Finalizada</span>
                     </div>
-                    <div className="absolute top-1/2 -right-4 w-4 h-0.5 bg-gradient-to-r from-pink-500 to-red-500"></div>
-                  </div>
-                </div>
-
-                {/* FINAL */}
-                <div className="flex items-center relative">
-                  <div className="w-40 bg-gradient-to-r from-yellow-900 to-yellow-800 rounded-lg border-2 border-yellow-500 p-4 relative shadow-lg shadow-yellow-500/20">
-                    <div className="text-center mb-3">
-                      <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-1" />
-                      <span className="text-yellow-400 font-bold text-sm">GRANDE FINAL</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-0.5 bg-yellow-500"></div>
+                      <span className="text-slate-400">Partida Agendada</span>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white font-medium text-sm">TBD</span>
-                        <span className="text-yellow-400">vs</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white font-medium text-sm">TBD</span>
-                        <span className="text-yellow-400 text-xs">Dom 21:00</span>
-                      </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-0.5 bg-slate-600"></div>
+                      <span className="text-slate-400">Aguardando Definição</span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Semi Final - Right */}
-                <div className="flex items-center">
-                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white text-sm">TBD</span>
-                        <span className="text-yellow-400">vs</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white text-sm">TBD</span>
-                        <span className="text-yellow-400 text-xs">Dom 19:00</span>
-                      </div>
-                    </div>
-                    <div className="absolute top-1/2 -left-4 w-4 h-0.5 bg-gradient-to-l from-pink-500 to-red-500"></div>
-                  </div>
-                </div>
-
-                {/* Quarter Finals - Right */}
-                <div className="space-y-12">
-                  {/* Quarter 3 */}
-                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white text-sm">TBD</span>
-                        <span className="text-yellow-400">vs</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white text-sm">TBD</span>
-                        <span className="text-yellow-400 text-xs">19:00</span>
-                      </div>
-                    </div>
-                    <div className="absolute top-1/2 -left-4 w-4 h-0.5 bg-yellow-500"></div>
-                  </div>
-
-                  {/* Quarter 4 */}
-                  <div className="w-32 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white text-sm">TBD</span>
-                        <span className="text-yellow-400">vs</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                        <span className="text-white text-sm">TBD</span>
-                        <span className="text-yellow-400 text-xs">21:00</span>
-                      </div>
-                    </div>
-                    <div className="absolute top-1/2 -left-4 w-4 h-0.5 bg-yellow-500"></div>
-                  </div>
-                </div>
-
-                {/* Right Side - Lower Bracket */}
-                <div className="space-y-4">
-                  {/* Round 1 - Right Side */}
-                  <div className="space-y-6">
-                    {/* Match 5 */}
-                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Team Echo</span>
-                          <span className="text-yellow-400">vs</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Team Foxtrot</span>
-                          <span className="text-yellow-400 text-sm">14:00</span>
-                        </div>
-                      </div>
-                      <div className="absolute top-1/2 -left-6 w-6 h-0.5 bg-yellow-500"></div>
-                    </div>
-
-                    {/* Match 6 */}
-                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Team Golf</span>
-                          <span className="text-yellow-400">vs</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Team Hotel</span>
-                          <span className="text-yellow-400 text-sm">16:00</span>
-                        </div>
-                      </div>
-                      <div className="absolute top-1/2 -left-6 w-6 h-0.5 bg-yellow-500"></div>
-                    </div>
-
-                    {/* Match 7 */}
-                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Team India</span>
-                          <span className="text-yellow-400">vs</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Team Juliet</span>
-                          <span className="text-yellow-400 text-sm">18:00</span>
-                        </div>
-                      </div>
-                      <div className="absolute top-1/2 -left-6 w-6 h-0.5 bg-yellow-500"></div>
-                    </div>
-
-                    {/* Match 8 */}
-                    <div className="w-48 bg-slate-700 rounded-lg border border-slate-600 p-3 relative">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Team Kilo</span>
-                          <span className="text-yellow-400">vs</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border-2 border-yellow-500">
-                          <span className="text-white font-medium">Team Lima</span>
-                          <span className="text-yellow-400 text-sm">20:00</span>
-                        </div>
-                      </div>
-                      <div className="absolute top-1/2 -left-6 w-6 h-0.5 bg-yellow-500"></div>
+                    <div className="flex items-center space-x-2">
+                      <Trophy className="w-4 h-4 text-yellow-500" />
+                      <span className="text-slate-400">Grande Final</span>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Tournament Info */}
-              <div className="mt-12 text-center">
-                <div className="flex justify-center space-x-8 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                    <span className="text-slate-400">Partida Finalizada</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-0.5 bg-yellow-500"></div>
-                    <span className="text-slate-400">Partida Agendada</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Trophy className="w-4 h-4 text-yellow-500" />
-                    <span className="text-slate-400">Grande Final</span>
-                  </div>
-                </div>
+            ) : (
+              /* No teams message */
+              <div className="text-center py-12">
+                <Trophy className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                <h4 className="text-xl font-semibold text-slate-400 mb-2">Chaveamento não disponível</h4>
+                <p className="text-slate-500">
+                  {teamsCount === 0 ? 'Nenhuma equipe inscrita ainda.' : 
+                   teamsCount === 1 ? 'É necessário pelo menos 2 equipes para gerar o chaveamento.' :
+                   `${teamsCount} equipes inscritas. O chaveamento será gerado quando as partidas forem criadas.`}
+                </p>
               </div>
-            </div>
+            )}
           </div>
         </div>
-      )}      {activeTab === 'matches' && (
+      )}{activeTab === 'matches' && (
         <div className="space-y-6">
           {isLoadingMatches ? (
             <div className="grid gap-6">
