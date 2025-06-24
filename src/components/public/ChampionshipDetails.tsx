@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { getStandingsByChampionshipId, getChampionshipById } from '@/data/search-functions';
-import { useGetChampionshipMatches } from '@/services/championshipService';
+import { useGetChampionshipMatches, useGetChampionshipById } from '@/services/championshipService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
 import { useGetAllTeams, Team } from '@/services/teamService';
 import { Match } from '@/types/match';
@@ -39,6 +39,13 @@ export function ChampionshipDetails({
 }: ChampionshipDetailsProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'bracket' | 'matches' | 'teams'>('overview');
   const router = useRouter();
+  // Fetch championship data using React Query (API)
+  const {
+    data: championshipData,
+    isLoading: isLoadingChampionship,
+    isError: isChampionshipError,
+  } = useGetChampionshipById(championshipId);
+
   // Fetch subscriptions to count teams for this championship
   const {
     data: subscriptionsData = [],
@@ -119,7 +126,6 @@ export function ChampionshipDetails({
   const matchesCount = championshipMatches.length; const completedMatches = championshipMatches.filter(m => m.status === 'Finalizada').length;
   const futureMatches = championshipMatches.filter(m => m.status === 'Agendada' || m.status === 'Planejada').length;
 
-  const championship = getChampionshipById(championshipId);
   const standings = getStandingsByChampionshipId(championshipId);
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -145,6 +151,30 @@ export function ChampionshipDetails({
       minute: '2-digit'
     });
   };
+
+  // Show loading state
+  if (isLoadingChampionship || isLoadingSubscriptions || isLoadingMatches || isLoadingTeams) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        <div className="h-12 bg-slate-700 rounded"></div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 bg-slate-700 rounded"></div>
+          ))}
+        </div>
+        <div className="h-64 bg-slate-700 rounded"></div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (isChampionshipError || !championshipData) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-slate-400">Erro ao carregar dados do campeonato.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">      {/* Navigation Tabs */}
@@ -202,9 +232,7 @@ export function ChampionshipDetails({
               </div>
               <div className="text-slate-400 text-sm">Partidas a seguir</div>
             </Card>
-          </div>
-
-          {championship && (
+          </div>          {championshipData && (
             <div className="grid md:grid-cols-2 gap-8">
               {/* Championship Information */}
               <Card className="bg-slate-800 border-slate-700 p-6">
@@ -213,32 +241,32 @@ export function ChampionshipDetails({
                   Informações do Campeonato
                 </h3>
                 <div className="space-y-4">                  <div>
-                    <label className="text-slate-400 text-sm">Formato</label>
-                    <p className="text-white font-medium">
-                      {championship.format === 'double' ? 'Eliminação Dupla' : 
-                       championship.format === 'simple' ? 'Eliminação Simples' : 
-                       championship.format}
-                    </p>
-                  </div>
+                  <label className="text-slate-400 text-sm">Formato</label>
+                  <p className="text-white font-medium">
+                    {championshipData.format === 'double' ? 'Eliminação Dupla' :
+                      championshipData.format === 'simple' ? 'Eliminação Simples' :
+                        championshipData.format}
+                  </p>
+                </div>
                   <div>
                     <label className="text-slate-400 text-sm">Período</label>
                     <p className="text-white">
-                      {new Date(championship.start_date).toLocaleDateString('pt-BR')} - {new Date(championship.end_date).toLocaleDateString('pt-BR')}
+                      {new Date(championshipData.start_date).toLocaleDateString('pt-BR')} - {new Date(championshipData.end_date).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                   <div>
                     <label className="text-slate-400 text-sm">Local</label>
                     <p className="text-white flex items-center">
                       <MapPin className="w-4 h-4 text-red-500 mr-1" />
-                      {championship.location}
+                      {championshipData.location}
                     </p>
                   </div>
-                  {championship.prize_pool && (
+                  {championshipData.prize && (
                     <div>
                       <label className="text-slate-400 text-sm">Premiação</label>
                       <p className="text-yellow-500 font-semibold flex items-center">
                         <Crown className="w-4 h-4 mr-1" />
-                        {championship.prize_pool}
+                        {championshipData.prize}
                       </p>
                     </div>
                   )}
@@ -461,13 +489,12 @@ export function ChampionshipDetails({
         <div className="space-y-8">
           {/* Tournament Bracket */}
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 overflow-x-auto">
-            <div className="text-center mb-2">              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                {
-                  championship?.format === 'double' ? 'Eliminação Dupla' :
-                    championship?.format === 'simple' ? 'Eliminação Simples' :
-                      ''
-                }
-              </Badge>
+            <div className="text-center mb-2">              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">                {
+              championshipData?.format === 'double' ? 'Eliminação Dupla' :
+                championshipData?.format === 'simple' ? 'Eliminação Simples' :
+                  ''
+            }
+            </Badge>
             </div>
             <h3 className="text-2xl font-bold text-white mb-8 text-center flex items-center justify-center">
               <Trophy className="w-6 h-6 text-yellow-500 mr-2" />
