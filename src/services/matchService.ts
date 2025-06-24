@@ -7,6 +7,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { createReactQueryService } from './reactQueryService';
 
+// Re-export Match type for convenience
+export type { Match } from '@/types/match';
+
 
 interface MatchResponse {
   success: boolean;

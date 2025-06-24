@@ -11,6 +11,7 @@ import { useGetChampionshipMatches } from '@/services/championshipService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
 import { useGetAllTeams, Team } from '@/services/teamService';
 import { Match } from '@/types/match';
+import { PublicMatch } from '@/types/data-types';
 import { useMemo } from 'react';
 
 interface LocalTeam {
@@ -26,7 +27,7 @@ interface LocalTeam {
 interface ChampionshipDetailsProps {
   championshipId: number;
   championshipName: string;
-  matches: Match[];
+  matches: PublicMatch[];
   teams: LocalTeam[];
 }
 
