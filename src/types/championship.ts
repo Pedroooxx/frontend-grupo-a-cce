@@ -6,7 +6,7 @@ export interface Championship {
   start_date: string;
   end_date: string;
   location: string;
-  status: "ativo" | "planejado" | "finalizado";
+  status: "Ativo" | "Planejado" | "Finalizado";
   prize: number | string;
   user_id?: number;
   matches_count: number;
@@ -20,7 +20,7 @@ export interface ChampionshipFormValues {
   start_date: string;
   end_date: string;
   location: string;
-  status: "ativo" | "planejado" | "finalizado";
+  status: "Ativo" | "Planejado" | "Finalizado";
   prize: number | string;
   user_id?: number;
 }

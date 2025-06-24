@@ -80,8 +80,7 @@ export default function ChampionshipPublicPage({ params }: PageProps) {
   }  // Show error state
   if (isChampionshipError || !championship) {
     notFound();
-  }
-  const getStatusBadge = (status: string) => {
+  }  const getStatusBadge = (status: string) => {
     const statusConfig = {
       'ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
       'finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },

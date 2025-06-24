@@ -89,23 +89,21 @@ export default function MatchPublicPage({ params }: PageProps) {
   if (isChampionshipError || isMatchError || !championship || !match) {
     notFound();
   }
-
   const getMatchStatusIcon = (status: string) => {
     switch (status) {
       case 'Finalizada':
         return <CheckCircle className="w-5 h-5 text-green-400" />;
-      case 'Marcada':
+      case 'Planejada':
       case 'Agendada':
         return <Play className="w-5 h-5 text-red-400" />;
       default:
         return <Circle className="w-5 h-5 text-slate-400" />;
     }
   };
-
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; label: string }> = {
       'Agendada': { color: 'bg-yellow-500/20 text-yellow-400', label: 'Agendada' },
-      'Marcada': { color: 'bg-red-500/20 text-red-400', label: 'Marcada' },
+      'Planejada': { color: 'bg-orange-500/20 text-orange-400', label: 'Planejada' },
       'Finalizada': { color: 'bg-green-500/20 text-green-400', label: 'Finalizada' }
     };
     const config = statusConfig[status] || { color: 'bg-gray-500/20 text-gray-400', label: status };

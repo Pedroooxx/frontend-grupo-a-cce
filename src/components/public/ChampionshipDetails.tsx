@@ -115,13 +115,11 @@ export function ChampionshipDetails({
 
     return uniqueTeamIds.size;
   }; const teamsCount = getTeamCountForChampionship(championshipId);
-  const matchesCount = championshipMatches.length;
-  const completedMatches = championshipMatches.filter(m => m.status === 'Encerrada').length;
-  const futureMatches = championshipMatches.filter(m => m.status === 'Agendada' || m.status === 'Marcada').length;
+  const matchesCount = championshipMatches.length;  const completedMatches = championshipMatches.filter(m => m.status === 'Finalizada').length;
+  const futureMatches = championshipMatches.filter(m => m.status === 'Agendada' || m.status === 'Planejada').length;
 
   const championship = getChampionshipById(championshipId);
   const standings = getStandingsByChampionshipId(championshipId);
-
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       scheduled: { color: 'bg-yellow-500/20 text-yellow-400', label: 'Agendada' },
@@ -131,6 +129,20 @@ export function ChampionshipDetails({
       cancelled: { color: 'bg-gray-500/20 text-gray-400', label: 'Cancelada' },
       upcoming: { color: 'bg-yellow-500/20 text-yellow-400', label: 'Em Breve' },
       ongoing: { color: 'bg-green-500/20 text-green-400', label: 'Em Andamento' }
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || { color: 'bg-gray-500/20 text-gray-400', label: status };
+    return (
+      <Badge className={config.color}>
+        {config.label}
+      </Badge>
+    );
+  };
+  const getChampionshipStatusBadge = (status: string) => {
+    const statusConfig = {
+      'planejado': { color: 'bg-yellow-500/20 text-yellow-400', label: 'Planejado' },
+      'ativo': { color: 'bg-green-500/20 text-green-400', label: 'Ativo' },
+      'finalizado': { color: 'bg-blue-500/20 text-blue-400', label: 'Finalizado' }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || { color: 'bg-gray-500/20 text-gray-400', label: status };
@@ -243,11 +255,10 @@ export function ChampionshipDetails({
                         {championship.prize_pool}
                       </p>
                     </div>
-                  )}
-                  <div>
+                  )}                    <div>
                     <label className="text-slate-400 text-sm">Status</label>
                     <div className="mt-1">
-                      {getStatusBadge(championship.status)}
+                      {getChampionshipStatusBadge(championship.status)}
                     </div>
                   </div>
                 </div>
@@ -320,7 +331,7 @@ export function ChampionshipDetails({
               </div>
             ) : (() => {
               const upcomingMatches = championshipMatches.filter(m =>
-                m.status === 'Agendada' || m.status === 'Marcada'
+                m.status === 'Planejada' || m.status === 'Agendada'
               );
 
               if (upcomingMatches.length === 0) {
@@ -472,7 +483,9 @@ export function ChampionshipDetails({
                 {
                   championship?.format === 'double' ? 'Eliminação Dupla' :
                     championship?.format === 'simple' ? 'Eliminação Simples' :
-                      championship?.format?.replace('_', ' ')
+                      typeof championship?.format === 'string'
+                        ? (typeof championship.format === 'string' ? championship.format.split('_').join(' ') : '')
+                        : ''
                 }
               </Badge>
             </div>

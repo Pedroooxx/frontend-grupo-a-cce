@@ -121,12 +121,11 @@ export default function TeamPublicPage({ params }: PageProps) {
     winRate: 0,
     position: 2
   };
-
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       Agendada: { color: 'bg-yellow-500/20 text-yellow-400', label: 'Agendada' },
-      Encerrada: { color: 'bg-green-500/20 text-green-400', label: 'Finalizada' },
-      Marcada: { color: 'bg-blue-500/20 text-blue-400', label: 'Marcada' }
+      Planejada: { color: 'bg-orange-500/20 text-orange-400', label: 'Planejada' },
+      Finalizada: { color: 'bg-green-500/20 text-green-400', label: 'Finalizada' }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || { color: 'bg-gray-500/20 text-gray-400', label: status };
@@ -163,9 +162,8 @@ export default function TeamPublicPage({ params }: PageProps) {
       age--;
     }
     return age;
-  };
-  const getMatchResult = (match: any) => {
-    if (match.status !== 'completed' || !match.score) return null;
+  };  const getMatchResult = (match: any) => {
+    if (match.status !== 'finalizado' || !match.score) return null;
     
     const isTeamA = match.TeamA.team_id === teamId;
     const teamScore = isTeamA ? match.score.teamA : match.score.teamB;
@@ -460,9 +458,8 @@ export default function TeamPublicPage({ params }: PageProps) {
 
                         <div className="text-center">
                           <div className="flex items-center text-slate-300 mb-1">
-                            <Clock className="w-4 h-4 mr-1" />
-                            <span className="text-sm">
-                              {match.status === 'Agendada' ? 'À Agendar' : formatDateTime(match.date)}
+                            <Clock className="w-4 h-4 mr-1" />                            <span className="text-sm">
+                              {match.status === 'Planejada' ? 'À Agendar' : formatDateTime(match.date)}
                             </span>
                           </div>
                           {getStatusBadge(match.status)}

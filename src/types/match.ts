@@ -94,7 +94,7 @@ export interface Match {
     teamB: number;
   } | null;
   map: string;
-  status: "Agendada" | "Marcada" | "Finalizada";
+  status: "Agendada" | "Planejada" | "Finalizada";
   next_match_id: number | null;
   TeamA: {
     team_id: number;

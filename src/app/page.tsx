@@ -190,7 +190,7 @@ export default function HomePage() {
                     <Trophy className="w-4 md:w-5 h-4 md:h-5 mr-2" />
                     Criar Meu Campeonato
                   </button>
-                  <button 
+                  <button
                     onClick={() => router.push('/campeonatos')}
                     className="w-full sm:w-auto px-6 md:px-8 py-3 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors rounded-md text-base md:text-lg"
                   >
@@ -206,7 +206,7 @@ export default function HomePage() {
                     <Trophy className="w-4 md:w-5 h-4 md:h-5 mr-2" />
                     Ir para Dashboard
                   </button>
-                  <button 
+                  <button
                     onClick={() => router.push('/campeonatos')}
                     className="w-full sm:w-auto px-6 md:px-8 py-3 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors rounded-md text-base md:text-lg"
                   >
@@ -284,10 +284,11 @@ export default function HomePage() {
                 </div>) : (
               // Render championships from API
               championshipsData.slice(0, 3).map((championship: Championship) => {
-                const getStatusDisplay = (status: string) => {                  const statusMap = {
-                    'ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
-                    'finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
-                    'planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' }
+                const getStatusDisplay = (status: string) => {
+                  const statusMap = {
+                    'Ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
+                    'Finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
+                    'Planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' }
                   };
                   return statusMap[status as keyof typeof statusMap] || { label: status, color: 'bg-gray-500/20 text-gray-400' };
                 }; const statusDisplay = getStatusDisplay(championship.status);
@@ -305,7 +306,7 @@ export default function HomePage() {
                   <div key={championship.championship_id} className="bg-slate-800 border border-slate-700 p-6 hover:bg-slate-750 transition-colors rounded-md flex flex-col min-h-[280px]">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xl font-semibold text-white">{championship.name}</h3>
-                      <span className={`px-3 py-1 ${statusDisplay.color} rounded-full text-sm`}>
+                      <span className={`px-3 py-1 ml-8 ${statusDisplay.color} rounded-full text-sm`}>
                         {statusDisplay.label}
                       </span>
                     </div>
@@ -319,8 +320,8 @@ export default function HomePage() {
                       href={`/campeonatos/${championship.championship_id}`}
                       className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-3 rounded-md flex items-center justify-center mt-auto"
                     >
-                      {championship.status === 'completed' ? 'Ver Resultados' :
-                        championship.status === 'upcoming' ? 'Inscrever-se' : 'Ver Detalhes'}
+                      {championship.status === 'Finalizado' ? 'Ver Resultados' :
+                        championship.status === 'Planejado' ? 'Ver Detalhes' : 'Acompanhe'}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                   </div>
@@ -468,18 +469,16 @@ export default function HomePage() {
                   matchesData.slice(0, 2).map((match: Match) => {
                     const getStatusDisplay = (status: string) => {
                       const statusMap: Record<string, { label: string; color: string }> = {
-                        'Pre-Agendada': { label: 'À Agendar', color: 'bg-orange-500/20 text-orange-400' },
+                        'Planejada': { label: 'À Agendar', color: 'bg-orange-500/20 text-orange-400' },
                         'Agendada': { label: 'Agendada', color: 'bg-yellow-500/20 text-yellow-400' },
-                        'Encerrada': { label: 'Finalizada', color: 'bg-green-500/20 text-green-400' },
+                        'Finalizada': { label: 'Finalizada', color: 'bg-green-500/20 text-green-400' },
                       };
                       return statusMap[status] || { label: status, color: 'bg-blue-500/20 text-blue-400' };
                     };
 
-                    const statusDisplay = getStatusDisplay(match.status);
-
-                    // Only format date/time if not Pre-Agendada
+                    const statusDisplay = getStatusDisplay(match.status);                    // Only format date/time if not Planejada
                     let dateTimeDisplay = "Sem data definida";
-                    if (match.status !== "Agendada") {
+                    if (match.status !== "Planejada") {
                       const matchDate = new Date(match.date);
                       const formattedDate = matchDate.toLocaleDateString('pt-BR', {
                         day: '2-digit',

@@ -15,7 +15,7 @@ import { Match } from '@/types/match';
 
 export default function ChampionshipsListPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'ongoing' | 'completed'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'Planejado' | 'Ativo' | 'Finalizado'>('all');
   const router = useRouter();
 
   // Fetch championships from API
@@ -73,16 +73,16 @@ export default function ChampionshipsListPage() {
     }
     return matchesData.filter(match => match.championship_id === championshipId).length;
   };  // Map API status to filter status
-  const mapApiStatusToFilter = (apiStatus: string): 'upcoming' | 'ongoing' | 'completed' => {
+  const mapApiStatusToFilter = (apiStatus: string): 'Planejado' | 'Ativo' | 'Finalizado' => {
     switch (apiStatus) {
       case 'planejado':
-        return 'upcoming';
+        return 'Planejado';
       case 'ativo':
-        return 'ongoing';
+        return 'Ativo';
       case 'finalizado':
-        return 'completed';
+        return 'Finalizado';
       default:
-        return 'upcoming'; // default
+        return 'Planejado'; // default
     }
   };
 
@@ -197,18 +197,16 @@ export default function ChampionshipsListPage() {
                 onResultClick={handleResultClick} // Optional: handle click on search results
                 className="w-full"
               />
-            </div>
-
-            {/* Status Filter */}            <div className="md:w-48">
+            </div>            {/* Status Filter */}            <div className="md:w-48">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
                 className="w-full py-3 px-4 bg-slate-800 border border-slate-700 rounded-md text-white focus:outline-none focus:ring-2 focus-ring-red-500"
               >
                 <option value="all">Todos os Status</option>
-                <option value="upcoming">Planejados</option>
-                <option value="ongoing">Ativos</option>
-                <option value="completed">Finalizados</option>
+                <option value="Planejado">Planejados</option>
+                <option value="Ativo">Ativos</option>
+                <option value="Finalizado">Finalizados</option>
               </select>
             </div>
           </div>
@@ -267,9 +265,9 @@ export default function ChampionshipsListPage() {
               filteredChampionships.map((championship: Championship) => {
                 const getStatusDisplay = (status: string) => {
                   const statusMap = {
-                    'ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
-                    'finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
-                    'planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
+                    'Ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
+                    'Finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
+                    'Planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
                   };
                   return statusMap[status as keyof typeof statusMap] || { label: status, color: 'bg-gray-500/20 text-gray-400' };
                 };
@@ -343,8 +341,8 @@ export default function ChampionshipsListPage() {
                     <Link
                       href={`/campeonatos/${championship.championship_id}`}
                       className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-3 rounded-md flex items-center justify-center mt-auto"
-                    >                      {championship.status === 'finalizado' ? 'Ver Resultados' :
-                        championship.status === 'planejado' ? 'Ver Detalhes' : 'Ver Detalhes'}
+                    >                      {championship.status === 'Finalizado' ? 'Ver Resultados' :
+                      championship.status === 'Planejado' ? 'Ver Detalhes' : 'Acompanhe'}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                   </div>
