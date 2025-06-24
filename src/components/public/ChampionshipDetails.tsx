@@ -211,10 +211,13 @@ export function ChampionshipDetails({
                   <Trophy className="w-5 h-5 text-yellow-500 mr-2" />
                   Informações do Campeonato
                 </h3>
-                <div className="space-y-4">
-                  <div>
+                <div className="space-y-4">                  <div>
                     <label className="text-slate-400 text-sm">Formato</label>
-                    <p className="text-white font-medium capitalize">{championship.format.replace('_', ' ')}</p>
+                    <p className="text-white font-medium">
+                      {championship.format === 'double' ? 'Eliminação Dupla' : 
+                       championship.format === 'simple' ? 'Eliminação Simples' : 
+                       championship.format}
+                    </p>
                   </div>
                   <div>
                     <label className="text-slate-400 text-sm">Período</label>
@@ -457,14 +460,11 @@ export function ChampionshipDetails({
         <div className="space-y-8">
           {/* Tournament Bracket */}
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 overflow-x-auto">
-            <div className="text-center mb-2">
-              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+            <div className="text-center mb-2">              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
                 {
                   championship?.format === 'double' ? 'Eliminação Dupla' :
                     championship?.format === 'simple' ? 'Eliminação Simples' :
-                      typeof championship?.format === 'string'
-                        ? (typeof championship.format === 'string' ? championship.format.split('_').join(' ') : '')
-                        : ''
+                      ''
                 }
               </Badge>
             </div>
