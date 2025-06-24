@@ -115,34 +115,16 @@ export function ChampionshipDetails({
 
     return uniqueTeamIds.size;
   }; const teamsCount = getTeamCountForChampionship(championshipId);
-  const matchesCount = championshipMatches.length;  const completedMatches = championshipMatches.filter(m => m.status === 'Finalizada').length;
+  const matchesCount = championshipMatches.length; const completedMatches = championshipMatches.filter(m => m.status === 'Finalizada').length;
   const futureMatches = championshipMatches.filter(m => m.status === 'Agendada' || m.status === 'Planejada').length;
 
   const championship = getChampionshipById(championshipId);
   const standings = getStandingsByChampionshipId(championshipId);
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      scheduled: { color: 'bg-yellow-500/20 text-yellow-400', label: 'Agendada' },
-      live: { color: 'bg-red-500/20 text-red-400', label: 'Ao Vivo' },
-      completed: { color: 'bg-green-500/20 text-green-400', label: 'Finalizada' },
-      postponed: { color: 'bg-orange-500/20 text-orange-400', label: 'Adiada' },
-      cancelled: { color: 'bg-gray-500/20 text-gray-400', label: 'Cancelada' },
-      upcoming: { color: 'bg-yellow-500/20 text-yellow-400', label: 'Em Breve' },
-      ongoing: { color: 'bg-green-500/20 text-green-400', label: 'Em Andamento' }
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig] || { color: 'bg-gray-500/20 text-gray-400', label: status };
-    return (
-      <Badge className={config.color}>
-        {config.label}
-      </Badge>
-    );
-  };
-  const getChampionshipStatusBadge = (status: string) => {
-    const statusConfig = {
-      'planejado': { color: 'bg-yellow-500/20 text-yellow-400', label: 'Planejado' },
-      'ativo': { color: 'bg-green-500/20 text-green-400', label: 'Ativo' },
-      'finalizado': { color: 'bg-blue-500/20 text-blue-400', label: 'Finalizado' }
+      'Agendada': { color: 'bg-yellow-500/20 text-yellow-400', label: 'Agendada' },
+      'Planejada': { color: 'bg-orange-500/20 text-orange-400', label: 'Planejada' },
+      'Finalizada': { color: 'bg-green-500/20 text-green-400', label: 'Finalizada' }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || { color: 'bg-gray-500/20 text-gray-400', label: status };
@@ -255,11 +237,8 @@ export function ChampionshipDetails({
                         {championship.prize_pool}
                       </p>
                     </div>
-                  )}                    <div>
-                    <label className="text-slate-400 text-sm">Status</label>
-                    <div className="mt-1">
-                      {getChampionshipStatusBadge(championship.status)}
-                    </div>
+                  )}
+                  <div>
                   </div>
                 </div>
               </Card>              {/* Current Standings */}
@@ -379,13 +358,13 @@ export function ChampionshipDetails({
                             <div className="flex items-center text-slate-300 mb-1">
                               <Clock className="w-4 h-4 mr-1" />
                               <span className="text-sm">
-                                {match.status === 'Agendada' ? 'À Agendar' : formatDateTime(match.date)}
+                                {match.status === 'Planejada' ? 'À Agendar' : formatDateTime(match.date)}
                               </span>
                             </div>
                             <Badge
                               className={`${match.status === 'Agendada'
-                                  ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                                  : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                                : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                                 }`}
                             >
                               {match.status}
@@ -846,7 +825,7 @@ export function ChampionshipDetails({
                         <div className="flex items-center text-slate-300 mb-1">
                           <Clock className="w-4 h-4 mr-1" />
                           <span className="text-sm">
-                            {match.status === 'Agendada' ? 'À Agendar' : formatDateTime(match.date)}
+                            {match.status === 'Planejada' ? 'À Agendar' : formatDateTime(match.date)}
                           </span>
                         </div>
                         {getStatusBadge(match.status)}
