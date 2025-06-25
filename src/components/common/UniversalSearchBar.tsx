@@ -168,8 +168,8 @@ export const UniversalSearchBar = ({
                   {/* Metadata adicional se necessário */}
                   {result.metadata && (
                     <div className="text-right text-xs text-gray-500 hidden md:block">
-                      {result.type === 'player' && result.metadata.kda && (
-                        <div>KDA: {result.metadata.kda}</div>
+                      {result.type === 'player' && result.metadata.teamName && (
+                        <div>Equipe: {result.metadata.teamName}</div>
                       )}
                       {result.type === 'team' && result.metadata.winRate && (
                         <div>{Math.round(result.metadata.winRate * 100)}% WR</div>

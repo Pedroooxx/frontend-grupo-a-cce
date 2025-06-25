@@ -1,10 +1,10 @@
- /**
+/**
  * Participant service with React Query
  */
 import { createReactQueryService } from './reactQueryService';
 
 export interface Participant {
-  id: number;
+  participant_id: number;
   name: string;
   nickname: string;
   birth_date: string;
@@ -17,6 +17,7 @@ export interface Participant {
 export const participantService = createReactQueryService<Participant>({
   entityName: 'Participante',
   endpoint: '/participants',
+  idField: 'participant_id',
 });
 
 export const {

@@ -1,4 +1,5 @@
 'use client';
+import { use } from 'react';
 import { notFound } from 'next/navigation';
 import { useGetChampionshipById, useGetChampionshipMatches } from '@/services/championshipService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
@@ -9,13 +10,14 @@ import { Calendar, MapPin, Trophy, Users, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function ChampionshipPublicPage({ params }: PageProps) {
-  const championshipId = parseInt(params.id);
+  const resolvedParams = use(params);
+  const championshipId = parseInt(resolvedParams.id);
 
   // Fetch championship data using React Query (API)
   const {

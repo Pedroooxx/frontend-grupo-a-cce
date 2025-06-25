@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react';
+import { use } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -29,18 +30,19 @@ import { useGetAllMatches } from '@/services/matchService';
 import PublicLayout from '@/components/layout/PublicLayout';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
     teamId: string;
-  };
+  }>;
 }
 
 export default function TeamPublicPage({ params }: PageProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'players' | 'matches' | 'stats'>('overview');
   const router = useRouter();
   
-  const championshipId = parseInt(params.id);
-  const teamId = parseInt(params.teamId);
+  const resolvedParams = use(params);
+  const championshipId = parseInt(resolvedParams.id);
+  const teamId = parseInt(resolvedParams.teamId);
   
   // Fetch championship data using React Query (API)
   const {
