@@ -12,6 +12,7 @@ export interface TeamParticipant {
   name: string;
   nickname: string;
   is_coach: boolean;
+  team_id?: number;
 }
 
 /**
@@ -21,6 +22,7 @@ export interface Team {
   team_id: number;
   name: string;
   user_id: number;
+  participants_count?: number;
   Participants?: TeamParticipant[];
 }
 
@@ -47,5 +49,15 @@ export const useValidateTeam = (teamId: number | string, enabled = true) => {
     queryKey: ['teams', teamId, 'validate'],
     queryFn: () => apiClient.get<{ isValid: boolean; message: string }>(`/teams/${teamId}/validate`, { withAuth: true }),
     enabled: enabled && !!teamId,
+  });
+};
+
+/**
+ * Hook to get all participants for search functionality
+ */
+export const useGetAllParticipants = () => {
+  return useQuery<TeamParticipant[], ApiError>({
+    queryKey: ['participants'],
+    queryFn: () => apiClient.get<TeamParticipant[]>('/participants', { withAuth: false }),
   });
 };
