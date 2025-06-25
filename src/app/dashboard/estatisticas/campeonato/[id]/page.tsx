@@ -6,13 +6,22 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '../../../_components/DashboardLayout';
 import { Trophy, Users, Target, Calendar, MapPin, Crown, Zap, TrendingUp, Award, Timer, DollarSign } from 'lucide-react';
-import { detailedChampionshipsStats, championshipTeamRankings, championshipPlayerRankings } from '@/data/data-mock';
+import { 
+  useChampionshipOverview, 
+  useChampionshipTeamStatistics, 
+  useChampionshipPlayerStatistics,
+  useTopPlayersByChampionship
+} from '@/hooks/useStatistics';
 
 const ChampionshipStatistics = () => {
   const params = useParams();
   const championshipId = parseInt(params.id as string) || 1;
   
-  const championship = detailedChampionshipsStats.find(c => c.championship_id === championshipId) || detailedChampionshipsStats[0];
+  const { data: championshipOverview, isLoading: isLoadingOverview } = useChampionshipOverview(championshipId);
+  const { data: teamStats = [], isLoading: isLoadingTeamStats } = useChampionshipTeamStatistics(championshipId);
+  const { data: playerStats = [], isLoading: isLoadingPlayerStats } = useChampionshipPlayerStatistics(championshipId);
+  const { data: topPlayers = [], isLoading: isLoadingTopPlayers } = useTopPlayersByChampionship(championshipId);
+  
   const [selectedTab, setSelectedTab] = useState<'overview' | 'teams' | 'players' | 'matches' | 'stats'>('overview');
 
   const getStatusColor = (status: string) => {
@@ -35,14 +44,43 @@ const ChampionshipStatistics = () => {
     }
   };
 
+  if (isLoadingOverview || !championshipOverview) {
+    return (
+      <DashboardLayout
+        title="ESTATÍSTICAS"
+        subtitle="CARREGANDO..."
+        breadcrumbs={[
+          { label: "DASHBOARD", href: "/dashboard" },
+          { label: "ESTATÍSTICAS", href: "/dashboard/estatisticas" },
+          { label: "CARREGANDO..." }
+        ]}
+      >
+        <div className="p-8 space-y-8">
+          <Card className="dashboard-card border-gray-700 p-6 animate-pulse">
+            <div className="h-20 bg-gray-700 rounded w-full"></div>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Calculate additional stats from the player statistics
+  const totalKills = playerStats.reduce((acc: number, player: any) => acc + player.total_kills, 0);
+  const totalDeaths = playerStats.reduce((acc: number, player: any) => acc + player.total_deaths, 0);
+  const kdaRatio = totalDeaths > 0 ? (totalKills / totalDeaths).toFixed(2) : '0';
+  
+  // Sort teams and players for rankings
+  const sortedTeams = [...teamStats].sort((a: any, b: any) => b.points - a.points);
+  const sortedPlayers = [...playerStats].sort((a: any, b: any) => b.kda_ratio - a.kda_ratio);
+
   return (
     <DashboardLayout
       title="ESTATÍSTICAS"
-      subtitle={`CAMPEONATO - ${championship.name.toUpperCase()}`}
+      subtitle={`CAMPEONATO - ${championshipOverview.name.toUpperCase()}`}
       breadcrumbs={[
         { label: "DASHBOARD", href: "/dashboard" },
         { label: "ESTATÍSTICAS", href: "/dashboard/estatisticas" },
-        { label: championship.name.toUpperCase() }
+        { label: championshipOverview.name.toUpperCase() }
       ]}
     >
       <div className="p-8 space-y-8">
@@ -53,31 +91,21 @@ const ChampionshipStatistics = () => {
               <Trophy className="w-12 h-12 text-purple-500" />
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-white">{championship.name}</h1>
-              <p className="text-xl dashboard-text-muted mt-1">{championship.description}</p>
+              <h1 className="text-3xl font-bold text-white">{championshipOverview.name}</h1>
               <div className="flex items-center space-x-4 mt-3">
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-300">{championship.location}</span>
-                </div>
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-300">
-                    {new Date(championship.start_date).toLocaleDateString('pt-BR')} - {new Date(championship.end_date).toLocaleDateString('pt-BR')}
+                    {new Date(championshipOverview.start_date).toLocaleDateString('pt-BR')} - 
+                    {new Date(championshipOverview.end_date).toLocaleDateString('pt-BR')}
                   </span>
                 </div>
               </div>
             </div>
             <div className="text-right space-y-2">
-              <Badge className={getStatusColor(championship.status)}>
-                {getStatusText(championship.status)}
+              <Badge className={getStatusColor(championshipOverview.status)}>
+                {getStatusText(championshipOverview.status)}
               </Badge>
-              <p className="dashboard-text-muted text-sm">
-                Organizado por {championship.organizer_name}
-              </p>
-              {championship.prize_pool && (
-                <p className="text-yellow-400 font-medium">{championship.prize_pool}</p>
-              )}
             </div>
           </div>
         </Card>
@@ -117,7 +145,7 @@ const ChampionshipStatistics = () => {
                   </div>
                   <div>
                     <p className="dashboard-text-muted text-sm">Total de Equipes</p>
-                    <p className="text-2xl font-bold text-white">{championship.total_teams}</p>
+                    <p className="text-2xl font-bold text-white">{championshipOverview.total_teams}</p>
                   </div>
                 </div>
               </Card>
@@ -128,7 +156,7 @@ const ChampionshipStatistics = () => {
                   </div>
                   <div>
                     <p className="dashboard-text-muted text-sm">Total de Jogadores</p>
-                    <p className="text-2xl font-bold text-white">{championship.total_players}</p>
+                    <p className="text-2xl font-bold text-white">{championshipOverview.total_participants}</p>
                   </div>
                 </div>
               </Card>
@@ -139,18 +167,18 @@ const ChampionshipStatistics = () => {
                   </div>
                   <div>
                     <p className="dashboard-text-muted text-sm">Partidas</p>
-                    <p className="text-2xl font-bold text-white">{championship.matches_completed}/{championship.total_matches}</p>
+                    <p className="text-2xl font-bold text-white">{championshipOverview.total_matches}</p>
                   </div>
                 </div>
               </Card>
               <Card className="dashboard-card border-gray-700 p-6 hover:border-yellow-500/50 hover:bg-gray-800/50 transition-all duration-300">
                 <div className="flex items-center space-x-3">
                   <div className="p-3 bg-yellow-500/20 rounded-lg">
-                    <Timer className="w-6 h-6 text-yellow-500" />
+                    <TrendingUp className="w-6 h-6 text-yellow-500" />
                   </div>
                   <div>
-                    <p className="dashboard-text-muted text-sm">Duração Média</p>
-                    <p className="text-2xl font-bold text-white">{championship.avg_match_duration}min</p>
+                    <p className="dashboard-text-muted text-sm">KDA Médio</p>
+                    <p className="text-2xl font-bold text-white">{championshipOverview.highest_kda}</p>
                   </div>
                 </div>
               </Card>
@@ -162,25 +190,23 @@ const ChampionshipStatistics = () => {
                 <h3 className="text-xl font-bold text-white mb-6">Informações do Torneio</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Formato</span>
-                    <Badge className="bg-indigo-500/20 text-indigo-400 border-indigo-500/30">
-                      {championship.format.replace('_', ' ').toUpperCase()}
+                    <span className="dashboard-text-muted">Status</span>
+                    <Badge className={getStatusColor(championshipOverview.status)}>
+                      {getStatusText(championshipOverview.status)}
                     </Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Progresso</span>
-                    <span className="text-white font-medium">
-                      {Math.round((championship.matches_completed / championship.total_matches) * 100)}%
-                    </span>
+                    <span className="dashboard-text-muted">Total de Times</span>
+                    <span className="text-white font-medium">{championshipOverview.total_teams}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Total de Kills</span>
-                    <span className="text-white font-medium">{championship.total_kills.toLocaleString()}</span>
+                    <span className="dashboard-text-muted">Total de Partidas</span>
+                    <span className="text-white font-medium">{championshipOverview.total_matches}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="dashboard-text-muted">KDA Médio do Torneio</span>
                     <span className="text-green-400 font-medium">
-                      {(championship.total_kills / championship.total_deaths).toFixed(2)}
+                      {kdaRatio}
                     </span>
                   </div>
                 </div>
@@ -188,32 +214,49 @@ const ChampionshipStatistics = () => {
 
               <Card className="dashboard-card border-gray-700 p-6 hover:border-gray-600 transition-all duration-300">
                 <h3 className="text-xl font-bold text-white mb-6">Destaques</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Maior Killer</span>
-                    <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
-                      {championship.most_kills_player}
-                    </Badge>
+                {isLoadingTopPlayers ? (
+                  <div className="space-y-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="flex justify-between">
+                        <div className="h-5 bg-gray-700 rounded w-24"></div>
+                        <div className="h-5 bg-gray-700 rounded w-32"></div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Mais MVPs</span>
-                    <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
-                      {championship.most_mvps_player}
-                    </Badge>
+                ) : topPlayers.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span className="dashboard-text-muted">Maior Killer</span>
+                      <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+                        ID: {topPlayers[0].participant_id} ({topPlayers[0].kills} kills)
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="dashboard-text-muted">Mais MVPs</span>
+                      <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                        ID: {topPlayers.reduce((prev: any, current: any) => ((prev.MVPs || 0) > (current.MVPs || 0)) ? prev : current).participant_id}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="dashboard-text-muted">Melhor KDA</span>
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                        ID: {topPlayers.reduce((prev: any, current: any) => 
+                          ((current.kills + current.assists) / Math.max(1, current.deaths) > 
+                           (prev.kills + prev.assists) / Math.max(1, prev.deaths)) 
+                            ? current : prev).participant_id}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="dashboard-text-muted">Maior Pontuação</span>
+                      <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                        ID: {topPlayers.reduce((prev: any, current: any) => 
+                          ((current.total_score || 0) > (prev.total_score || 0)) ? current : prev).participant_id}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Melhor Equipe</span>
-                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                      {championship.best_team}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Agente Mais Usado</span>
-                    <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
-                      {championship.most_popular_agent}
-                    </Badge>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-center text-gray-400">Nenhum destaque disponível</p>
+                )}
               </Card>
             </div>
           </>
@@ -223,34 +266,48 @@ const ChampionshipStatistics = () => {
         {selectedTab === 'teams' && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-white">Ranking de Equipes</h2>
-            <div className="grid grid-cols-1 gap-4">
-              {championshipTeamRankings.map((team, index) => (
-                <Card key={index} className="dashboard-card border-gray-700 p-6 hover:border-blue-500/50 hover:bg-gray-800/30 transition-all duration-300 cursor-pointer">
-                  <div className="flex items-center space-x-6">
-                    <div className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-xl ${
-                      team.rank === 1 ? 'bg-yellow-500/20 text-yellow-400' :
-                      team.rank === 2 ? 'bg-gray-300/20 text-gray-300' :
-                      team.rank === 3 ? 'bg-amber-600/20 text-amber-600' :
-                      'bg-gray-600/20 text-gray-400'
-                    }`}>
-                      #{team.rank}
+            {isLoadingTeamStats ? (
+              <div className="grid grid-cols-1 gap-4">
+                {[...Array(5)].map((_, i) => (
+                  <Card key={i} className="dashboard-card border-gray-700 p-6 animate-pulse">
+                    <div className="h-16 bg-gray-700 rounded w-full"></div>
+                  </Card>
+                ))}
+              </div>
+            ) : sortedTeams.length === 0 ? (
+              <Card className="dashboard-card border-gray-700 p-6">
+                <p className="text-center text-gray-400">Nenhuma equipe registrada para este campeonato.</p>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {sortedTeams.map((team: any, index: number) => (
+                  <Card key={index} className="dashboard-card border-gray-700 p-6 hover:border-blue-500/50 hover:bg-gray-800/30 transition-all duration-300 cursor-pointer">
+                    <div className="flex items-center space-x-6">
+                      <div className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-xl ${
+                        index === 0 ? 'bg-yellow-500/20 text-yellow-400' :
+                        index === 1 ? 'bg-gray-300/20 text-gray-300' :
+                        index === 2 ? 'bg-amber-600/20 text-amber-600' :
+                        'bg-gray-600/20 text-gray-400'
+                      }`}>
+                        #{index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-white">{team.team_name}</h3>
+                        <p className="dashboard-text-muted text-sm">{team.matches_played || team.total_matches || 0} partidas jogadas</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-white font-medium">{team.wins || 0}W - {team.losses || 0}L</p>
+                        <p className="dashboard-text-muted text-sm">Win Rate: {team.win_rate || 0}%</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-white">{team.points || 0}</p>
+                        <p className="dashboard-text-muted text-sm">pontos</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white">{team.team_name}</h3>
-                      <p className="dashboard-text-muted text-sm">{team.matches_played} partidas jogadas</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-white font-medium">{team.wins}W - {team.losses}L</p>
-                      <p className="dashboard-text-muted text-sm">Win Rate: {Math.round(team.win_rate * 100)}%</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-white">{team.points}</p>
-                      <p className="dashboard-text-muted text-sm">pontos</p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -258,34 +315,50 @@ const ChampionshipStatistics = () => {
         {selectedTab === 'players' && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-white">Ranking de Jogadores</h2>
-            <div className="grid grid-cols-1 gap-4">
-              {championshipPlayerRankings.map((player, index) => (
-                <Card key={index} className="dashboard-card border-gray-700 p-6 hover:border-green-500/50 hover:bg-gray-800/30 transition-all duration-300 cursor-pointer">
-                  <div className="flex items-center space-x-6">
-                    <div className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-xl ${
-                      player.rank === 1 ? 'bg-yellow-500/20 text-yellow-400' :
-                      player.rank === 2 ? 'bg-gray-300/20 text-gray-300' :
-                      player.rank === 3 ? 'bg-amber-600/20 text-amber-600' :
-                      'bg-gray-600/20 text-gray-400'
-                    }`}>
-                      #{player.rank}
+            {isLoadingPlayerStats ? (
+              <div className="grid grid-cols-1 gap-4">
+                {[...Array(5)].map((_, i) => (
+                  <Card key={i} className="dashboard-card border-gray-700 p-6 animate-pulse">
+                    <div className="h-16 bg-gray-700 rounded w-full"></div>
+                  </Card>
+                ))}
+              </div>
+            ) : sortedPlayers.length === 0 ? (
+              <Card className="dashboard-card border-gray-700 p-6">
+                <p className="text-center text-gray-400">Nenhum jogador registrado para este campeonato.</p>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {sortedPlayers.map((player: any, index: number) => (
+                  <Card key={index} className="dashboard-card border-gray-700 p-6 hover:border-green-500/50 hover:bg-gray-800/30 transition-all duration-300 cursor-pointer">
+                    <div className="flex items-center space-x-6">
+                      <div className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-xl ${
+                        index === 0 ? 'bg-yellow-500/20 text-yellow-400' :
+                        index === 1 ? 'bg-gray-300/20 text-gray-300' :
+                        index === 2 ? 'bg-amber-600/20 text-amber-600' :
+                        'bg-gray-600/20 text-gray-400'
+                      }`}>
+                        #{index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-white">ID: {player.participant_id}</h3>
+                        <p className="dashboard-text-muted text-sm">{player.team_name || "Time não informado"}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-white font-medium">KDA: {player.kda_ratio?.toFixed(2) || "0.00"}</p>
+                        <p className="dashboard-text-muted text-sm">
+                          {player.kills || 0}K / {player.deaths || 0}D / {player.assists || 0}A
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-yellow-400">{player.MVPs || 0}</p>
+                        <p className="dashboard-text-muted text-sm">MVPs</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white">{player.player_name}</h3>
-                      <p className="dashboard-text-muted text-sm">{player.team_name}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-white font-medium">KDA: {player.kda_ratio}</p>
-                      <p className="dashboard-text-muted text-sm">{player.kills}K / {player.deaths}D / {player.assists}A</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-yellow-400">{player.mvps}</p>
-                      <p className="dashboard-text-muted text-sm">MVPs</p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -309,49 +382,47 @@ const ChampionshipStatistics = () => {
             <h2 className="text-2xl font-bold text-white">Estatísticas Detalhadas</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <Card className="dashboard-card border-gray-700 p-6 hover:border-gray-600 transition-all duration-300">
-                <h3 className="text-xl font-bold text-white mb-6">Meta do Campeonato</h3>
+                <h3 className="text-xl font-bold text-white mb-6">Estatísticas Gerais</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Mapa Mais Jogado</span>
-                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                      {championship.most_played_map}
-                    </Badge>
+                    <span className="dashboard-text-muted">Total de Kills</span>
+                    <span className="text-white font-medium">{totalKills}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Agente Mais Popular</span>
-                    <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
-                      {championship.most_popular_agent}
-                    </Badge>
+                    <span className="dashboard-text-muted">Total de Deaths</span>
+                    <span className="text-white font-medium">{totalDeaths}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Kills Totais</span>
-                    <span className="text-white font-medium">{championship.total_kills.toLocaleString()}</span>
+                    <span className="dashboard-text-muted">KDA Médio</span>
+                    <span className="text-green-400 font-medium">{kdaRatio}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Deaths Totais</span>
-                    <span className="text-white font-medium">{championship.total_deaths.toLocaleString()}</span>
+                    <span className="dashboard-text-muted">Maior Kill</span>
+                    <span className="text-white font-medium">{championshipOverview.highest_kills}</span>
                   </div>
                 </div>
               </Card>
 
               <Card className="dashboard-card border-gray-700 p-6 hover:border-gray-600 transition-all duration-300">
-                <h3 className="text-xl font-bold text-white mb-6">Recordes</h3>
+                <h3 className="text-xl font-bold text-white mb-6">Registros do Campeonato</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Maior Kills em Partida</span>
-                    <span className="text-red-400 font-medium">35 kills</span>
+                    <span className="dashboard-text-muted">Início do Campeonato</span>
+                    <span className="text-white font-medium">
+                      {new Date(championshipOverview.start_date).toLocaleDateString('pt-BR')}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Melhor KDA em Partida</span>
-                    <span className="text-green-400 font-medium">4.2</span>
+                    <span className="dashboard-text-muted">Término do Campeonato</span>
+                    <span className="text-white font-medium">
+                      {new Date(championshipOverview.end_date).toLocaleDateString('pt-BR')}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Partida Mais Longa</span>
-                    <span className="text-white font-medium">42 rounds</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Maior Comeback</span>
-                    <span className="text-yellow-400 font-medium">0-9 → 13-11</span>
+                    <span className="dashboard-text-muted">Status</span>
+                    <Badge className={getStatusColor(championshipOverview.status)}>
+                      {getStatusText(championshipOverview.status)}
+                    </Badge>
                   </div>
                 </div>
               </Card>

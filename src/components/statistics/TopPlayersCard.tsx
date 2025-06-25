@@ -1,10 +1,10 @@
 import { Card } from '@/components/ui/card';
 import { Trophy } from 'lucide-react';
-import { Player } from '@/types/data-types';
+import { PlayerSummaryStatistic } from '@/types/statistics';
 import { PlayerListItem } from './PlayerListItem';
 
 interface TopPlayersCardProps {
-  players: Player[];
+  players: PlayerSummaryStatistic[];
 }
 
 export const TopPlayersCard = ({ players }: TopPlayersCardProps) => {
@@ -20,7 +20,7 @@ export const TopPlayersCard = ({ players }: TopPlayersCardProps) => {
       <div className="space-y-4">
         {players.map((player, index) => (
           <PlayerListItem 
-            key={index} 
+            key={player.participant_id} 
             player={player} 
             position={index} 
           />

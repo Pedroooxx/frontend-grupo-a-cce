@@ -1,9 +1,9 @@
-import { Player } from '@/types/data-types';
+import { PlayerSummaryStatistic } from '@/types/statistics';
 import { PlayerRankBadge } from './PlayerRankBadge';
 import { PlayerStatsDisplay } from './PlayerStatsDisplay';
 
 interface PlayerListItemProps {
-  player: Player;
+  player: PlayerSummaryStatistic;
   position: number;
 }
 
@@ -13,15 +13,11 @@ export const PlayerListItem = ({ player, position }: PlayerListItemProps) => {
       <div className="flex items-center space-x-4">
         <PlayerRankBadge position={position} />
         <div>
-          <p className="text-white font-medium">{player.nome}</p>
-          <p className="dashboard-text-muted text-sm">{player.equipe}</p>
+          <p className="text-white font-medium">{player.nickname}</p>
+          <p className="dashboard-text-muted text-sm">{player.team_name}</p>
         </div>
       </div>
-      <PlayerStatsDisplay 
-        kda={player.kda}
-        kills={player.kills}
-        winRate={player.winRate}
-      />
+      <PlayerStatsDisplay player={player} />
     </div>
   );
 };
