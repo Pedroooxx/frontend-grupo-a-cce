@@ -9,10 +9,11 @@ export const metadata: Metadata = {
   icons: [
     {
       rel: 'icon',
-      url: '/images/favicon.png',
+      url: '/favicon.ico',
     },
     {
-      rel: 'shortcut icon',
+      rel: 'icon',
+      type: 'image/png',
       url: '/images/favicon.png',
     },
   ],

@@ -8,11 +8,24 @@ interface PlayerStatsDisplayProps {
 }
 
 export const PlayerStatsDisplay = ({ player }: PlayerStatsDisplayProps) => {
-  const kda = player.kda_ratio ? player.kda_ratio.toFixed(2) : '0.00';
+  // Calculate KDA ratio if not provided
+  const calculateKDA = () => {
+    if (player.total_deaths === undefined || player.total_kills === undefined || player.total_assists === undefined) {
+      return '0.00';
+    }
+    if (player.total_deaths === 0) {
+      return ((player.total_kills + player.total_assists)).toFixed(2);
+    }
+    return ((player.total_kills + player.total_assists) / player.total_deaths).toFixed(2);
+  };
+
+  const kda = player.kda_ratio !== undefined ? player.kda_ratio.toFixed(2) : calculateKDA();
   const kills = player.total_kills || 0;
-  const winRate = player.total_matches && player.total_matches > 0 && player.mvp_count !== undefined
-    ? `${Math.round((player.mvp_count / player.total_matches) * 100)}%` 
-    : '0%';
+  const winRate = player.win_rate 
+    ? `${Math.round(player.win_rate * 100)}%`
+    : player.total_matches && player.wins !== undefined
+      ? `${Math.round((player.wins / player.total_matches) * 100)}%`
+      : '0%';
 
   return (
     <div className="text-right">

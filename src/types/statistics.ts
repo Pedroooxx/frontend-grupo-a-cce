@@ -26,6 +26,9 @@ export interface PlayerSummaryStatistic {
   total_matches: number;
   mvp_count: number;
   kda_ratio: number;
+  wins: number;
+  losses: number;
+  win_rate: number;
 }
 
 export interface TeamSummaryStatistic {

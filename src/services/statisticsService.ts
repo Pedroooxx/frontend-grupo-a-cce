@@ -62,10 +62,27 @@ class StatisticsService {
   }
 
   /**
-   * Get summary statistics for all players
+   * Get all player summary statistics
    */
   async getAllPlayersSummary(): Promise<PlayerSummaryStatistic[]> {
-    return apiClient.get('/participant-stats/all-players');
+    const response = await apiClient.get('/participant-stats/all-players');
+    
+    // Map the team data to player statistics format
+    return response.map((item: any) => ({
+      participant_id: item.team_id, // Temporary using team_id as participant_id
+      name: item.team_name,
+      nickname: item.team_name,
+      team_id: item.team_id,
+      team_name: item.team_name,
+      total_kills: item.total_kills || 0,
+      total_deaths: item.total_deaths || 0,
+      total_assists: item.total_assists || 0,
+      total_matches: item.total_matches || 0,
+      mvp_count: item.mvp_count || 0,
+      kda_ratio: item.total_deaths > 0 ? 
+        ((item.total_kills + item.total_assists) / item.total_deaths) : 
+        (item.total_kills + item.total_assists) || 0
+    }));
   }
 
   /**
