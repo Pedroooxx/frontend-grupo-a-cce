@@ -1,10 +1,10 @@
 'use client'
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { use } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { 
+import {
   ArrowLeft,
   User,
   Crown,
@@ -26,7 +26,7 @@ import { useGetChampionshipById } from '@/services/championshipService';
 import { useGetTeamById } from '@/services/teamService';
 import { useGetAllParticipants } from '@/services/participantService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
-import { useGetAllMatches } from '@/services/matchService';
+import { useGetAllMatches, useGetChampionshipTeamHistory } from '@/services/matchService';
 import PublicLayout from '@/components/layout/PublicLayout';
 
 interface PageProps {
@@ -39,11 +39,11 @@ interface PageProps {
 export default function TeamPublicPage({ params }: PageProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'players' | 'matches' | 'stats'>('overview');
   const router = useRouter();
-  
+
   const resolvedParams = use(params);
   const championshipId = parseInt(resolvedParams.id);
   const teamId = parseInt(resolvedParams.teamId);
-  
+
   // Fetch championship data using React Query (API)
   const {
     data: championship,
@@ -77,8 +77,15 @@ export default function TeamPublicPage({ params }: PageProps) {
     isLoading: isLoadingMatches,
     isError: isMatchesError,
   } = useGetAllMatches();
+
+  // Fetch team statistics for this championship
+  const {
+    data: teamStatistics = {},
+    isLoading: isLoadingStatistics,
+  } = useGetChampionshipTeamHistory(championshipId);
+
   // Show loading state
-  if (isLoadingChampionship || isLoadingTeam || isLoadingParticipants || isLoadingSubscriptions || isLoadingMatches) {
+  if (isLoadingChampionship || isLoadingTeam || isLoadingParticipants || isLoadingSubscriptions || isLoadingMatches || isLoadingStatistics) {
     return (
       <PublicLayout title="Carregando...">
         <div className="container mx-auto px-4 py-8">
@@ -112,17 +119,26 @@ export default function TeamPublicPage({ params }: PageProps) {
   const coaches = participants.filter(p => p.is_coach);
 
   // Filter matches for this team in this championship
-  const teamMatches = allMatches.filter(match => 
-    match.championship_id === championshipId && 
+  const teamMatches = allMatches.filter(match =>
+    match.championship_id === championshipId &&
     (match.teamA_id === teamId || match.teamB_id === teamId)
   );
-  // Static data for now as requested (no real statistics available)
-  const teamStats = {
+
+  // Get real statistics from matches or default to 0
+  const stats = teamStatistics[teamId] || {
     wins: 0,
     losses: 0,
-    winRate: 0,
-    position: 2
+    total_matches: 0,
+    win_rate: 0
   };
+
+  const teamStats = {
+    wins: stats.wins,
+    losses: stats.losses,
+    winRate: stats.win_rate,
+    totalMatches: stats.total_matches,
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       Agendada: { color: 'bg-yellow-500/20 text-yellow-400', label: 'Agendada' },
@@ -164,13 +180,13 @@ export default function TeamPublicPage({ params }: PageProps) {
       age--;
     }
     return age;
-  };  const getMatchResult = (match: any) => {
-    if (match.status !== 'finalizado' || !match.score) return null;
-    
+  }; const getMatchResult = (match: any) => {
+    if (match.status !== 'Finalizada' || !match.score) return null;
+
     const isTeamA = match.TeamA.team_id === teamId;
     const teamScore = isTeamA ? match.score.teamA : match.score.teamB;
     const opponentScore = isTeamA ? match.score.teamB : match.score.teamA;
-    
+
     return {
       won: teamScore > opponentScore,
       score: `${teamScore} - ${opponentScore}`,
@@ -209,19 +225,15 @@ export default function TeamPublicPage({ params }: PageProps) {
                     <p className="text-slate-300">Manager: {coaches.length > 0 ? coaches[0].name : 'N/A'}</p>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="flex items-center space-x-2 text-slate-300">
-                    <Trophy className="w-4 h-4 text-yellow-500" />
-                    <span className="text-sm">{teamStats.position}º lugar</span>
-                  </div>
                   <div className="flex items-center space-x-2 text-slate-300">
                     <Target className="w-4 h-4 text-green-500" />
                     <span className="text-sm">{teamStats.wins}V - {teamStats.losses}D</span>
                   </div>
                   <div className="flex items-center space-x-2 text-slate-300">
                     <TrendingUp className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm">{Math.round(teamStats.winRate * 100)}% WR</span>
+                    <span className="text-sm">{teamStats.totalMatches > 0 ? Math.round(teamStats.winRate * 100) : 0}% WR</span>
                   </div>
                   <div className="flex items-center space-x-2 text-slate-300">
                     <User className="w-4 h-4 text-red-500" />
@@ -247,11 +259,10 @@ export default function TeamPublicPage({ params }: PageProps) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`py-4 px-2 border-b-2 transition-colors ${
-                  activeTab === tab.id
+                className={`py-4 px-2 border-b-2 transition-colors ${activeTab === tab.id
                     ? 'border-red-500 text-white'
                     : 'border-transparent text-slate-400 hover:text-white'
-                }`}
+                  }`}
               >
                 {tab.label}
               </button>
@@ -268,9 +279,9 @@ export default function TeamPublicPage({ params }: PageProps) {
             <div className="bg-slate-800 border border-slate-700 rounded-md p-6">
               <h3 className="text-xl font-semibold text-white mb-4">Informações da Equipe</h3>
               <div className="space-y-4">                <div>
-                  <label className="text-slate-400 text-sm">Manager</label>
-                  <p className="text-white">{coaches.length > 0 ? coaches[0].name : 'N/A'}</p>
-                </div>
+                <label className="text-slate-400 text-sm">Manager</label>
+                <p className="text-white">{coaches.length > 0 ? coaches[0].name : 'N/A'}</p>
+              </div>
                 <div>
                   <label className="text-slate-400 text-sm">Participantes</label>
                   <p className="text-white">{participants.length} membros</p>
@@ -281,7 +292,7 @@ export default function TeamPublicPage({ params }: PageProps) {
                 </div>
                 <div>
                   <label className="text-slate-400 text-sm">Taxa de Vitória</label>
-                  <p className="text-white">{Math.round(teamStats.winRate * 100)}%</p>
+                  <p className="text-white">{teamStats.totalMatches > 0 ? Math.round(teamStats.winRate * 100) : 0}%</p>
                 </div>
               </div>
             </div>            {/* Recent Matches */}
@@ -297,7 +308,7 @@ export default function TeamPublicPage({ params }: PageProps) {
                     const result = getMatchResult(match);
                     const isTeamA = match.TeamA.team_id === teamId;
                     const opponent = isTeamA ? match.TeamB.name : match.TeamA.name;
-                    
+
                     return (
                       <div key={match.match_id} className="bg-slate-700 rounded p-3 flex items-center justify-between">
                         <div>
@@ -311,12 +322,17 @@ export default function TeamPublicPage({ params }: PageProps) {
                             </div>
                           ) : (
                             <div className="text-slate-400 text-sm">
-                              {formatDateTime(match.date)}
+                              {match.status === 'Planejada' ? 'À Agendar' : formatDateTime(match.date)}
                             </div>
                           )}
                           {result && (
                             <div className={`text-xs ${result.won ? 'text-green-400' : 'text-red-400'}`}>
                               {result.won ? 'Vitória' : 'Derrota'}
+                            </div>
+                          )}
+                          {getStatusBadge(match.status) && (
+                            <div className="mt-1">
+                              {getStatusBadge(match.status)}
                             </div>
                           )}
                         </div>
@@ -338,8 +354,9 @@ export default function TeamPublicPage({ params }: PageProps) {
                   <Crown className="w-6 h-6 text-yellow-500 mr-2" />
                   Técnicos
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">                  {coaches.map((coach) => (
-                    <div key={coach.id} className="bg-slate-800 border border-slate-700 rounded-md p-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {coaches.map((coach) => (
+                    <div key={coach.participant_id} className="bg-slate-800 border border-slate-700 rounded-md p-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
                           <Crown className="w-6 h-6 text-yellow-500" />
@@ -362,8 +379,9 @@ export default function TeamPublicPage({ params }: PageProps) {
                 <Swords className="w-6 h-6 text-red-500 mr-2" />
                 Jogadores
               </h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">                {players.map((player) => (
-                  <div key={player.id} className="bg-slate-800 border border-slate-700 rounded-md p-4">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {players.map((player) => (
+                  <div key={player.participant_id} className="bg-slate-800 border border-slate-700 rounded-md p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
@@ -487,20 +505,20 @@ export default function TeamPublicPage({ params }: PageProps) {
         {activeTab === 'stats' && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-white mb-6">Estatísticas da Equipe</h2>
-            
+
             {/* Team Stats */}
             <div className="grid md:grid-cols-3 gap-6">              <div className="bg-slate-800 border border-slate-700 rounded-md p-6 text-center">
-                <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
-                <div className="text-2xl font-bold text-white mb-1">0</div>
-                <div className="text-slate-400 text-sm">Campeonatos Ganhos</div>
-              </div>
-              
+              <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
+              <div className="text-2xl font-bold text-white mb-1">0</div>
+              <div className="text-slate-400 text-sm">Campeonatos Ganhos</div>
+            </div>
+
               <div className="bg-slate-800 border border-slate-700 rounded-md p-6 text-center">
                 <Target className="w-8 h-8 text-green-500 mx-auto mb-3" />
-                <div className="text-2xl font-bold text-white mb-1">0%</div>
+                <div className="text-2xl font-bold text-white mb-1">{teamStats.totalMatches > 0 ? Math.round(teamStats.winRate * 100) : 0}%</div>
                 <div className="text-slate-400 text-sm">Taxa de Vitória</div>
               </div>
-              
+
               <div className="bg-slate-800 border border-slate-700 rounded-md p-6 text-center">
                 <Users className="w-8 h-8 text-blue-500 mx-auto mb-3" />
                 <div className="text-2xl font-bold text-white mb-1">{players.length}</div>
@@ -541,41 +559,41 @@ export default function TeamPublicPage({ params }: PageProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700">                    {players.map((player) => (
-                      <tr key={player.id} className="hover:bg-slate-750 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center mr-3">
-                              <User className="w-4 h-4 text-red-500" />
-                            </div>
-                            <div>
-                              <div className="text-white font-medium">{player.nickname}</div>
-                              <div className="text-slate-400 text-sm">{player.name}</div>
-                            </div>
+                    <tr key={player.participant_id} className="hover:bg-slate-750 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center mr-3">
+                            <User className="w-4 h-4 text-red-500" />
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-white font-semibold">
-                          0.00
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-green-400">
-                          0
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-red-400">
-                          0
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-blue-400">
-                          0
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <div className="flex items-center justify-center">
-                            <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                            <span className="text-yellow-500 font-medium">0</span>
+                          <div>
+                            <div className="text-white font-medium">{player.nickname}</div>
+                            <div className="text-slate-400 text-sm">{player.name}</div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-slate-300">
-                          0%
-                        </td>
-                      </tr>
-                    ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-white font-semibold">
+                        0.00
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-green-400">
+                        0
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-red-400">
+                        0
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-blue-400">
+                        0
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center">
+                          <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                          <span className="text-yellow-500 font-medium">0</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-slate-300">
+                        0%
+                      </td>
+                    </tr>
+                  ))}
                   </tbody>
                 </table>
               </div>
