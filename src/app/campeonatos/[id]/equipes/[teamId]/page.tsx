@@ -146,7 +146,7 @@ export default function TeamPublicPage({ params }: PageProps) {
 
   // Get player statistics and apply same filtering logic as dashboard
   const topPlayersData = [...(playersData || [])]
-    .filter((player, index, self) => 
+    .filter((player, index, self) =>
       // Only keep first occurrence of each player
       index === self.findIndex(p => p.participant_id === player.participant_id))
     .sort((a, b) => Number(b.kda_ratio || 0) - Number(a.kda_ratio || 0));
@@ -277,8 +277,8 @@ export default function TeamPublicPage({ params }: PageProps) {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`py-4 px-2 border-b-2 transition-colors ${activeTab === tab.id
-                    ? 'border-red-500 text-white'
-                    : 'border-transparent text-slate-400 hover:text-white'
+                  ? 'border-red-500 text-white'
+                  : 'border-transparent text-slate-400 hover:text-white'
                   }`}
               >
                 {tab.label}
@@ -400,7 +400,7 @@ export default function TeamPublicPage({ params }: PageProps) {
                 {players.map((player) => {
                   // Get player statistics from the map
                   const playerStats = playerStatsMap.get(player.participant_id);
-                  
+
                   return (
                     <div key={player.participant_id} className="bg-slate-800 border border-slate-700 rounded-md p-4">
                       <div className="flex items-start justify-between mb-3">
@@ -473,11 +473,10 @@ export default function TeamPublicPage({ params }: PageProps) {
                   return (
                     <div key={match.match_id} className="bg-slate-700 rounded p-4 flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className={`px-3 py-1 rounded text-sm font-medium ${
-                          result?.won ? 'bg-green-500/20 text-green-400' : 
-                          result?.won === false ? 'bg-red-500/20 text-red-400' : 
-                          'bg-gray-500/20 text-gray-400'
-                        }`}>
+                        <div className={`px-3 py-1 rounded text-sm font-medium ${result?.won ? 'bg-green-500/20 text-green-400' :
+                            result?.won === false ? 'bg-red-500/20 text-red-400' :
+                              'bg-gray-500/20 text-gray-400'
+                          }`}>
                           {result?.won ? 'V' : result?.won === false ? 'D' : 'E'}
                         </div>
                         <div>
@@ -501,7 +500,7 @@ export default function TeamPublicPage({ params }: PageProps) {
 
         {/* Stats Tab */}
         {activeTab === 'stats' && (
-          <StatsTab 
+          <StatsTab
             teamId={teamId}
             championshipId={championshipId}
             teamName={team.name}

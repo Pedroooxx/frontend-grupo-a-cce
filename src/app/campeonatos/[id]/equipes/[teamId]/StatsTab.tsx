@@ -118,18 +118,6 @@ export const StatsTab: React.FC<StatsTabProps> = ({
             </div>
           </Card>
 
-          <Card className="bg-slate-800 border-slate-700 p-6 hover:border-green-500/50 transition-colors">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-green-500/20 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-green-500" />
-              </div>
-              <div>
-                <p className="text-slate-400 text-sm">Taxa de Vitória</p>
-                <p className="text-2xl font-bold text-white">{teamWinRate}%</p>
-              </div>
-            </div>
-          </Card>
-
           <Card className="bg-slate-800 border-slate-700 p-6 hover:border-yellow-500/50 transition-colors">
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-yellow-500/20 rounded-lg">
