@@ -52,7 +52,7 @@ const Inscricoes = () => {
   const inscricoes = useMemo(() => {
     return subscriptionsData.map((sub: Subscription) => {
       const team = teamsData.find((t: Team) => t.team_id === sub.team_id);
-      const championship = championshipsData.find((c: Championship) => c.id === sub.championship_id);
+      const championship = championshipsData.find((c: Championship) => c.championship_id === sub.championship_id);
       return {
         subscription_id: sub.subscription_id,
         championship_id: sub.championship_id,
@@ -64,25 +64,45 @@ const Inscricoes = () => {
     });
   }, [subscriptionsData, teamsData, championshipsData]);
 
-  // Search function using current data
+  /**
+   * Search function using real subscription data
+   * @param query - Search query string  
+   * @param types - Array of search types to include
+   * @returns Array of search results
+   */
   const searchSubscriptions = useCallback(
     (query: string, types: string[] = ["inscription"]): SearchResult[] => {
-      if (!query.trim() || !types.includes("inscription")) return [];
-      const q = query.toLowerCase();
+      // Prevent search during loading state
+      if (isLoadingSubscriptions || isLoadingTeams || isLoadingChampionships) {
+        return [];
+      }
+      
+      if (!query.trim() || !types.includes("inscription") || !Array.isArray(inscricoes)) {
+        return [];
+      }
+
+      const searchQuery = query.toLowerCase();
+      
       return inscricoes
-        .filter((ins: Subscription) =>
-            (ins.team_name ?? '').toLowerCase().includes(q) ||
-            (ins.championship_name ?? '').toLowerCase().includes(q)
+        .filter((inscription) =>
+          inscription && 
+          (inscription.team_name && inscription.team_name.toLowerCase().includes(searchQuery)) ||
+          (inscription.championship_name && inscription.championship_name.toLowerCase().includes(searchQuery))
         )
-        .map((ins: Subscription) => ({
-          id: ins.subscription_id,
-          name: `${ins.team_name} - ${ins.championship_name}`,
-          type: "inscription",
-          subtitle: `Inscrito em ${new Date(ins.subscription_date).toLocaleDateString("pt-BR")}`,
-          metadata: ins,
-        }));
+        .map((inscription) => ({
+          id: inscription.subscription_id,
+          name: `${inscription.team_name} - ${inscription.championship_name}`,
+          type: "inscription" as const,
+          subtitle: `Inscrito em ${new Date(inscription.subscription_date).toLocaleDateString("pt-BR")}`,
+          metadata: {
+            teamId: inscription.team_id,
+            championshipId: inscription.championship_id,
+            subscriptionDate: inscription.subscription_date,
+          },
+        }))
+        .slice(0, 6); // maxResults from config
     },
-    [inscricoes]
+    [inscricoes, isLoadingSubscriptions, isLoadingTeams, isLoadingChampionships]
   );
 
   const { isOpen, openModal, closeModal } = useModal();
@@ -159,7 +179,16 @@ const Inscricoes = () => {
       console.log("Inscrição selecionada:", result);
     }
   };
-  
+
+  // Memoized search configuration
+  const searchConfig = useMemo(() => ({
+    searchTypes: ["inscription"],
+    placeholder: "Buscar inscrições por equipe ou campeonato...",
+    maxResults: 6,
+    minQueryLength: 1,
+    debounceMs: 300,
+  }), []);
+
   const totalInscricoes = inscricoes.length;
   const ultimaInscricao = totalInscricoes > 0 
     ? [...inscricoes].sort((a, b) => new Date(b.subscription_date).getTime() - new Date(a.subscription_date).getTime())[0] 
@@ -211,13 +240,7 @@ const Inscricoes = () => {
         <div className="flex justify-center my-6">
           <UniversalSearchBar
             searchFunction={searchSubscriptions}
-            config={{
-              searchTypes: ["inscription"],
-              placeholder: "Buscar inscrições por equipe, campeonato ou coach...",
-              maxResults: 6,
-              minQueryLength: 1,
-              debounceMs: 300,
-            }}
+            config={searchConfig}
             onResultClick={handleSearchResultClick}
             className="max-w-xl"
           />
@@ -308,7 +331,7 @@ const Inscricoes = () => {
         onClose={closeModal}
         onSubmit={handleSave}
         teams={teamsData.map((t) => ({ team_id: t.team_id, name: t.name }))}
-        championships={championshipsData.map((c) => ({ championship_id: c.id, name: c.name }))}
+        championships={championshipsData.map((c) => ({ championship_id: c.championship_id, name: c.name }))}
         defaultValues={
           editingSubscription ? {
             championship_id: editingSubscription.championship_id,

@@ -674,3 +674,7 @@ export default function HomePage() {
     </div>
   );
 }
+
+/**
+ * A Search Bar is implemented in the HomePage component to allow users to search for championships, teams, and matches. It utilizes the UniversalSearchBar component, which takes in a search function, configuration, and a click handler for results. The search bar is styled to be responsive and is placed within a container that centers it on the page. This enhances user experience by providing a straightforward way to access relevant data quickly.
+ */

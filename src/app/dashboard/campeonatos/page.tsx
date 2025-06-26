@@ -8,9 +8,8 @@ import { DashboardLayout } from "../_components/DashboardLayout";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { AddChampionshipModal } from "@/components/modals/AddChampionshipModal";
 import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
-import { searchChampionships } from "@/data/search-functions";
 import { useModal } from "@/hooks/useModal";
-import { SearchResult } from "@/hooks/useSearch";
+import { SearchResult, SearchConfig } from "@/hooks/useSearch";
 import {
   useCreateChampionship,
   useDeleteChampionship,
@@ -26,7 +25,7 @@ const Campeonatos = () => {
   const router = useRouter();
   const { isOpen, openModal, closeModal } = useModal();
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "upcoming" | "ongoing" | "completed" | "planned">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "Ativo" | "Planejado" | "Finalizado">("all");
   const [editingChampionship, setEditingChampionship] = useState<Championship | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -50,19 +49,40 @@ const Campeonatos = () => {
 
   // Map API data to internal type
   const campeonatos = useMemo(() => {
-    return championshipsData.map((c) => ({
-      championship_id: c.id,
-      name: c.name,
-      description: c.description,
-      format: c.format as 'single_elimination' | 'double_elimination',
-      start_date: c.start_date,
-      end_date: c.end_date,
-      location: c.location,
-      status: c.status as 'upcoming' | 'ongoing' | 'completed' | 'planned',
-      prize: typeof c.prize === 'string' ? Number(c.prize) : c.prize,
-      user_id: c.user_id,
-      teams_count: (c as any).teams_count ?? 0,
-    }));
+    return championshipsData.map((c) => {
+      // Map status from API to internal format
+      const mapStatus = (apiStatus: string): 'Ativo' | 'Planejado' | 'Finalizado' => {
+        switch (apiStatus) {
+          case 'ongoing':
+          case 'Ativo':
+            return 'Ativo';
+          case 'upcoming':
+          case 'planned':
+          case 'Planejado':
+            return 'Planejado';
+          case 'completed':
+          case 'Finalizado':
+            return 'Finalizado';
+          default:
+            return 'Planejado';
+        }
+      };
+
+      return {
+        championship_id: c.championship_id,
+        name: c.name,
+        description: c.description,
+        format: (c.format === 'single_elimination' ? 'simple' : 'double') as 'simple' | 'double',
+        start_date: c.start_date,
+        end_date: c.end_date,
+        location: c.location,
+        status: mapStatus(c.status),
+        prize: typeof c.prize === 'string' ? Number(c.prize) : c.prize,
+        user_id: c.user_id,
+        teams_count: (c as any).teams_count ?? 0,
+        matches_count: (c as any).matches_count ?? 0,
+      };
+    });
   }, [championshipsData]);
 
   // Error notifications
@@ -167,10 +187,59 @@ const Campeonatos = () => {
     }
   };
 
+  /**
+   * Search function using real championship data
+   * @param query - Search query string  
+   * @param types - Array of search types to include
+   * @returns Array of search results
+   */
+  const searchChampionships = useCallback((query: string, types: string[]): SearchResult[] => {
+    if (!query.trim() || !types.includes("championship") || !Array.isArray(championshipsData)) return [];
+
+    const searchQuery = query.toLowerCase();
+
+    return championshipsData
+      .filter(championship =>
+        championship && 
+        championship.name && 
+        (championship.name.toLowerCase().includes(searchQuery) ||
+        (championship.description && championship.description.toLowerCase().includes(searchQuery)) ||
+        (championship.location && championship.location.toLowerCase().includes(searchQuery)))
+      )
+      .map(championship => ({
+        id: championship.championship_id,
+        name: championship.name,
+        type: "championship" as const,
+        subtitle: `${championship.location || "Local não definido"} - ${
+          championship.status === "Ativo"
+            ? "Em andamento"
+            : championship.status === "Finalizado"
+            ? "Finalizado"
+            : championship.status === "Planejado"
+            ? "Em breve"
+            : "Status não definido"
+        }`,
+        metadata: {
+          status: championship.status,
+          location: championship.location,
+          startDate: championship.start_date,
+          endDate: championship.end_date,
+        },
+      }))
+      .slice(0, 6); // maxResults from config
+  }, [championshipsData]);
+
   const handleSearchResultClick = (result: SearchResult) => {
-    if (result.type === "championship") {
-      router.push(`/dashboard/campeonatos/${result.id}`);
-    }
+    router.push(`/campeonatos/${result.id}`);
+  };
+
+  // Configuration for UniversalSearchBar
+  const searchConfig: SearchConfig = {
+    searchTypes: ["championship"],
+    placeholder: "Buscar campeonatos por nome, local ou organizador...",
+    maxResults: 6,
+    minQueryLength: 1,
+    debounceMs: 300,
   };
 
   // Get default values for editing
@@ -229,14 +298,7 @@ const Campeonatos = () => {
           <div className="flex justify-center my-6">
             <UniversalSearchBar
               searchFunction={searchChampionships}
-              config={{
-                searchTypes: ["championship"],
-                placeholder:
-                  "Buscar campeonatos por nome, local ou organizador...",
-                maxResults: 6,
-                minQueryLength: 1,
-                debounceMs: 300,
-              }}
+              config={searchConfig}
               onResultClick={handleSearchResultClick}
               className="max-w-xl"
             />
@@ -259,8 +321,8 @@ const Campeonatos = () => {
                         {championship.name}
                       </h3>
                       <p className="dashboard-text-muted text-sm">
-                        {championship.format === 'single_elimination' ? 'Eliminação Simples' :
-                         championship.format === 'double_elimination' ? 'Eliminação Dupla' :
+                        {championship.format === 'simple' ? 'Eliminação Simples' :
+                         championship.format === 'double' ? 'Eliminação Dupla' :
                          'Todos contra Todos'}
                       </p>
                     </div>
