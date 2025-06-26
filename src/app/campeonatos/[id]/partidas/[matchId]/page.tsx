@@ -112,7 +112,7 @@ export default function MatchPublicPage({ params }: PageProps) {
         {config.label}
       </span>
     );
-  };  const formatDateTime = (dateString: string) => {
+  }; const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
@@ -222,10 +222,6 @@ export default function MatchPublicPage({ params }: PageProps) {
                   <Calendar className="w-4 h-4 mr-2 text-red-500" />
                   <span>{formatDateTime(match.date)}</span>
                 </div>
-                <div className="flex items-center">
-                  <Trophy className="w-4 h-4 mr-2 text-red-500" />
-                  <span>{match.bracket}</span>
-                </div>
               </div>
             </div>
           </div>
@@ -273,10 +269,6 @@ export default function MatchPublicPage({ params }: PageProps) {
                 <div>
                   <label className="text-slate-400 text-sm">Mapa</label>
                   <p className="text-white">{match.map}</p>
-                </div>
-                <div>
-                  <label className="text-slate-400 text-sm">Chave</label>
-                  <p className="text-white capitalize">{match.bracket}</p>
                 </div>
                 <div>
                   <label className="text-slate-400 text-sm">Data e Hora</label>
@@ -373,7 +365,8 @@ export default function MatchPublicPage({ params }: PageProps) {
                         <th className="px-4 py-3 text-center text-xs font-medium text-slate-300 uppercase">Score</th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-slate-300 uppercase">MVP</th>
                       </tr>
-                    </thead>                    <tbody className="divide-y divide-slate-700">
+                    </thead>
+                    <tbody className="divide-y divide-slate-700">
                       {teamAStats.length > 0 ? (
                         teamAStats.map((stat) => (
                           <tr key={stat.participant_id} className="hover:bg-slate-750">
@@ -428,7 +421,8 @@ export default function MatchPublicPage({ params }: PageProps) {
                         <th className="px-4 py-3 text-center text-xs font-medium text-slate-300 uppercase">Score</th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-slate-300 uppercase">MVP</th>
                       </tr>
-                    </thead>                    <tbody className="divide-y divide-slate-700">
+                    </thead>
+                    <tbody className="divide-y divide-slate-700">
                       {teamBStats.length > 0 ? (
                         teamBStats.map((stat) => (
                           <tr key={stat.participant_id} className="hover:bg-slate-750">
