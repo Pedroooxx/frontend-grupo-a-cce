@@ -4,15 +4,124 @@ import { Calendar, MapPin, Trophy, Users, Target, Crown, ArrowRight } from 'luci
 import PublicLayout from '@/components/layout/PublicLayout';
 import { useState } from 'react';
 import { UniversalSearchBar } from '@/components/common/UniversalSearchBar';
-import { searchPublicCatalog } from '@/data/search-functions';
 import { SearchConfig, SearchResult } from '@/hooks/useSearch';
 import { useRouter } from 'next/navigation';
 import { useGetAllChampionships, type Championship } from '@/services/championshipService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
-import { useGetAllTeams } from '@/services/teamService';
-import { useGetAllMatches } from '@/services/matchService';
-import { Match } from '@/types/match';
+import { useGetAllTeams, useGetAllParticipants, type TeamParticipant, type Team } from '@/services/teamService';
+import { useGetAllMatches, type Match } from '@/services/matchService';
 
+/**
+ * Search function using real API data (same as home page)
+ * @param query - Search query string
+ * @param types - Array of search types to include
+ * @param championshipsData - Championships data from API
+ * @param teamsData - Teams data from API
+ * @param matchesData - Matches data from API
+ * @param participantsData - Participants data from API
+ * @returns Array of search results
+ */
+const searchWithRealData = (
+  query: string, 
+  types: string[], 
+  championshipsData: Championship[] = [], 
+  teamsData: Team[] = [], 
+  matchesData: Match[] = [],
+  participantsData: TeamParticipant[] = []
+): SearchResult[] => {
+  if (!query.trim()) return [];
+  
+  const searchQuery = query.toLowerCase();
+  const results: SearchResult[] = [];
+
+  // Search championships
+  if (types.includes("championship")) {
+    const championshipResults = championshipsData
+      .filter(championship =>
+        championship.name.toLowerCase().includes(searchQuery) ||
+        (championship.description && championship.description.toLowerCase().includes(searchQuery))
+      )
+      .map(championship => ({
+        id: championship.championship_id,
+        name: championship.name,
+        type: "championship",
+        subtitle: `${championship.location || "Local não definido"} - ${championship.status}`,
+        metadata: {
+          status: championship.status,
+          location: championship.location,
+        },
+      }));
+    results.push(...championshipResults);
+  }
+
+  // Search teams
+  if (types.includes("team")) {
+    const teamResults = teamsData
+      .filter(team =>
+        team.name.toLowerCase().includes(searchQuery)
+      )
+      .map(team => ({
+        id: team.team_id,
+        name: team.name,
+        type: "team",
+        subtitle: `${team.participants_count || 0} jogadores`,
+        metadata: {
+          participantsCount: team.participants_count || 0,
+        },
+      }));
+    results.push(...teamResults);
+  }
+
+  // Search players/participants
+  if (types.includes("player")) {
+    const playerResults = participantsData
+      .filter(participant =>
+        !participant.is_coach && // Only include players, not coaches
+        (participant.name.toLowerCase().includes(searchQuery) ||
+         participant.nickname.toLowerCase().includes(searchQuery))
+      )
+      .map(participant => ({
+        id: participant.participant_id,
+        name: participant.nickname,
+        type: "player",
+        subtitle: `${participant.name} - ${teamsData.find(t => t.team_id === participant.team_id)?.name || 'Sem equipe'}`,
+        metadata: {
+          fullName: participant.name,
+          teamId: participant.team_id,
+          teamName: teamsData.find(t => t.team_id === participant.team_id)?.name,
+          isCoach: participant.is_coach,
+        },
+      }));
+    results.push(...playerResults);
+  }
+
+  // Search matches
+  if (types.includes("match")) {
+    const matchResults = matchesData
+      .filter(match =>
+        (match.TeamA?.name && match.TeamA.name.toLowerCase().includes(searchQuery)) ||
+        (match.TeamB?.name && match.TeamB.name.toLowerCase().includes(searchQuery)) ||
+        (match.map && match.map.toLowerCase().includes(searchQuery))
+      )
+      .map(match => ({
+        id: match.match_id,
+        name: `${match.TeamA?.name || 'Equipe A'} vs ${match.TeamB?.name || 'Equipe B'}`,
+        type: "match",
+        subtitle: `${match.stage || 'Fase'} - ${match.map || 'Mapa'}`,
+        metadata: {
+          championshipId: match.championship_id,
+          status: match.status,
+        },
+      }));
+    results.push(...matchResults);
+  }
+
+  return results.slice(0, 8);
+};
+
+ /**
+ * Championships listing page with search and filtering functionality
+ */
 export default function ChampionshipsListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'Planejado' | 'Ativo' | 'Finalizado'>('all');
@@ -45,6 +154,13 @@ export default function ChampionshipsListPage() {
     isLoading: isLoadingMatches,
     isError: isMatchesError,
   } = useGetAllMatches();
+
+  // Fetch participants data
+  const {
+    data: participantsData = [],
+    isLoading: isLoadingParticipants,
+    isError: isParticipantsError,
+  } = useGetAllParticipants();
 
   /**
    * Count teams for a specific championship using subscription data
@@ -96,7 +212,7 @@ export default function ChampionshipsListPage() {
   });
 
   // Show loading state
-  if (isLoadingChampionships || isLoadingSubscriptions || isLoadingTeams || isLoadingMatches) {
+  if (isLoadingChampionships || isLoadingSubscriptions || isLoadingTeams || isLoadingMatches || isLoadingParticipants) {
     return (
       <PublicLayout title="Campeonatos">
         <div className="min-h-screen bg-slate-900 flex items-center justify-center">
@@ -110,7 +226,7 @@ export default function ChampionshipsListPage() {
   }
 
   // Show error state
-  if (isChampionshipsError || isSubscriptionsError || isTeamsError || isMatchesError) {
+  if (isChampionshipsError || isSubscriptionsError || isTeamsError || isMatchesError || isParticipantsError) {
     return (
       <PublicLayout title="Campeonatos">
         <div className="min-h-screen bg-slate-900 flex items-center justify-center">
@@ -131,12 +247,18 @@ export default function ChampionshipsListPage() {
     });
   };
 
-  // Configuration for UniversalSearchBar
+  // Configuration for UniversalSearchBar - Add 'player' to search types
   const searchConfig: SearchConfig = {
-    searchTypes: ['championship', 'team', 'match'],
-    placeholder: "Buscar campeonatos, equipes ou partidas...",
+    searchTypes: ['championship', 'team', 'player', 'match'],
+    placeholder: "Buscar campeonatos, equipes, jogadores ou partidas...",
     maxResults: 8,
   };
+
+  // Create search function that uses real data
+  const searchFunction = (query: string, types: string[]) => {
+    return searchWithRealData(query, types, championshipsData, teamsData, matchesData, participantsData);
+  };
+
   const handleResultClick = (result: SearchResult) => {
     console.log('Result clicked:', result);
     let path = '';
@@ -152,6 +274,20 @@ export default function ChampionshipsListPage() {
           path = `/campeonatos/${teamMatch.championship_id}/equipes/${result.id}`;
         } else {
           path = `/campeonatos/1/equipes/${result.id}`; // Fallback
+        }
+        break;
+      case 'player':
+        // Navigate to player's team page
+        const playerTeamId = result.metadata?.teamId;
+        if (playerTeamId) {
+          const playerTeamMatch = matchesData.find((match: Match) =>
+            match.teamA_id === playerTeamId || match.teamB_id === playerTeamId
+          );
+          if (playerTeamMatch) {
+            path = `/campeonatos/${playerTeamMatch.championship_id}/equipes/${playerTeamId}`;
+          } else {
+            path = `/campeonatos/1/equipes/${playerTeamId}`;
+          }
         }
         break;
       case 'match':
@@ -191,10 +327,10 @@ export default function ChampionshipsListPage() {
             {/* Search */}
             <div className="flex-1 relative">
               <UniversalSearchBar
-                searchFunction={searchPublicCatalog}
+                searchFunction={searchFunction}
                 config={searchConfig}
                 onQueryChange={setSearchQuery}
-                onResultClick={handleResultClick} // Optional: handle click on search results
+                onResultClick={handleResultClick}
                 className="w-full"
               />
             </div>            {/* Status Filter */}            <div className="md:w-48">

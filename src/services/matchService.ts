@@ -2,16 +2,9 @@
  * Match service with React Query
  */
 import { apiClient, ApiError } from '@/lib/apiClient';
-import { Match } from '@/types/match';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { createReactQueryService } from './reactQueryService';
-
-
-interface MatchResponse {
-  success: boolean;
-  data: Match[];
-}
 
 /**
  * Team interface as returned by the matches API (simplified from teams API)
@@ -30,6 +23,28 @@ export interface MatchScore {
   teamB: number;
 }
 
+/**
+ * Match interface as returned by the matches API
+ */
+export interface Match {
+  match_id: number;
+  championship_id: number;
+  teamA_id: number;
+  teamB_id: number;
+  date: string;
+  stage: string;
+  status: string;
+  map: string;
+  winner_team_id?: number;
+  score?: MatchScore;
+  TeamA: MatchTeam;
+  TeamB: MatchTeam;
+}
+
+interface MatchResponse {
+  success: boolean;
+  data: Match[];
+}
 
 /**
  * Interface for bulk match updates
@@ -61,8 +76,6 @@ export const useGetMatchById = (id: string | number, enabled = true) => {
   });
 };
 
-
-// Note: CREATE, UPDATE, DELETE are not available in the API according to the postman collection
 
 export const useGetAllMatches = (enabled = true) => {
   return useQuery<Match[], ApiError>({

@@ -86,8 +86,8 @@ export interface Match {
   teamA_id: number;
   teamB_id: number;
   date: string;
-  stage: "Oitavas de Final" | "Quartas de Final" | "Semifinal" | "Final";
-  bracket: "upper" | "lower";
+  stage: "Oitavas de Final" | "Quartas de Final" | "Semifinal" | "Final" | "Upper Round 1" | "Upper Round 2" | "Upper Round 3" | "Upper Semifinal" | "Lower Round 1" | "Lower Round 2" | "Lower Round 3" | "Lower Semifinal" | "Lower Final" | "Grand Final";
+  bracket: "upper" | "lower" | "final";
   winner_team_id: number | null;
   score: {
     teamA: number;
