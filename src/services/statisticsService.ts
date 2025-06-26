@@ -23,46 +23,46 @@ class StatisticsService {
    * Get all participant statistics
    */
   async getAllParticipantStatistics(): Promise<ParticipantStatistic[]> {
-    return apiClient.get('/participant-stats');
+    return apiClient.get('/statistics/participants');
   }
 
   /**
    * Get participant statistic by ID
    */
   async getParticipantStatisticById(statisticId: number): Promise<ParticipantStatistic> {
-    return apiClient.get(`/participant-stats/${statisticId}`);
+    return apiClient.get(`/statistics/participants/${statisticId}`);
   }
 
   /**
    * Get statistics for a specific player
    */
   async getPlayerStatistics(playerId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/participant-stats/player/${playerId}`);
+    return apiClient.get(`/statistics/participants/player/${playerId}`);
   }
 
   /**
    * Get statistics for a specific match
    */
   async getMatchStatistics(matchId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/participant-stats/match/${matchId}`);
+    return apiClient.get(`/statistics/participants/match/${matchId}`);
   }
 
   /**
    * Get top players by championship
    */
   async getTopPlayersByChampionship(championshipId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/participant-stats/top-players/${championshipId}`);
+    return apiClient.get(`/statistics/participants/championship/${championshipId}/top-players`);
   }
 
   /**
    * Get team statistics
    */
-  async getTeamStatistics(teamId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/participant-stats/team/${teamId}/stats`);
+  async getTeamStatistics(teamId: number): Promise<TeamSummaryStatistic> {
+    return apiClient.get(`/statistics/teams/${teamId}`);
   }
 
   /**
-   * Get summary statistics for all players
+   * Get all player summary statistics
    */
   async getAllPlayersSummary(): Promise<PlayerSummaryStatistic[]> {
     return apiClient.get('/participant-stats/all-players');

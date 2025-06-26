@@ -25,7 +25,11 @@ export interface PlayerSummaryStatistic {
   total_assists: number;
   total_matches: number;
   mvp_count: number;
-  kda_ratio: number;
+  kda_ratio: number | string;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  birth_date?: string;
 }
 
 export interface TeamSummaryStatistic {

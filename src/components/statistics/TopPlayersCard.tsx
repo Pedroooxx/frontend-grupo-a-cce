@@ -18,13 +18,21 @@ export const TopPlayersCard = ({ players }: TopPlayersCardProps) => {
       </div>
 
       <div className="space-y-4">
-        {players.map((player, index) => (
-          <PlayerListItem 
-            key={player.participant_id} 
-            player={player} 
-            position={index} 
-          />
-        ))}
+        {players
+          // Filter out duplicates based on participant_id
+          .filter((player, index, self) => 
+            index === self.findIndex((p) => p.participant_id === player.participant_id)
+          )
+          // Sort by KDA ratio descending
+          .sort((a, b) => (b.kda_ratio || 0) - (a.kda_ratio || 0))
+          .slice(0, 5) // Only show top 5 players
+          .map((player, index) => (
+            <PlayerListItem 
+              key={player.participant_id}
+              player={player} 
+              position={index} 
+            />
+          ))}
       </div>
     </Card>
   );
