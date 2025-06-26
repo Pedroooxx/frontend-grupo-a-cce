@@ -16,7 +16,7 @@ import { detailedPlayersStats } from "@/data/data-mock"; // Fallback if API fail
 
 const PlayerStatistics = () => {
   const params = useParams();
-  const playerId = parseInt(params.id as string) || 1;
+  const playerId = parseInt(params?.id as string) || 1;
   
   // Fetch player data from API
   const { data: allPlayers, isLoading: isLoadingAllPlayers } = useAllPlayersSummary();
@@ -454,26 +454,6 @@ const PlayerStatistics = () => {
               ))}
             </div>
             */}
-          </div>
-        )}
-      </div>
-    </DashboardLayout>
-  );
-};
-
-export default PlayerStatistics;
-                            : "bg-green-500/20 text-green-400 border-green-500/30"
-                        }`}
-                      >
-                        {championship.status}
-                      </Badge>                      <p className="text-white font-medium">
-                        #{championship.placement}º Lugar
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
           </div>
         )}
       </div>

@@ -29,6 +29,7 @@ export interface PlayerSummaryStatistic {
   wins: number;
   losses: number;
   win_rate: number;
+  birth_date?: string;
 }
 
 export interface TeamSummaryStatistic {
