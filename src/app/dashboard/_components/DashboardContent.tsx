@@ -145,8 +145,10 @@ export function DashboardContent() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-medium">{player.kda_ratio.toFixed(2)} KDA</p>
-                    <p className="dashboard-text-muted text-sm">{player.total_kills} kills</p>
+                    <p className="text-white font-medium">
+                      {typeof player.kda_ratio === 'number' ? player.kda_ratio.toFixed(2) : '0.00'} KDA
+                    </p>
+                    <p className="dashboard-text-muted text-sm">{player.total_kills || 0} kills</p>
                   </div>
                 </div>
               ))}
