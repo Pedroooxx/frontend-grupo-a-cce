@@ -60,3 +60,15 @@ export const teamSchema = z.object({
 });
 
 export type TeamFormValues = z.infer<typeof teamSchema>;
+
+// Add interface for teams with match statistics
+export interface TeamWithStatistics {
+  team_id: number;
+  name: string;
+  manager_name: string;
+  wins: number;
+  losses: number;
+  total_matches: number;
+  win_rate: number;
+  participants_count: number;
+}

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useGetChampionshipMatches, useGetChampionshipById } from '@/services/championshipService';
+import { useGetChampionshipTeamHistory } from '@/services/matchService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
 import { useGetAllTeams } from '@/services/teamService';
 import { PublicMatch } from '@/types/data-types';
@@ -59,6 +60,12 @@ export function ChampionshipDetails({
     isLoading: isLoadingTeams,
   } = useGetAllTeams();
 
+  // Fetch match statistics for teams in this championship
+  const {
+    data: teamStatistics = {},
+    isLoading: isLoadingStatistics,
+  } = useGetChampionshipTeamHistory(championshipId);
+
   /**
    * Get teams for this championship using subscription data
    */
@@ -78,11 +85,15 @@ export function ChampionshipDetails({
     // Find teams that are subscribed to this championship
     const teamsInChampionship = allTeams.filter(team => teamIds.has(team.team_id));
 
-    // Map to LocalTeam interface with calculated win rate
-    return teamsInChampionship.map(team => {
-      const wins = 0; // Static for now as requested
-      const losses = 0; // Static for now as requested
-      const win_rate = wins / (wins + losses);
+    // Map to LocalTeam interface with calculated win rate from actual matches
+    const teamsWithStats = teamsInChampionship.map(team => {
+      // Get real statistics from matches or default to 0
+      const stats = teamStatistics[team.team_id] || {
+        wins: 0,
+        losses: 0,
+        total_matches: 0,
+        win_rate: 0
+      };
 
       // Get manager name from participants
       const coach = team.Participants?.find(p => p.is_coach);
@@ -92,13 +103,25 @@ export function ChampionshipDetails({
         team_id: team.team_id,
         name: team.name,
         manager_name,
-        wins,
-        losses,
-        win_rate,
+        wins: stats.wins,
+        losses: stats.losses,
+        win_rate: stats.win_rate,
+        total_matches: stats.total_matches,
         participants_count: team.Participants?.length || 0,
       };
     });
-  }, [subscriptionsData, allTeams, championshipId]);
+
+    // Sort teams by win rate (descending), then by total wins, then by name
+    return teamsWithStats.sort((a, b) => {
+      if (a.win_rate !== b.win_rate) {
+        return b.win_rate - a.win_rate; // Higher win rate first
+      }
+      if (a.wins !== b.wins) {
+        return b.wins - a.wins; // More wins first
+      }
+      return a.name.localeCompare(b.name); // Alphabetical by name
+    });
+  }, [subscriptionsData, allTeams, championshipId, teamStatistics]);
 
   /**
    * Count teams for this championship using subscription data
@@ -350,7 +373,7 @@ export function ChampionshipDetails({
   };
 
   // Show loading state
-  if (isLoadingChampionship || isLoadingSubscriptions || isLoadingMatches || isLoadingTeams) {
+  if (isLoadingChampionship || isLoadingSubscriptions || isLoadingMatches || isLoadingTeams || isLoadingStatistics) {
     return (
       <div className="space-y-8 animate-pulse">
         <div className="h-12 bg-slate-700 rounded"></div>
@@ -518,11 +541,18 @@ export function ChampionshipDetails({
                             {team.wins}V - {team.losses}D
                           </span>
                           <span className="text-green-400 font-semibold">
-                            {Math.round(team.win_rate * 100)}%
+                            {team.total_matches > 0 ? Math.round(team.win_rate * 100) : 0}%
                           </span>
                         </div>
                       </div>
                     ))}
+                    {championshipTeams.length > 5 && (
+                      <div className="text-center pt-2">
+                        <span className="text-slate-500 text-sm">
+                          +{championshipTeams.length - 5} equipes adicionais
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </Card>
@@ -705,295 +735,295 @@ export function ChampionshipDetails({
             </h3>            {/* Dynamic Bracket Container */}
             {bracketStructure.winners.length > 0 ? (
               <div className="mx-auto relative min-w-fit">                {championshipData?.format === 'double' ? (
-                  /* Double Elimination Bracket - Winners Left, Losers Right, Grand Final Center */
-                  <div className="flex justify-center items-start space-x-6">
-                    {/* Winners Bracket - Left Side */}
-                    <div className="flex-shrink-0 flex flex-col items-start">
-                      <h4 className="text-lg font-semibold text-green-400 mb-6 text-center w-full">Chave dos Vencedores</h4>
+                /* Double Elimination Bracket - Winners Left, Losers Right, Grand Final Center */
+                <div className="flex justify-center items-start space-x-6">
+                  {/* Winners Bracket - Left Side */}
+                  <div className="flex-shrink-0 flex flex-col items-start">
+                    <h4 className="text-lg font-semibold text-green-400 mb-6 text-center w-full">Chave dos Vencedores</h4>
 
-                      {/* Winners Round Labels - All rounds including winners final */}
-                      <div className="flex space-x-3 mb-8 text-center w-full justify-start">
-                        {bracketStructure.winners.map((round, index) => (
-                          <div key={index} className="w-32 text-slate-400 font-semibold text-xs">
-                            {round.name}
-                          </div>
-                        ))}
-                      </div>
-
-
-                      {/* Winners Bracket Structure - All rounds */}
-                      <div className="flex items-start space-x-3 relative">
-                        {bracketStructure.winners.map((round, roundIndex) => (
-                          <div key={roundIndex} className="flex flex-col justify-start space-y-6">
-                            {roundIndex === bracketStructure.winners.length - 1 ? (
-                              /* Winners Final - Aligned at top */
-                              <div className="w-36 bg-gradient-to-r from-green-900 to-green-800 rounded-lg border-2 border-green-500 p-4 relative shadow-lg shadow-green-500/20">
-                                <div className="text-center mb-3">
-                                  <Trophy className="w-5 h-5 text-green-400 mx-auto mb-2" />
-                                  <span className="text-green-400 font-bold text-xs">{round.name.toUpperCase()}</span>
-                                </div>
-                                <div className="space-y-2">
-                                  {(() => {
-                                    const winnersFinaltMatch = championshipMatches.find(m =>
-                                      m.stage?.toLowerCase().includes('final') &&
-                                      !m.stage?.toLowerCase().includes('grand') &&
-                                      !m.stage?.toLowerCase().includes('losers')
-                                    );
-
-                                    if (winnersFinaltMatch) {
-                                      return (
-                                        <div
-                                          className="cursor-pointer hover:bg-slate-700/50 rounded transition-colors"
-                                          onClick={() => router.push(`/campeonatos/${championshipId}/partidas/${winnersFinaltMatch.match_id}`)}
-                                        >
-                                          <div className={`flex items-center justify-between p-2 ${winnersFinaltMatch.winner_team_id === winnersFinaltMatch.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded text-xs`}>
-                                            <span className="text-white font-medium truncate pr-1">{winnersFinaltMatch.TeamA?.name || 'TBD'}</span>
-                                            <span className="text-green-400 font-bold">{winnersFinaltMatch.status === 'Finalizada' ? (winnersFinaltMatch.score?.teamA || '0') : 'vs'}</span>
-                                          </div>
-                                          <div className={`flex items-center justify-between p-2 ${winnersFinaltMatch.winner_team_id === winnersFinaltMatch.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded text-xs`}>
-                                            <span className="text-white font-medium truncate pr-1">{winnersFinaltMatch.TeamB?.name || 'TBD'}</span>
-                                            <span className="text-green-400 font-bold">{winnersFinaltMatch.status === 'Finalizada' ? (winnersFinaltMatch.score?.teamB || '0') : 'TBD'}</span>
-                                          </div>
-                                        </div>
-                                      );
-                                    } else {
-                                      return (
-                                        <>
-                                          <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-green-500 text-xs">
-                                            <span className="text-white font-medium">Semi 1</span>
-                                            <span className="text-green-400">vs</span>
-                                          </div>
-                                          <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-green-500 text-xs">
-                                            <span className="text-white font-medium">Semi 2</span>
-                                            <span className="text-green-400">TBD</span>
-                                          </div>
-                                        </>
-                                      );
-                                    }
-                                  })()}
-                                </div>
-                                {/* Connection line to Grand Final */}
-                                <div className="absolute top-1/2 -right-6 w-6 h-0.5 bg-green-500"></div>
-                              </div>
-                            ) : (
-                              /* Regular Winners Bracket Rounds */
-                              Array.from({ length: round.matches }).map((_, matchIndex) => {
-                                // Filter matches by exact stage name (matches backend stage names)
-                                const roundMatches = championshipMatches.filter(m => {
-                                  return m.stage === round.name && (m.bracket === 'upper' || !m.bracket);
-                                });
-
-                                const match = roundMatches[matchIndex];
-                                return (
-                                  <div key={matchIndex} className={`w-32 bg-slate-700 rounded-lg border border-green-600 p-3 relative ${match ? 'cursor-pointer hover:bg-slate-600/50 transition-colors' : ''}`}
-                                    onClick={match ? () => router.push(`/campeonatos/${championshipId}/partidas/${match.match_id}`) : undefined}
-                                  >
-                                    <div className="space-y-2">
-                                      {match ? (
-                                        <>
-                                          <div className={`flex items-center justify-between p-2 ${match.winner_team_id === match.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${match.status !== 'Finalizada' ? 'border-2 border-green-500' : ''}`}>
-                                            <span className="text-white font-medium text-sm truncate pr-2">{match.TeamA?.name || `Team ${match.teamA_id}`}</span>
-                                            <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamA_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400'}>
-                                              {match.status === 'Finalizada' ? (match.score?.teamA || '0') : 'vs'}
-                                            </span>
-                                          </div>
-                                          <div className={`flex items-center justify-between p-2 ${match.winner_team_id === match.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${match.status !== 'Finalizada' ? 'border-2 border-green-500' : ''}`}>
-                                            <span className="text-white font-medium text-sm truncate pr-2">{match.TeamB?.name || `Team ${match.teamB_id}`}</span>
-                                            <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamB_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400 text-xs'}>
-                                              {match.status === 'Finalizada' ? (match.score?.teamB || '0') : (match.date ? formatDateTime(match.date) : 'TBD')}
-                                            </span>
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-slate-500">
-                                            <span className="text-slate-400 text-sm">TBD</span>
-                                            <span className="text-slate-500">vs</span>
-                                          </div>
-                                          <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-slate-500">
-                                            <span className="text-slate-400 text-sm">TBD</span>
-                                            <span className="text-slate-500 text-xs">-</span>
-                                          </div>
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                    {/* Winners Round Labels - All rounds including winners final */}
+                    <div className="flex space-x-3 mb-8 text-center w-full justify-start">
+                      {bracketStructure.winners.map((round, index) => (
+                        <div key={index} className="w-32 text-slate-400 font-semibold text-xs">
+                          {round.name}
+                        </div>
+                      ))}
                     </div>
 
-                    {/* Grand Final - Center - Aligned at top */}
-                    <div className="flex flex-col items-center justify-start">
-                      <div className="w-44 bg-gradient-to-r from-yellow-900 to-yellow-800 rounded-lg border-2 border-yellow-500 p-4 relative shadow-lg shadow-yellow-500/20 mt-16">
-                        <div className="text-center mb-3">
-                          <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-                          <span className="text-yellow-400 font-bold text-sm">GRANDE FINAL</span>
-                        </div>
-                        <div className="space-y-3">
-                          {(() => {
-                            const grandFinalMatch = championshipMatches.find(m =>
-                              m.stage === 'Grand Final' && m.bracket === 'final'
-                            );
 
-                            if (grandFinalMatch) {
+                    {/* Winners Bracket Structure - All rounds */}
+                    <div className="flex items-start space-x-3 relative">
+                      {bracketStructure.winners.map((round, roundIndex) => (
+                        <div key={roundIndex} className="flex flex-col justify-start space-y-6">
+                          {roundIndex === bracketStructure.winners.length - 1 ? (
+                            /* Winners Final - Aligned at top */
+                            <div className="w-36 bg-gradient-to-r from-green-900 to-green-800 rounded-lg border-2 border-green-500 p-4 relative shadow-lg shadow-green-500/20">
+                              <div className="text-center mb-3">
+                                <Trophy className="w-5 h-5 text-green-400 mx-auto mb-2" />
+                                <span className="text-green-400 font-bold text-xs">{round.name.toUpperCase()}</span>
+                              </div>
+                              <div className="space-y-2">
+                                {(() => {
+                                  const winnersFinaltMatch = championshipMatches.find(m =>
+                                    m.stage?.toLowerCase().includes('final') &&
+                                    !m.stage?.toLowerCase().includes('grand') &&
+                                    !m.stage?.toLowerCase().includes('losers')
+                                  );
+
+                                  if (winnersFinaltMatch) {
+                                    return (
+                                      <div
+                                        className="cursor-pointer hover:bg-slate-700/50 rounded transition-colors"
+                                        onClick={() => router.push(`/campeonatos/${championshipId}/partidas/${winnersFinaltMatch.match_id}`)}
+                                      >
+                                        <div className={`flex items-center justify-between p-2 ${winnersFinaltMatch.winner_team_id === winnersFinaltMatch.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded text-xs`}>
+                                          <span className="text-white font-medium truncate pr-1">{winnersFinaltMatch.TeamA?.name || 'TBD'}</span>
+                                          <span className="text-green-400 font-bold">{winnersFinaltMatch.status === 'Finalizada' ? (winnersFinaltMatch.score?.teamA || '0') : 'vs'}</span>
+                                        </div>
+                                        <div className={`flex items-center justify-between p-2 ${winnersFinaltMatch.winner_team_id === winnersFinaltMatch.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded text-xs`}>
+                                          <span className="text-white font-medium truncate pr-1">{winnersFinaltMatch.TeamB?.name || 'TBD'}</span>
+                                          <span className="text-green-400 font-bold">{winnersFinaltMatch.status === 'Finalizada' ? (winnersFinaltMatch.score?.teamB || '0') : 'TBD'}</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  } else {
+                                    return (
+                                      <>
+                                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-green-500 text-xs">
+                                          <span className="text-white font-medium">Semi 1</span>
+                                          <span className="text-green-400">vs</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-green-500 text-xs">
+                                          <span className="text-white font-medium">Semi 2</span>
+                                          <span className="text-green-400">TBD</span>
+                                        </div>
+                                      </>
+                                    );
+                                  }
+                                })()}
+                              </div>
+                              {/* Connection line to Grand Final */}
+                              <div className="absolute top-1/2 -right-6 w-6 h-0.5 bg-green-500"></div>
+                            </div>
+                          ) : (
+                            /* Regular Winners Bracket Rounds */
+                            Array.from({ length: round.matches }).map((_, matchIndex) => {
+                              // Filter matches by exact stage name (matches backend stage names)
+                              const roundMatches = championshipMatches.filter(m => {
+                                return m.stage === round.name && (m.bracket === 'upper' || !m.bracket);
+                              });
+
+                              const match = roundMatches[matchIndex];
                               return (
-                                <div
-                                  className="cursor-pointer hover:bg-slate-700/50 rounded transition-colors"
-                                  onClick={() => router.push(`/campeonatos/${championshipId}/partidas/${grandFinalMatch.match_id}`)}
+                                <div key={matchIndex} className={`w-32 bg-slate-700 rounded-lg border border-green-600 p-3 relative ${match ? 'cursor-pointer hover:bg-slate-600/50 transition-colors' : ''}`}
+                                  onClick={match ? () => router.push(`/campeonatos/${championshipId}/partidas/${match.match_id}`) : undefined}
                                 >
-                                  <div className={`flex items-center justify-between p-2 ${grandFinalMatch.winner_team_id === grandFinalMatch.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${grandFinalMatch.status !== 'Finalizada' ? 'border border-yellow-500' : ''}`}>
-                                    <span className="text-white font-medium text-sm">{grandFinalMatch.TeamA?.name || 'Vencedor Chave'}</span>
-                                    <span className={grandFinalMatch.status === 'Finalizada' ? (grandFinalMatch.winner_team_id === grandFinalMatch.teamA_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400'}>
-                                      {grandFinalMatch.status === 'Finalizada' ? (grandFinalMatch.score?.teamA || '0') : 'vs'}
-                                    </span>
-                                  </div>
-                                  <div className={`flex items-center justify-between p-2 ${grandFinalMatch.winner_team_id === grandFinalMatch.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${grandFinalMatch.status !== 'Finalizada' ? 'border border-yellow-500' : ''}`}>
-                                    <span className="text-white font-medium text-sm">{grandFinalMatch.TeamB?.name || 'Vencedor Eliminados'}</span>
-                                    <span className={grandFinalMatch.status === 'Finalizada' ? (grandFinalMatch.winner_team_id === grandFinalMatch.teamB_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400 text-xs'}>
-                                      {grandFinalMatch.status === 'Finalizada' ? (grandFinalMatch.score?.teamB || '0') : (grandFinalMatch.date ? formatDateTime(grandFinalMatch.date) : 'TBD')}
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            } else {
-                              return (
-                                <>
-                                  <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                                    <span className="text-white font-medium text-sm">Vencedor Chave</span>
-                                    <span className="text-yellow-400">vs</span>
-                                  </div>
-                                  <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
-                                    <span className="text-white font-medium text-sm">Vencedor Eliminados</span>
-                                    <span className="text-yellow-400 text-xs">A definir</span>
-                                  </div>
-                                </>
-                              );
-                            }
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Losers Bracket - Right Side */}
-                    <div className="flex-shrink-0 flex flex-col items-start">
-                      <h4 className="text-lg font-semibold text-red-400 mb-6 text-center w-full">Chave dos Eliminados</h4>
-
-                      {/* Losers Round Labels - Right to Left (reversed) */}
-                      <div className="flex space-x-3 mb-8 text-center w-full justify-start">
-                        {bracketStructure.losers.slice().reverse().map((round, index) => (
-                          <div key={index} className="w-32 text-slate-400 font-semibold text-xs">
-                            {round.name}
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Losers Bracket Structure - Right to Left (reversed) */}
-                      <div className="flex items-start space-x-3 relative">
-                        {bracketStructure.losers.slice().reverse().map((round, roundIndex) => (
-                          <div key={roundIndex} className="flex flex-col justify-start space-y-6">
-                            {round.name === 'Lower Final' ? (
-                              /* Lower Final - Aligned at top */
-                              <div className="w-36 bg-gradient-to-r from-red-900 to-red-800 rounded-lg border-2 border-red-500 p-4 relative shadow-lg shadow-red-500/20">
-                                <div className="text-center mb-3">
-                                  <Trophy className="w-5 h-5 text-red-400 mx-auto mb-2" />
-                                  <span className="text-red-400 font-bold text-xs">{round.name.toUpperCase()}</span>
-                                </div>
-                                <div className="space-y-2">
-                                  {(() => {
-                                    const lowerFinalMatch = championshipMatches.find(m =>
-                                      m.stage === 'Lower Final' && m.bracket === 'lower'
-                                    );
-
-                                    if (lowerFinalMatch) {
-                                      return (
-                                        <div
-                                          className="cursor-pointer hover:bg-slate-700/50 rounded transition-colors"
-                                          onClick={() => router.push(`/campeonatos/${championshipId}/partidas/${lowerFinalMatch.match_id}`)}
-                                        >
-                                          <div className={`flex items-center justify-between p-2 ${lowerFinalMatch.winner_team_id === lowerFinalMatch.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded text-xs`}>
-                                            <span className="text-white font-medium truncate pr-1">{lowerFinalMatch.TeamA?.name || 'TBD'}</span>
-                                            <span className="text-red-400 font-bold">{lowerFinalMatch.status === 'Finalizada' ? (lowerFinalMatch.score?.teamA || '0') : 'vs'}</span>
-                                          </div>
-                                          <div className={`flex items-center justify-between p-2 ${lowerFinalMatch.winner_team_id === lowerFinalMatch.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded text-xs`}>
-                                            <span className="text-white font-medium truncate pr-1">{lowerFinalMatch.TeamB?.name || 'TBD'}</span>
-                                            <span className="text-red-400 font-bold">{lowerFinalMatch.status === 'Finalizada' ? (lowerFinalMatch.score?.teamB || '0') : 'TBD'}</span>
-                                          </div>
+                                  <div className="space-y-2">
+                                    {match ? (
+                                      <>
+                                        <div className={`flex items-center justify-between p-2 ${match.winner_team_id === match.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${match.status !== 'Finalizada' ? 'border-2 border-green-500' : ''}`}>
+                                          <span className="text-white font-medium text-sm truncate pr-2">{match.TeamA?.name || `Team ${match.teamA_id}`}</span>
+                                          <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamA_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400'}>
+                                            {match.status === 'Finalizada' ? (match.score?.teamA || '0') : 'vs'}
+                                          </span>
                                         </div>
-                                      );
-                                    } else {
-                                      return (
-                                        <>
-                                          <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-red-500 text-xs">
-                                            <span className="text-white font-medium">Sobrevivente</span>
-                                            <span className="text-red-400">vs</span>
-                                          </div>
-                                          <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-red-500 text-xs">
-                                            <span className="text-white font-medium">Perdedor WF</span>
-                                            <span className="text-red-400">TBD</span>
-                                          </div>
-                                        </>
-                                      );
-                                    }
-                                  })()}
-                                </div>                                {/* Connection line to Grand Final */}
-                                <div className="absolute top-1/2 -left-6 w-6 h-0.5 bg-red-500"></div>
-                              </div>
-                            ) : (
-                              /* Regular Losers Bracket Rounds */
-                              Array.from({ length: round.matches }).map((_, matchIndex) => {
-                                // Filter matches by exact stage name (matches backend stage names)
-                                const roundMatches = championshipMatches.filter(m => {
-                                  return m.stage === round.name && m.bracket === 'lower';
-                                });
-
-                                const match = roundMatches[matchIndex];
-                                return (
-                                  <div key={matchIndex} className={`w-32 bg-slate-700 rounded-lg border border-red-600 p-3 relative ${match ? 'cursor-pointer hover:bg-slate-600/50 transition-colors' : ''}`}
-                                    onClick={match ? () => router.push(`/campeonatos/${championshipId}/partidas/${match.match_id}`) : undefined}
-                                  >
-                                    <div className="space-y-2">
-                                      {match ? (
-                                        <>
-                                          <div className={`flex items-center justify-between p-2 ${match.winner_team_id === match.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${match.status !== 'Finalizada' ? 'border-2 border-red-500' : ''}`}>
-                                            <span className="text-white font-medium text-sm truncate pr-2">{match.TeamA?.name || `Team ${match.teamA_id}`}</span>
-                                            <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamA_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400'}>
-                                              {match.status === 'Finalizada' ? (match.score?.teamA || '0') : 'vs'}
-                                            </span>
-                                          </div>
-                                          <div className={`flex items-center justify-between p-2 ${match.winner_team_id === match.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${match.status !== 'Finalizada' ? 'border-2 border-red-500' : ''}`}>
-                                            <span className="text-white font-medium text-sm truncate pr-2">{match.TeamB?.name || `Team ${match.teamB_id}`}</span>
-                                            <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamB_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400 text-xs'}>
-                                              {match.status === 'Finalizada' ? (match.score?.teamB || '0') : (match.date ? formatDateTime(match.date) : 'TBD')}
-                                            </span>
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-red-500">
-                                            <span className="text-slate-400 text-sm">TBD</span>
-                                            <span className="text-slate-500">vs</span>
-                                          </div>
-                                          <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-red-500">
-                                            <span className="text-slate-400 text-sm">TBD</span>
-                                            <span className="text-slate-500 text-xs">-</span>
-                                          </div>
-                                        </>
-                                      )}
-                                    </div>
+                                        <div className={`flex items-center justify-between p-2 ${match.winner_team_id === match.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${match.status !== 'Finalizada' ? 'border-2 border-green-500' : ''}`}>
+                                          <span className="text-white font-medium text-sm truncate pr-2">{match.TeamB?.name || `Team ${match.teamB_id}`}</span>
+                                          <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamB_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400 text-xs'}>
+                                            {match.status === 'Finalizada' ? (match.score?.teamB || '0') : (match.date ? formatDateTime(match.date) : 'TBD')}
+                                          </span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-slate-500">
+                                          <span className="text-slate-400 text-sm">TBD</span>
+                                          <span className="text-slate-500">vs</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-slate-500">
+                                          <span className="text-slate-400 text-sm">TBD</span>
+                                          <span className="text-slate-500 text-xs">-</span>
+                                        </div>
+                                      </>
+                                    )}
                                   </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        ))}
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Grand Final - Center - Aligned at top */}
+                  <div className="flex flex-col items-center justify-start">
+                    <div className="w-44 bg-gradient-to-r from-yellow-900 to-yellow-800 rounded-lg border-2 border-yellow-500 p-4 relative shadow-lg shadow-yellow-500/20 mt-16">
+                      <div className="text-center mb-3">
+                        <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
+                        <span className="text-yellow-400 font-bold text-sm">GRANDE FINAL</span>
+                      </div>
+                      <div className="space-y-3">
+                        {(() => {
+                          const grandFinalMatch = championshipMatches.find(m =>
+                            m.stage === 'Grand Final' && m.bracket === 'final'
+                          );
+
+                          if (grandFinalMatch) {
+                            return (
+                              <div
+                                className="cursor-pointer hover:bg-slate-700/50 rounded transition-colors"
+                                onClick={() => router.push(`/campeonatos/${championshipId}/partidas/${grandFinalMatch.match_id}`)}
+                              >
+                                <div className={`flex items-center justify-between p-2 ${grandFinalMatch.winner_team_id === grandFinalMatch.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${grandFinalMatch.status !== 'Finalizada' ? 'border border-yellow-500' : ''}`}>
+                                  <span className="text-white font-medium text-sm">{grandFinalMatch.TeamA?.name || 'Vencedor Chave'}</span>
+                                  <span className={grandFinalMatch.status === 'Finalizada' ? (grandFinalMatch.winner_team_id === grandFinalMatch.teamA_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400'}>
+                                    {grandFinalMatch.status === 'Finalizada' ? (grandFinalMatch.score?.teamA || '0') : 'vs'}
+                                  </span>
+                                </div>
+                                <div className={`flex items-center justify-between p-2 ${grandFinalMatch.winner_team_id === grandFinalMatch.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${grandFinalMatch.status !== 'Finalizada' ? 'border border-yellow-500' : ''}`}>
+                                  <span className="text-white font-medium text-sm">{grandFinalMatch.TeamB?.name || 'Vencedor Eliminados'}</span>
+                                  <span className={grandFinalMatch.status === 'Finalizada' ? (grandFinalMatch.winner_team_id === grandFinalMatch.teamB_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400 text-xs'}>
+                                    {grandFinalMatch.status === 'Finalizada' ? (grandFinalMatch.score?.teamB || '0') : (grandFinalMatch.date ? formatDateTime(grandFinalMatch.date) : 'TBD')}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <>
+                                <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                                  <span className="text-white font-medium text-sm">Vencedor Chave</span>
+                                  <span className="text-yellow-400">vs</span>
+                                </div>
+                                <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-yellow-500">
+                                  <span className="text-white font-medium text-sm">Vencedor Eliminados</span>
+                                  <span className="text-yellow-400 text-xs">A definir</span>
+                                </div>
+                              </>
+                            );
+                          }
+                        })()}
                       </div>
                     </div>
                   </div>
-                ) : (                  /* Single Elimination Bracket */
+
+                  {/* Losers Bracket - Right Side */}
+                  <div className="flex-shrink-0 flex flex-col items-start">
+                    <h4 className="text-lg font-semibold text-red-400 mb-6 text-center w-full">Chave dos Eliminados</h4>
+
+                    {/* Losers Round Labels - Right to Left (reversed) */}
+                    <div className="flex space-x-3 mb-8 text-center w-full justify-start">
+                      {bracketStructure.losers.slice().reverse().map((round, index) => (
+                        <div key={index} className="w-32 text-slate-400 font-semibold text-xs">
+                          {round.name}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Losers Bracket Structure - Right to Left (reversed) */}
+                    <div className="flex items-start space-x-3 relative">
+                      {bracketStructure.losers.slice().reverse().map((round, roundIndex) => (
+                        <div key={roundIndex} className="flex flex-col justify-start space-y-6">
+                          {round.name === 'Lower Final' ? (
+                            /* Lower Final - Aligned at top */
+                            <div className="w-36 bg-gradient-to-r from-red-900 to-red-800 rounded-lg border-2 border-red-500 p-4 relative shadow-lg shadow-red-500/20">
+                              <div className="text-center mb-3">
+                                <Trophy className="w-5 h-5 text-red-400 mx-auto mb-2" />
+                                <span className="text-red-400 font-bold text-xs">{round.name.toUpperCase()}</span>
+                              </div>
+                              <div className="space-y-2">
+                                {(() => {
+                                  const lowerFinalMatch = championshipMatches.find(m =>
+                                    m.stage === 'Lower Final' && m.bracket === 'lower'
+                                  );
+
+                                  if (lowerFinalMatch) {
+                                    return (
+                                      <div
+                                        className="cursor-pointer hover:bg-slate-700/50 rounded transition-colors"
+                                        onClick={() => router.push(`/campeonatos/${championshipId}/partidas/${lowerFinalMatch.match_id}`)}
+                                      >
+                                        <div className={`flex items-center justify-between p-2 ${lowerFinalMatch.winner_team_id === lowerFinalMatch.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded text-xs`}>
+                                          <span className="text-white font-medium truncate pr-1">{lowerFinalMatch.TeamA?.name || 'TBD'}</span>
+                                          <span className="text-red-400 font-bold">{lowerFinalMatch.status === 'Finalizada' ? (lowerFinalMatch.score?.teamA || '0') : 'vs'}</span>
+                                        </div>
+                                        <div className={`flex items-center justify-between p-2 ${lowerFinalMatch.winner_team_id === lowerFinalMatch.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded text-xs`}>
+                                          <span className="text-white font-medium truncate pr-1">{lowerFinalMatch.TeamB?.name || 'TBD'}</span>
+                                          <span className="text-red-400 font-bold">{lowerFinalMatch.status === 'Finalizada' ? (lowerFinalMatch.score?.teamB || '0') : 'TBD'}</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  } else {
+                                    return (
+                                      <>
+                                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-red-500 text-xs">
+                                          <span className="text-white font-medium">Sobrevivente</span>
+                                          <span className="text-red-400">vs</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-red-500 text-xs">
+                                          <span className="text-white font-medium">Perdedor WF</span>
+                                          <span className="text-red-400">TBD</span>
+                                        </div>
+                                      </>
+                                    );
+                                  }
+                                })()}
+                              </div>                                {/* Connection line to Grand Final */}
+                              <div className="absolute top-1/2 -left-6 w-6 h-0.5 bg-red-500"></div>
+                            </div>
+                          ) : (
+                            /* Regular Losers Bracket Rounds */
+                            Array.from({ length: round.matches }).map((_, matchIndex) => {
+                              // Filter matches by exact stage name (matches backend stage names)
+                              const roundMatches = championshipMatches.filter(m => {
+                                return m.stage === round.name && m.bracket === 'lower';
+                              });
+
+                              const match = roundMatches[matchIndex];
+                              return (
+                                <div key={matchIndex} className={`w-32 bg-slate-700 rounded-lg border border-red-600 p-3 relative ${match ? 'cursor-pointer hover:bg-slate-600/50 transition-colors' : ''}`}
+                                  onClick={match ? () => router.push(`/campeonatos/${championshipId}/partidas/${match.match_id}`) : undefined}
+                                >
+                                  <div className="space-y-2">
+                                    {match ? (
+                                      <>
+                                        <div className={`flex items-center justify-between p-2 ${match.winner_team_id === match.teamA_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${match.status !== 'Finalizada' ? 'border-2 border-red-500' : ''}`}>
+                                          <span className="text-white font-medium text-sm truncate pr-2">{match.TeamA?.name || `Team ${match.teamA_id}`}</span>
+                                          <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamA_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400'}>
+                                            {match.status === 'Finalizada' ? (match.score?.teamA || '0') : 'vs'}
+                                          </span>
+                                        </div>
+                                        <div className={`flex items-center justify-between p-2 ${match.winner_team_id === match.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${match.status !== 'Finalizada' ? 'border-2 border-red-500' : ''}`}>
+                                          <span className="text-white font-medium text-sm truncate pr-2">{match.TeamB?.name || `Team ${match.teamB_id}`}</span>
+                                          <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamB_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400 text-xs'}>
+                                            {match.status === 'Finalizada' ? (match.score?.teamB || '0') : (match.date ? formatDateTime(match.date) : 'TBD')}
+                                          </span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-red-500">
+                                          <span className="text-slate-400 text-sm">TBD</span>
+                                          <span className="text-slate-500">vs</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 bg-slate-800 rounded border border-red-500">
+                                          <span className="text-slate-400 text-sm">TBD</span>
+                                          <span className="text-slate-500 text-xs">-</span>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (                  /* Single Elimination Bracket */
                 <div className={`mx-auto relative ${bracketStructure.winners.length === 1 ? 'max-w-md' : bracketStructure.winners.length === 2 ? 'max-w-lg' : bracketStructure.winners.length === 3 ? 'max-w-2xl' : 'max-w-4xl'}`}>
                   {/* Round Labels */}
                   <div className={`flex ${bracketStructure.winners.length === 1 ? 'justify-center' : 'justify-between'} mb-8 text-center`}>

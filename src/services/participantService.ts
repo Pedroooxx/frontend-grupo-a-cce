@@ -5,6 +5,7 @@ import { createReactQueryService } from './reactQueryService';
 
 export interface Participant {
   participant_id: number;
+  id?: number; // Add alias for compatibility
   name: string;
   nickname: string;
   birth_date: string;

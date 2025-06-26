@@ -159,3 +159,84 @@ export const useUpdateMatchResult = () => {
     },
   });
 };
+
+/**
+ * Interface for team statistics based on match results
+ */
+export interface TeamStatistics {
+  team_id: number;
+  wins: number;
+  losses: number;
+  total_matches: number;
+  win_rate: number;
+}
+
+/**
+ * Hook to get match statistics for teams in a specific championship
+ */
+export const useGetChampionshipTeamHistory = (championshipId: number | string, enabled = true) => {
+  return useQuery<Record<number, TeamStatistics>, ApiError>({
+    queryKey: ['matches', 'championship', championshipId, 'statistics'],
+    queryFn: async () => {
+      const response = await apiClient.get<MatchResponse>(`/matches?championship_id=${championshipId}`, { withAuth: true });
+      const matches = response.data;
+      
+      // Calculate statistics for each team
+      const teamStats: Record<number, TeamStatistics> = {};
+      
+      matches.forEach(match => {
+        // Only count finished matches for statistics
+        if (match.status === 'Finalizada' && match.winner_team_id) {
+          // Initialize team A stats if not exists
+          if (!teamStats[match.teamA_id]) {
+            teamStats[match.teamA_id] = {
+              team_id: match.teamA_id,
+              wins: 0,
+              losses: 0,
+              total_matches: 0,
+              win_rate: 0
+            };
+          }
+          
+          // Initialize team B stats if not exists
+          if (!teamStats[match.teamB_id]) {
+            teamStats[match.teamB_id] = {
+              team_id: match.teamB_id,
+              wins: 0,
+              losses: 0,
+              total_matches: 0,
+              win_rate: 0
+            };
+          }
+          
+          // Update match counts
+          teamStats[match.teamA_id].total_matches++;
+          teamStats[match.teamB_id].total_matches++;
+          
+          // Update wins/losses based on winner
+          if (match.winner_team_id === match.teamA_id) {
+            teamStats[match.teamA_id].wins++;
+            teamStats[match.teamB_id].losses++;
+          } else if (match.winner_team_id === match.teamB_id) {
+            teamStats[match.teamB_id].wins++;
+            teamStats[match.teamA_id].losses++;
+          }
+          
+          // Calculate win rates
+          teamStats[match.teamA_id].win_rate = 
+            teamStats[match.teamA_id].total_matches > 0 
+              ? teamStats[match.teamA_id].wins / teamStats[match.teamA_id].total_matches 
+              : 0;
+              
+          teamStats[match.teamB_id].win_rate = 
+            teamStats[match.teamB_id].total_matches > 0 
+              ? teamStats[match.teamB_id].wins / teamStats[match.teamB_id].total_matches 
+              : 0;
+        }
+      });
+      
+      return teamStats;
+    },
+    enabled: enabled && !!championshipId,
+  });
+};

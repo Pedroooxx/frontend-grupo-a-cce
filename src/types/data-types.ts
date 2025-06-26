@@ -1,4 +1,4 @@
-// Core entity types
+// DATA TYPES FOR MOCK DATA DO NOT USE IN PRODUCTION
 export interface User {
   user_id: number;
   name: string;
