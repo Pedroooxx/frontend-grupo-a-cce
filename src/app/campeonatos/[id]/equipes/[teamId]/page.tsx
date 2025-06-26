@@ -27,7 +27,9 @@ import { useGetTeamById } from '@/services/teamService';
 import { useGetAllParticipants } from '@/services/participantService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
 import { useGetAllMatches, useGetChampionshipTeamHistory } from '@/services/matchService';
+import { useAllPlayersSummary } from '@/hooks/useStatistics';
 import PublicLayout from '@/components/layout/PublicLayout';
+import { StatsTab } from './StatsTab';
 
 interface PageProps {
   params: Promise<{
@@ -84,8 +86,11 @@ export default function TeamPublicPage({ params }: PageProps) {
     isLoading: isLoadingStatistics,
   } = useGetChampionshipTeamHistory(championshipId);
 
+  // Fetch players summary for statistics
+  const { data: playersData = [], isLoading: isLoadingPlayersData } = useAllPlayersSummary();
+
   // Show loading state
-  if (isLoadingChampionship || isLoadingTeam || isLoadingParticipants || isLoadingSubscriptions || isLoadingMatches || isLoadingStatistics) {
+  if (isLoadingChampionship || isLoadingTeam || isLoadingParticipants || isLoadingSubscriptions || isLoadingMatches || isLoadingStatistics || isLoadingPlayersData) {
     return (
       <PublicLayout title="Carregando...">
         <div className="container mx-auto px-4 py-8">
@@ -138,6 +143,18 @@ export default function TeamPublicPage({ params }: PageProps) {
     winRate: stats.win_rate,
     totalMatches: stats.total_matches,
   };
+
+  // Get player statistics and apply same filtering logic as dashboard
+  const topPlayersData = [...(playersData || [])]
+    .filter((player, index, self) => 
+      // Only keep first occurrence of each player
+      index === self.findIndex(p => p.participant_id === player.participant_id))
+    .sort((a, b) => Number(b.kda_ratio || 0) - Number(a.kda_ratio || 0));
+
+  // Create a map for quick lookup of player statistics
+  const playerStatsMap = new Map(
+    topPlayersData.map(player => [player.participant_id, player])
+  );
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -380,225 +397,116 @@ export default function TeamPublicPage({ params }: PageProps) {
                 Jogadores
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {players.map((player) => (
-                  <div key={player.participant_id} className="bg-slate-800 border border-slate-700 rounded-md p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
-                          <User className="w-6 h-6 text-red-500" />
+                {players.map((player) => {
+                  // Get player statistics from the map
+                  const playerStats = playerStatsMap.get(player.participant_id);
+                  
+                  return (
+                    <div key={player.participant_id} className="bg-slate-800 border border-slate-700 rounded-md p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
+                            <User className="w-6 h-6 text-red-500" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">{player.nickname}</h3>
+                            <p className="text-slate-400 text-sm">{player.name}</p>
+                            <p className="text-slate-500 text-xs">{calculateAge(player.birth_date)} anos</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">{player.nickname}</h3>
-                          <p className="text-slate-400 text-sm">{player.name}</p>
-                          <p className="text-slate-500 text-xs">{calculateAge(player.birth_date)} anos</p>
+                        {/* MVP count from statistics */}
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-4 h-4 text-yellow-500" />
+                          <span className="text-yellow-500 text-sm font-medium">
+                            {playerStats?.mvp_count || 0}
+                          </span>
                         </div>
                       </div>
-                      {/* Static MVP count - 0 since no statistics available */}
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-yellow-500" />
-                        <span className="text-yellow-500 text-sm font-medium">0</span>
-                      </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      {/* Static values since no participant statistics are available */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 text-sm">Agente Favorito</span>
-                        <span className="text-white text-sm font-medium">N/A</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 text-sm">KDA</span>
-                        <span className="text-white text-sm font-medium">0.00</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 text-sm">WR</span>
-                        <span className="text-green-400 text-sm font-medium">0%</span>
+                      <div className="space-y-2">
+                        {/* Real statistics from API */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400 text-sm">Kills</span>
+                          <span className="text-white text-sm font-medium">
+                            {playerStats?.total_kills || 0}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400 text-sm">Deaths</span>
+                          <span className="text-white text-sm font-medium">
+                            {playerStats?.total_deaths || 0}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400 text-sm">Assists</span>
+                          <span className="text-white text-sm font-medium">
+                            {playerStats?.total_assists || 0}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400 text-sm">KDA</span>
+                          <span className="text-white text-sm font-medium">
+                            {playerStats?.kda_ratio ? Number(playerStats.kda_ratio).toFixed(2) : '0.00'}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
         )}        {activeTab === 'matches' && (
-          <div className="space-y-6">
-            {teamMatches.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-slate-400 text-lg">Nenhuma partida encontrada para esta equipe no campeonato.</p>
-              </div>
-            ) : (
-              <div className="grid gap-6">
-                {teamMatches.map((match) => (
-                  <Card key={match.match_id} className="bg-slate-800 border-slate-700 p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-6">
-                        <div className="flex items-center space-x-8">
-                          {/* Team A */}
-                          <div className="text-center min-w-[120px]">
-                            <h3 className="font-semibold text-white">{match.TeamA.name}</h3>
-                            {match.score && (
-                              <div className="text-2xl font-bold text-red-500 mt-1">
-                                {match.score.teamA}
-                              </div>
-                            )}
-                          </div>
+          <div className="bg-slate-800 border border-slate-700 rounded-md p-6">
+            <h3 className="text-xl font-semibold text-white mb-4">Todas as Partidas</h3>
+            <div className="space-y-3">
+              {teamMatches.length === 0 ? (
+                <div className="text-center text-slate-400 py-8">
+                  <p>Nenhuma partida encontrada para esta equipe no campeonato</p>
+                </div>
+              ) : (
+                teamMatches.map((match) => {
+                  const result = getMatchResult(match);
+                  const isTeamA = match.TeamA.team_id === teamId;
+                  const opponent = isTeamA ? match.TeamB.name : match.TeamA.name;
 
-                          {/* VS */}
-                          <div className="text-center">
-                            <span className="text-lg font-bold text-slate-400">VS</span>
-                            {match.score && (
-                              <div className="text-sm text-slate-400 mt-1">
-                                {match.score.teamA} - {match.score.teamB}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Team B */}
-                          <div className="text-center min-w-[120px]">
-                            <h3 className="font-semibold text-white">{match.TeamB.name}</h3>
-                            {match.score && (
-                              <div className="text-2xl font-bold text-red-500 mt-1">
-                                {match.score.teamB}
-                              </div>
-                            )}
-                          </div>
+                  return (
+                    <div key={match.match_id} className="bg-slate-700 rounded p-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className={`px-3 py-1 rounded text-sm font-medium ${
+                          result?.won ? 'bg-green-500/20 text-green-400' : 
+                          result?.won === false ? 'bg-red-500/20 text-red-400' : 
+                          'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {result?.won ? 'V' : result?.won === false ? 'D' : 'E'}
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">vs {opponent}</p>
+                          <p className="text-sm text-slate-400">{match.stage}</p>
                         </div>
                       </div>
-
-                      <div className="flex items-center space-x-6">
-                        <div className="text-center">
-                          <div className="flex items-center text-slate-300 mb-1">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            <span className="text-sm">{match.map}</span>
-                          </div>
-                          <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                            {match.stage}
-                          </Badge>
-                        </div>
-
-                        <div className="text-center">
-                          <div className="flex items-center text-slate-300 mb-1">
-                            <Clock className="w-4 h-4 mr-1" />                            <span className="text-sm">
-                              {match.status === 'Planejada' ? 'À Agendar' : formatDateTime(match.date)}
-                            </span>
-                          </div>
-                          {getStatusBadge(match.status)}
-                        </div>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => router.push(`/campeonatos/${championshipId}/partidas/${match.match_id}`)}
-                          className="border-slate-600 text-slate-300 hover:text-white"
-                        >
-                          Ver Detalhes
-                        </Button>
+                      <div className="text-right">
+                        <p className="text-white">{match.map}</p>
+                        <p className="text-sm text-slate-400">
+                          {new Date(match.date).toLocaleDateString('pt-BR')}
+                        </p>
                       </div>
                     </div>
-                  </Card>
-                ))}
-              </div>
-            )}
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
 
+        {/* Stats Tab */}
         {activeTab === 'stats' && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Estatísticas da Equipe</h2>
-
-            {/* Team Stats */}
-            <div className="grid md:grid-cols-3 gap-6">              <div className="bg-slate-800 border border-slate-700 rounded-md p-6 text-center">
-              <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
-              <div className="text-2xl font-bold text-white mb-1">0</div>
-              <div className="text-slate-400 text-sm">Campeonatos Ganhos</div>
-            </div>
-
-              <div className="bg-slate-800 border border-slate-700 rounded-md p-6 text-center">
-                <Target className="w-8 h-8 text-green-500 mx-auto mb-3" />
-                <div className="text-2xl font-bold text-white mb-1">{teamStats.totalMatches > 0 ? Math.round(teamStats.winRate * 100) : 0}%</div>
-                <div className="text-slate-400 text-sm">Taxa de Vitória</div>
-              </div>
-
-              <div className="bg-slate-800 border border-slate-700 rounded-md p-6 text-center">
-                <Users className="w-8 h-8 text-blue-500 mx-auto mb-3" />
-                <div className="text-2xl font-bold text-white mb-1">{players.length}</div>
-                <div className="text-slate-400 text-sm">Jogadores Ativos</div>
-              </div>
-            </div>
-
-            {/* Player Stats Table */}
-            <div className="bg-slate-800 border border-slate-700 rounded-md overflow-hidden">
-              <div className="p-4 border-b border-slate-700">
-                <h3 className="text-lg font-semibold text-white">Estatísticas dos Jogadores</h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-slate-700">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
-                        Jogador
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">
-                        KDA
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">
-                        K
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">
-                        D
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">
-                        A
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">
-                        MVP
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-slate-300 uppercase tracking-wider">
-                        WR%
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-700">                    {players.map((player) => (
-                    <tr key={player.participant_id} className="hover:bg-slate-750 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center mr-3">
-                            <User className="w-4 h-4 text-red-500" />
-                          </div>
-                          <div>
-                            <div className="text-white font-medium">{player.nickname}</div>
-                            <div className="text-slate-400 text-sm">{player.name}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-white font-semibold">
-                        0.00
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-green-400">
-                        0
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-red-400">
-                        0
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-blue-400">
-                        0
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="flex items-center justify-center">
-                          <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                          <span className="text-yellow-500 font-medium">0</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-slate-300">
-                        0%
-                      </td>
-                    </tr>
-                  ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          <StatsTab 
+            teamId={teamId}
+            championshipId={championshipId}
+            teamName={team.name}
+            players={players}
+          />
         )}
       </div>
     </PublicLayout>
