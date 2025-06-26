@@ -9,6 +9,7 @@ import { Trophy, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useLogin } from "@/services/authService";
 import { toast } from "react-hot-toast";
+import Image from 'next/image';
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -17,6 +18,47 @@ export default function SignIn() {
   const [successMessage, setSuccessMessage] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Style and media loading states
+  const [stylesLoaded, setStylesLoaded] = useState(false);
+  const [mediaLoaded, setMediaLoaded] = useState(false);
+
+  // Track when stylesheets are loaded
+  useEffect(() => {
+    const styleSheets = Array.from(document.styleSheets);
+    if (styleSheets.length > 0) {
+      setStylesLoaded(true);
+    } else {
+      const checkStyles = () => {
+        if (document.styleSheets.length > 0) {
+          setStylesLoaded(true);
+        }
+      };
+      document.addEventListener('load', checkStyles, true);
+      return () => document.removeEventListener('load', checkStyles, true);
+    }
+  }, []);
+
+  // Preload and track background video loading
+  useEffect(() => {
+    // Add preloading hint
+    const linkEl = document.createElement('link');
+    linkEl.rel = 'preload';
+    linkEl.as = 'video';
+    linkEl.href = '/videos/loginBGvideo.mp4';
+    document.head.appendChild(linkEl);
+
+    // Create video element to track loading
+    const video = document.createElement('video');
+    video.src = '/videos/loginBGvideo.mp4';
+    video.oncanplaythrough = () => setMediaLoaded(true);
+    video.load();
+
+    return () => {
+      video.oncanplaythrough = null;
+      document.head.removeChild(linkEl);
+    };
+  }, []);
   
   // Use React Query for login
   const { mutate: login, isPending: isLoading, error: loginError } = useLogin();
@@ -88,6 +130,11 @@ export default function SignIn() {
       toast.error("Erro ao fazer login");
     }
   };
+
+  // Don't render until styles are loaded to prevent FOUC
+  if (!stylesLoaded) {
+    return <div className="min-h-screen bg-gray-900"></div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4 relative overflow-hidden">

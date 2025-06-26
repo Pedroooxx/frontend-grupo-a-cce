@@ -21,8 +21,13 @@ const Estatisticas = () => {
   const [mapData, setMapData] = useState<MapData[]>([]);
   const [isLoadingMapData, setIsLoadingMapData] = useState(true);
 
-  // Sort by KDA and win rate for ranking
-  const topPlayers = [...players].sort((a, b) => b.kda_ratio - a.kda_ratio).slice(0, 5);
+  // Sort by KDA and win rate for ranking, ensuring unique entries
+  const topPlayers = [...players]
+    .filter((player, index, self) => 
+      // Only keep first occurrence of each player
+      index === self.findIndex(p => p.participant_id === player.participant_id))
+    .sort((a, b) => b.kda_ratio - a.kda_ratio)
+    .slice(0, 5);
   const topTeams = [...teams].sort((a, b) => b.win_rate - a.win_rate).slice(0, 5);
 
   // Generate general statistics from API data

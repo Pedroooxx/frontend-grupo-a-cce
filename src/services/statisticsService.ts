@@ -23,66 +23,49 @@ class StatisticsService {
    * Get all participant statistics
    */
   async getAllParticipantStatistics(): Promise<ParticipantStatistic[]> {
-    return apiClient.get('/participant-stats');
+    return apiClient.get('/statistics/participants');
   }
 
   /**
    * Get participant statistic by ID
    */
   async getParticipantStatisticById(statisticId: number): Promise<ParticipantStatistic> {
-    return apiClient.get(`/participant-stats/${statisticId}`);
+    return apiClient.get(`/statistics/participants/${statisticId}`);
   }
 
   /**
    * Get statistics for a specific player
    */
   async getPlayerStatistics(playerId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/participant-stats/player/${playerId}`);
+    return apiClient.get(`/statistics/participants/player/${playerId}`);
   }
 
   /**
    * Get statistics for a specific match
    */
   async getMatchStatistics(matchId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/participant-stats/match/${matchId}`);
+    return apiClient.get(`/statistics/participants/match/${matchId}`);
   }
 
   /**
    * Get top players by championship
    */
   async getTopPlayersByChampionship(championshipId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/participant-stats/top-players/${championshipId}`);
+    return apiClient.get(`/statistics/participants/championship/${championshipId}/top-players`);
   }
 
   /**
    * Get team statistics
    */
-  async getTeamStatistics(teamId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/participant-stats/team/${teamId}/stats`);
+  async getTeamStatistics(teamId: number): Promise<TeamSummaryStatistic> {
+    return apiClient.get(`/statistics/teams/${teamId}`);
   }
 
   /**
    * Get all player summary statistics
    */
   async getAllPlayersSummary(): Promise<PlayerSummaryStatistic[]> {
-    const response = await apiClient.get('/participant-stats/all-players');
-    
-    // Map the team data to player statistics format
-    return response.map((item: any) => ({
-      participant_id: item.team_id, // Temporary using team_id as participant_id
-      name: item.team_name,
-      nickname: item.team_name,
-      team_id: item.team_id,
-      team_name: item.team_name,
-      total_kills: item.total_kills || 0,
-      total_deaths: item.total_deaths || 0,
-      total_assists: item.total_assists || 0,
-      total_matches: item.total_matches || 0,
-      mvp_count: item.mvp_count || 0,
-      kda_ratio: item.total_deaths > 0 ? 
-        ((item.total_kills + item.total_assists) / item.total_deaths) : 
-        (item.total_kills + item.total_assists) || 0
-    }));
+    return apiClient.get('/participant-stats/all-players');
   }
 
   /**

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { KDATooltipContent } from './KDATooltipContent';
 import { KillsTooltipContent } from './KillsTooltipContent';
@@ -19,13 +20,27 @@ export const PlayerStatsDisplay = ({ player }: PlayerStatsDisplayProps) => {
     return ((player.total_kills + player.total_assists) / player.total_deaths).toFixed(2);
   };
 
-  const kda = player.kda_ratio !== undefined ? player.kda_ratio.toFixed(2) : calculateKDA();
+  const kda = useMemo(() => {
+    if (player.kda_ratio !== undefined) {
+      // Handle kda_ratio whether it's a string or number
+      return typeof player.kda_ratio === 'string' 
+        ? player.kda_ratio 
+        : player.kda_ratio.toFixed(2);
+    }
+    return calculateKDA();
+  }, [player.kda_ratio, player.total_kills, player.total_deaths, player.total_assists]);
+
   const kills = player.total_kills || 0;
-  const winRate = player.win_rate 
-    ? `${Math.round(player.win_rate * 100)}%`
-    : player.total_matches && player.wins !== undefined
-      ? `${Math.round((player.wins / player.total_matches) * 100)}%`
-      : '0%';
+  
+  const winRate = useMemo(() => {
+    if (player.win_rate !== undefined) {
+      return `${Math.round(player.win_rate * 100)}%`;
+    }
+    if (player.total_matches && player.wins !== undefined) {
+      return `${Math.round((player.wins / player.total_matches) * 100)}%`;
+    }
+    return '0%';
+  }, [player.win_rate, player.total_matches, player.wins]);
 
   return (
     <div className="text-right">
