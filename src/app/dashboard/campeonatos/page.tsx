@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { AddChampionshipStatisticsModal } from '@/components/modals/AddChampionshipStatisticsModal';
+import AddChampionshipStatisticsModal from '@/components/modals/AddChampionshipStatisticsModal';
 
 const Campeonatos = () => {
   const router = useRouter();

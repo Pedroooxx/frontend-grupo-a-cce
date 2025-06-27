@@ -15,6 +15,93 @@ import {
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
 import { useGetChampionshipMatches, useGetChampionshipById } from '@/services/championshipService';
 import { Button } from '@/components/ui/button';
+import { Modal } from '@/components/ui/modal';
+import { DialogTitle } from "@/components/ui/dialog";
+import { useMutation } from '@tanstack/react-query';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+
+const ChampionshipStatisticSchema = z.object({
+  name: z.string().min(1, 'Nome é obrigatório'),
+  description: z.string().optional(),
+  format: z.enum(['single-elimination', 'double-elimination']),
+  start_date: z.string().regex(/\d{4}-\d{2}-\d{2}/, 'Data inválida'),
+  end_date: z.string().regex(/\d{4}-\d{2}-\d{2}/, 'Data inválida'),
+  location: z.string().optional(),
+  prize: z.number().min(0, 'Prêmio deve ser positivo').optional(),
+});
+
+const ChampionshipStatisticsFormSchema = z.object({
+  kills: z.number().min(0, 'Kills must be a positive number'),
+  deaths: z.number().min(0, 'Deaths must be a positive number'),
+  assists: z.number().min(0, 'Assists must be a positive number'),
+});
+
+const AddStatisticForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(ChampionshipStatisticSchema),
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <input {...register('name')} placeholder="Nome do Campeonato" className="input" />
+      {errors.name && <span className="text-red-500">{String(errors.name.message)}</span>}
+
+      <textarea {...register('description')} placeholder="Descrição" className="textarea" />
+
+      <select {...register('format')} className="select">
+        <option value="single-elimination">Eliminação Simples</option>
+        <option value="double-elimination">Eliminação Dupla</option>
+      </select>
+      {errors.format && <span className="text-red-500">{String(errors.format.message)}</span>}
+
+      <input {...register('start_date')} placeholder="Data de Início (YYYY-MM-DD)" className="input" />
+      {errors.start_date && <span className="text-red-500">{String(errors.start_date.message)}</span>}
+
+      <input {...register('end_date')} placeholder="Data de Término (YYYY-MM-DD)" className="input" />
+      {errors.end_date && <span className="text-red-500">{String(errors.end_date.message)}</span>}
+
+      <input {...register('location')} placeholder="Localização" className="input" />
+
+      <input type="number" {...register('prize')} placeholder="Prêmio" className="input" />
+
+      <button type="submit" className="btn btn-primary">Salvar</button>
+    </form>
+  );
+};
+
+const ChampionshipStatisticsForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(ChampionshipStatisticsFormSchema),
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <label htmlFor="kills" className="block text-sm font-medium text-slate-300">Kills</label>
+        <Input id="kills" type="number" {...register('kills')} className="mt-1" />
+        {errors.kills && <p className="text-red-500 text-xs mt-1">{String(errors.kills.message)}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="deaths" className="block text-sm font-medium text-slate-300">Deaths</label>
+        <Input id="deaths" type="number" {...register('deaths')} className="mt-1" />
+        {errors.deaths && <p className="text-red-500 text-xs mt-1">{String(errors.deaths.message)}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="assists" className="block text-sm font-medium text-slate-300">Assists</label>
+        <Input id="assists" type="number" {...register('assists')} className="mt-1" />
+        {errors.assists && <p className="text-red-500 text-xs mt-1">{String(errors.assists.message)}</p>}
+      </div>
+
+      <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">Submit</Button>
+    </form>
+  );
+};
 
 const ChampionshipStatistics = () => {
   const params = useParams();
@@ -85,6 +172,42 @@ const ChampionshipStatistics = () => {
   }, [matchesData]);
 
   const [selectedTab, setSelectedTab] = useState<'overview' | 'stats'>('overview');
+  const [isAddModalOpen, setAddModalOpen] = useState(false);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [isStatisticsModalOpen, setStatisticsModalOpen] = useState(false);
+
+  const { mutate: handleGenerateBracket } = useMutation({
+    mutationFn: () => {
+      // Placeholder function for generating bracket
+      console.log('Generating bracket...');
+      return Promise.resolve();
+    },
+    onSuccess: () => {
+      alert('Chaveamento gerado com sucesso!');
+    },
+    onError: (error: unknown) => {
+      alert(`Erro ao gerar chaveamento: ${error}`);
+    },
+  });
+
+  const handleGenerateNextPhase = () => {
+    console.log('Generating next phase...');
+  };
+
+  const handleAddStatisticsSubmit = (data: any) => {
+    console.log('Add Statistics:', data);
+    setAddModalOpen(false);
+  };
+
+  const handleEditStatisticsSubmit = (data: any) => {
+    console.log('Edit Statistics:', data);
+    setEditModalOpen(false);
+  };
+
+  const handleStatisticsFormSubmit = (data: any) => {
+    console.log('Statistics Form submitted:', data);
+    setStatisticsModalOpen(false);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -149,6 +272,11 @@ const ChampionshipStatistics = () => {
     })
     : [];
 
+  const modalStyles = cn(
+    "bg-slate-900 border-slate-700 text-white p-6 rounded-lg shadow-lg",
+    "transition-transform transform hover:scale-105 hover:shadow-xl"
+  );
+
   return (
     <DashboardLayout
       title="ESTATÍSTICAS"
@@ -187,22 +315,58 @@ const ChampionshipStatistics = () => {
         </Card>
 
         <div className='flex justify-between items-center '>
-          <Button className='bg-green-500 hover:bg-green-600 text-white'>
+          <Button
+            className='bg-green-500 hover:bg-green-600 text-white shadow-md rounded-md px-4 py-2 transition-all duration-200'
+            onClick={() => handleGenerateBracket()}
+          >
             Gerar Chaveamento
           </Button>
 
-          <Button className='bg-blue-500 hover:bg-blue-600 text-white'>
-            Gerar proxima Fase
+          <Button
+            className='bg-blue-500 hover:bg-blue-600 text-white shadow-md rounded-md px-4 py-2 transition-all duration-200'
+            onClick={() => handleGenerateNextPhase()}
+          >
+            Gerar próxima Fase
           </Button>
 
-          <Button>
-            Adicionar Estatistica de campeonato
+          <Button
+            className='bg-yellow-500 hover:bg-yellow-600 text-white shadow-md rounded-md px-4 py-2 transition-all duration-200'
+            onClick={() => setAddModalOpen(true)}
+          >
+            Adicionar Estatística de campeonato
           </Button>
 
-          <Button>
-            Editar Estatistica de campeonato
+          <Button
+            className='bg-orange-500 hover:bg-orange-600 text-white shadow-md rounded-md px-4 py-2 transition-all duration-200'
+            onClick={() => setEditModalOpen(true)}
+          >
+            Editar Estatística de campeonato
           </Button>
-          <Button>
+
+          <Modal isOpen={isAddModalOpen} onClose={() => setAddModalOpen(false)} className={modalStyles}>
+            <DialogTitle>Adicionar Estatísticas</DialogTitle>
+            <div className="text-center">
+              <h2 className="text-xl font-bold mb-4">Adicionar Estatísticas</h2>
+              <AddStatisticForm onSubmit={(data) => console.log(data)} />
+            </div>
+          </Modal>
+
+          <Modal isOpen={isEditModalOpen} onClose={() => setEditModalOpen(false)} className={modalStyles}>
+            <DialogTitle>Editar Estatísticas</DialogTitle>
+            <div className="text-center">
+              <h2 className="text-xl font-bold mb-4">Editar Estatísticas</h2>
+              <AddStatisticForm onSubmit={(data) => console.log(data)} />
+            </div>
+          </Modal>
+
+          <Modal isOpen={isStatisticsModalOpen} onClose={() => setStatisticsModalOpen(false)} className={modalStyles}>
+            <div className="text-center">
+              <h2 className="text-xl font-bold mb-4">Adicionar Estatísticas do Campeonato</h2>
+              <ChampionshipStatisticsForm onSubmit={handleStatisticsFormSubmit} />
+            </div>
+          </Modal>
+
+          <Button className='bg-red-500 hover:bg-red-600 text-white shadow-md rounded-md px-4 py-2 transition-all duration-200'>
             <Trash2 className="w-4 h-4 mr-2" />
           </Button>
         </div>

@@ -1,3 +1,13 @@
+import { z } from 'zod';
+
+export const championshipStatisticSchema = z.object({
+  kills: z.number().min(0, 'Kills must be a positive number'),
+  deaths: z.number().min(0, 'Deaths must be a positive number'),
+  assists: z.number().min(0, 'Assists must be a positive number'),
+});
+
+export type ChampionshipStatisticInput = z.infer<typeof championshipStatisticSchema>;
+
 export interface Championship {
   championship_id: number;
   name: string;

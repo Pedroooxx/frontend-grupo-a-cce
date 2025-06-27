@@ -23,7 +23,6 @@ import { Button } from '@/components/ui/button';
 import { AddChampionshipStatisticsModal } from '@/components/modals/AddChampionshipStatisticsModal';
 import { ChampionshipStatisticInput } from '@/types/statistics';
 import { statisticsService } from '@/services';
-import { StatCard } from '@/components/statistics/StatCard';
 
 /**
  * Search function using real API data (same as public page)
@@ -337,7 +336,7 @@ const Estatisticas = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {generalStats.map((stat, index) => (
-              <StatCard key={index} {...stat} />
+              <Card key={index} {...stat} />
             ))}
           </div>
         )}
