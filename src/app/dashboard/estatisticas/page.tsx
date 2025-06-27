@@ -18,9 +18,11 @@ import { useGetAllChampionships } from '@/services/championshipService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
 import { useGetAllMatches, type Match as ServiceMatch } from '@/services/matchService';
 import { useGetAllTeams, useGetAllParticipants, type TeamParticipant, type Team } from '@/services/teamService';
-import { Calendar, Crown, MapPin, Target, Trophy, Users } from 'lucide-react';
+import { ArrowRight, Calendar, Crown, MapPin, Target, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import type { Championship } from '@/types/championship';
+import { Button } from '@/components/ui/button';
+import { AddChampionshipStatisticsModal } from '@/components/modals/AddChampionshipStatisticsModal';
 
 /**
  * Search function using real API data (same as public page)
@@ -138,6 +140,7 @@ const Estatisticas = () => {
   const [isLoadingMapData, setIsLoadingMapData] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'Ativo' | 'Planejado' | 'Finalizado'>('all');
+  const [isModalOpen, setModalOpen] = useState(false);
 
   // Fetch championships from API
   const {
@@ -310,6 +313,19 @@ const Estatisticas = () => {
 
     return matchesSearch && matchesStatus;
   });
+
+  const handleModalOpen = () => setModalOpen(true);
+  const handleModalClose = () => setModalOpen(false);
+
+  const handleSubmit = async (data: ChampionshipStatisticInput) => {
+    try {
+      await statisticsService.createChampionshipStatistic(data);
+      alert('Estatísticas adicionadas com sucesso!');
+      handleModalClose();
+    } catch (error) {
+      console.error('Erro ao adicionar estatísticas:', error);
+    }
+  };
 
   return (
     <DashboardLayout
@@ -487,6 +503,16 @@ const Estatisticas = () => {
                       </div>
                     </div>
 
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 border-slate-600 text-slate-300 hover:text-white flex items-center justify-center"
+                      onClick={handleModalOpen}
+                    >
+                     Adicionar Estatísticas 
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
                     <Link
                       href={`/dashboard/estatisticas/campeonato/${championship.championship_id}`}
                       className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center mt-auto text-sm"
@@ -523,6 +549,11 @@ const Estatisticas = () => {
           )}
         </div>
       </div>
+      <AddChampionshipStatisticsModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSubmit={handleSubmit}
+      />
     </DashboardLayout>
   );
 };

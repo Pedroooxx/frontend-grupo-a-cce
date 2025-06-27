@@ -1,15 +1,15 @@
 'use client'
-import Link from 'next/link';
-import { Calendar, MapPin, Trophy, Users, Target, Crown, ArrowRight } from 'lucide-react';
-import PublicLayout from '@/components/layout/PublicLayout';
-import { useState } from 'react';
 import { UniversalSearchBar } from '@/components/common/UniversalSearchBar';
+import PublicLayout from '@/components/layout/PublicLayout';
 import { SearchConfig, SearchResult } from '@/hooks/useSearch';
-import { useRouter } from 'next/navigation';
 import { useGetAllChampionships, type Championship } from '@/services/championshipService';
-import { useGetAllSubscriptions } from '@/services/subscriptionService';
-import { useGetAllTeams, useGetAllParticipants, type TeamParticipant, type Team } from '@/services/teamService';
 import { useGetAllMatches, type Match } from '@/services/matchService';
+import { useGetAllSubscriptions } from '@/services/subscriptionService';
+import { useGetAllParticipants, useGetAllTeams, type Team, type TeamParticipant } from '@/services/teamService';
+import { ArrowRight, Calendar, Crown, MapPin, Target, Trophy, Users } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 /**
  * Search function using real API data (same as home page)

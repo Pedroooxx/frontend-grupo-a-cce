@@ -128,3 +128,18 @@ export const participantStatisticSchema = z.object({
   MVPs: z.number().nonnegative('MVPs must be a non-negative number').optional(),
   first_kills: z.number().nonnegative('First kills must be a non-negative number').optional(),
 });
+
+export const ChampionshipStatisticSchema = z.object({
+  championship_id: z.number().min(1, 'Championship ID é obrigatório'),
+  participant_id: z.number().min(1, 'Participant ID é obrigatório'),
+  team_id: z.number().min(1, 'Team ID é obrigatório'),
+  kills: z.number().min(0, 'Kills não pode ser negativo'),
+  assists: z.number().min(0, 'Assists não pode ser negativo'),
+  deaths: z.number().min(0, 'Deaths não pode ser negativo'),
+  spike_plants: z.number().min(0, 'Spike Plants não pode ser negativo'),
+  spike_defuses: z.number().min(0, 'Spike Defuses não pode ser negativo'),
+  MVPs: z.number().min(0, 'MVPs não pode ser negativo'),
+  first_kills: z.number().min(0, 'First Kills não pode ser negativo'),
+});
+
+export type ChampionshipStatisticInput = z.infer<typeof ChampionshipStatisticSchema>;
