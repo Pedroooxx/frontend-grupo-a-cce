@@ -12,7 +12,7 @@ import { useGetAllTeams, type Team } from "@/services/teamService";
 import type { DetailedPlayerStats } from "@/types/data-types";
 import type { ParticipantFormValues } from "@/types/participant";
 import { Skull, Target, User, Filter } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { DashboardLayout } from "../_components/DashboardLayout";
 import { SearchResult } from "@/hooks/useSearch";
 
@@ -23,6 +23,7 @@ export default function GerenciarJogadores() {
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
   const [deleteItemName, setDeleteItemName] = useState<string>("");
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Fetch participants and teams via service hooks
   const {
@@ -194,43 +195,49 @@ export default function GerenciarJogadores() {
    * @param players - Array of player data
    * @returns Array of search results
    */
-  const searchPlayers = (
-    query: string,
-    types: string[],
-    players: DetailedPlayerStats[] = []
-  ): SearchResult[] => {
-    if (!query.trim() || !types.includes("player")) return [];
-    
+  const searchPlayers = (query: string, types: string[] = ['player'], jogadores: DetailedPlayerStats[] = [], teams: Team[] = []): SearchResult[] => {
+    if (!query.trim() || !types.includes('player') || !Array.isArray(jogadores) || !Array.isArray(teams)) return [];
+
     const searchQuery = query.toLowerCase();
-    
-    return players
-      .filter(player =>
-        player.name.toLowerCase().includes(searchQuery) ||
-        player.nickname.toLowerCase().includes(searchQuery) ||
-        player.team_name.toLowerCase().includes(searchQuery) ||
-        player.phone.toLowerCase().includes(searchQuery)
-      )
-      .map(player => ({
-        id: player.participant_id,
-        name: player.nickname,
-        type: "player",
-        subtitle: `${player.name} - ${player.team_name || 'Sem equipe'}`,
-        metadata: {
-          fullName: player.name,
-          teamId: player.team_id,
-          teamName: player.team_name,
-          isCoach: player.is_coach,
-          kda: player.kda_ratio.toFixed(2),
-          matches: player.total_matches,
-        },
-      }));
+
+    return jogadores
+      .filter((player) => {
+        const team = teams.find(t => t.team_id === player.team_id);
+        return (
+          player.name.toLowerCase().includes(searchQuery) ||
+          player.nickname.toLowerCase().includes(searchQuery) ||
+          (team && team.name.toLowerCase().includes(searchQuery))
+        );
+      })
+      .map((player) => {
+        const team = teams.find(t => t.team_id === player.team_id);
+        return {
+          id: player.participant_id,
+          name: player.name,
+          type: 'player',
+          subtitle: team ? team.name : 'Unknown Team',
+          metadata: {
+            team_id: player.team_id,
+            is_coach: player.is_coach,
+          },
+        };
+      });
   };
 
-  // Filter jogadores by selected team if set
+  // Filter jogadores by search query and selected team using searchPlayers
   const filteredJogadores = useMemo(() => {
-    if (!selectedTeamId) return jogadores;
-    return jogadores.filter(j => j.team_id === selectedTeamId);
-  }, [jogadores, selectedTeamId]);
+    let filtered = jogadores;
+    if (selectedTeamId) {
+      filtered = filtered.filter(j => j.team_id === selectedTeamId);
+    }
+    if (searchQuery.trim()) {
+      // Use searchPlayers to filter by name or team
+      const results = searchPlayers(searchQuery, ["player", "team"], filtered, teams);
+      const ids = new Set(results.map(r => r.id));
+      filtered = filtered.filter(j => ids.has(j.participant_id));
+    }
+    return filtered;
+  }, [jogadores, selectedTeamId, searchQuery, teams]);
 
   return (
     <DashboardLayout
@@ -267,7 +274,7 @@ export default function GerenciarJogadores() {
 
         {/* Search */}
         <UniversalSearchBar
-          searchFunction={(query, types) => searchPlayers(query, types, jogadores)}
+          searchFunction={(query, types) => searchPlayers(query, types, jogadores, teams)}
           config={{
             searchTypes: ['player', 'team'],
             placeholder: 'Buscar jogadores ou equipes...',
@@ -280,6 +287,7 @@ export default function GerenciarJogadores() {
             if (player) handleEdit(player);
           }}
           className="max-w-xl mx-auto mb-6"
+          onInputChange={setSearchQuery}
         />
 
         {/* Grid */}
