@@ -108,43 +108,14 @@ const Campeonatos = () => {
     return matchesData.filter(match => match.championship_id === championshipId).length;
   };
 
-  // Map API data to internal type
+  // Map API data to internal type - no transformation needed since service handles it
   const campeonatos = useMemo(() => {
-    return championshipsData.map((c) => {
-      // Map status from API to internal format
-      const mapStatus = (apiStatus: string): 'Ativo' | 'Planejado' | 'Finalizado' => {
-        switch (apiStatus) {
-          case 'ongoing':
-          case 'Ativo':
-            return 'Ativo';
-          case 'upcoming':
-          case 'planned':
-          case 'Planejado':
-            return 'Planejado';
-          case 'completed':
-          case 'Finalizado':
-            return 'Finalizado';
-          default:
-            return 'Planejado';
-        }
-      };
-
-      return {
-        championship_id: c.championship_id,
-        name: c.name,
-        description: c.description,
-        format: (c.format === 'single_elimination' ? 'simple' : 'double') as 'simple' | 'double',
-        start_date: c.start_date,
-        end_date: c.end_date,
-        location: c.location,
-        status: mapStatus(c.status),
-        prize: typeof c.prize === 'string' ? Number(c.prize) : c.prize,
-        user_id: c.user_id,
-        // Use calculated counts instead of relying on API values
-        teams_count: getTeamCountForChampionship(c.championship_id),
-        matches_count: getMatchCountForChampionship(c.championship_id),
-      };
-    });
+    return championshipsData.map((c) => ({
+      ...c,
+      // Use calculated counts instead of relying on API values if needed
+      teams_count: c.teams_count ?? getTeamCountForChampionship(c.championship_id),
+      matches_count: c.matches_count ?? getMatchCountForChampionship(c.championship_id),
+    }));
   }, [championshipsData, subscriptionsData, matchesData]);
 
   // Error notifications
@@ -196,13 +167,28 @@ const Campeonatos = () => {
 
   // Handle saving championship (create/edit)
   const handleSaveChampionship = useCallback(async (data: ChampionshipFormValues) => {
-    const payload = { ...data, prize: String(data.prize) };
+    // Transform data to match backend API format
+    const transformedData = {
+      ...data,
+      // Ensure prize is properly formatted (null, number, or string)
+      prize: data.prize === null || data.prize === undefined || data.prize === "" 
+        ? null 
+        : data.prize,
+      // Status should remain as-is (Ativo, Planejado, Finalizado)
+      status: data.status,
+      // Format should remain as-is (single-elimination, double-elimination)
+      format: data.format
+    };
+    
+    // Debug: Log the payload being sent to the API
+    console.log('Championship payload being sent:', transformedData);
+    
     try {
       if (editingChampionship) {
-        await updateChampionship.mutateAsync({ id: editingChampionship.championship_id, data: payload });
+        await updateChampionship.mutateAsync({ id: editingChampionship.championship_id, data: transformedData });
         toast.success("Campeonato atualizado com sucesso!");
       } else {
-        await createChampionship.mutateAsync(payload);
+        await createChampionship.mutateAsync(transformedData);
         toast.success("Campeonato criado com sucesso!");
       }
       closeModal();
@@ -213,7 +199,7 @@ const Campeonatos = () => {
   }, [editingChampionship, createChampionship, updateChampionship, closeModal]);
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
+    const statusConfig: Record<string, { label: string; color: string }> = {
       'Ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
       'Finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
       'Planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
@@ -226,6 +212,7 @@ const Campeonatos = () => {
       'upcoming': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
       'planned': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
       'planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
+      'ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
     };
     
     const config = statusConfig[status] || statusConfig[status.toLowerCase()] || 

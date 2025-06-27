@@ -4,6 +4,7 @@
 
 import { toast } from "react-hot-toast";
 import config from "./config";
+import { getSession } from "next-auth/react";
 
 interface FetchOptions extends RequestInit {
   baseUrl?: string;
@@ -57,10 +58,25 @@ export const fetchApi = async <T = any>({
   };
 
   if (withAuth) {
-    // Get the token from localStorage or use the session token
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
+    // Try to get the token from NextAuth session first
+    try {
+      const session = await getSession();
+      if (session?.user?.token) {
+        headers.Authorization = `Bearer ${session.user.token}`;
+      } else {
+        // Fallback to localStorage for cases where session might not be available
+        const token = localStorage.getItem("authToken");
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+      }
+    } catch (error) {
+      // If getSession fails, fallback to localStorage
+      console.warn("Failed to get session, falling back to localStorage token:", error);
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
     }
   }
 

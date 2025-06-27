@@ -3,6 +3,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
@@ -25,24 +26,16 @@ import type { ChampionshipFormValues } from "@/types/championship";
 const championshipSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(100, "Nome muito longo"),
   description: z.string().optional(),
-  format: z.enum(["single_elimination", "double_elimination"], {
+  format: z.enum(["single-elimination", "double-elimination"], {
     required_error: "Formato é obrigatório",
   }),
   start_date: z.string().min(1, "Data de início é obrigatória"),
   end_date: z.string().min(1, "Data de fim é obrigatória"),
   location: z.string().min(1, "Localização é obrigatória"),
-  status: z.enum(["upcoming", "ongoing", "completed", "planned"], {
+  status: z.enum(["Planejado", "Ativo", "Finalizado"], {
     required_error: "Status é obrigatório",
   }),
-  prize: z.union([z.string(), z.number()]).refine(
-    (val) => {
-      if (typeof val === "string") {
-        return val.trim().length > 0;
-      }
-      return val > 0;
-    },
-    { message: "Premiação é obrigatória" }
-  ),
+  prize: z.union([z.string(), z.number(), z.null()]).optional().or(z.literal("")),
 }).refine(
   (data) => new Date(data.start_date) < new Date(data.end_date),
   {
@@ -50,6 +43,8 @@ const championshipSchema = z.object({
     path: ["end_date"],
   }
 );
+
+type FormValues = z.infer<typeof championshipSchema>;
 
 interface AddChampionshipModalProps {
   isOpen: boolean;
@@ -66,6 +61,7 @@ export const AddChampionshipModal: React.FC<AddChampionshipModalProps> = ({
   defaultValues,
   isLoading = false,
 }) => {
+  const { data: session } = useSession();
   const isEditing = !!defaultValues?.championship_id;
 
   const {
@@ -75,17 +71,17 @@ export const AddChampionshipModal: React.FC<AddChampionshipModalProps> = ({
     reset,
     setValue,
     watch,
-  } = useForm<ChampionshipFormValues>({
+  } = useForm<FormValues>({
     resolver: zodResolver(championshipSchema),
     defaultValues: defaultValues || {
       name: "",
       description: "",
-      format: "single_elimination",
+      format: "single-elimination",
       start_date: "",
       end_date: "",
       location: "",
-      status: "planned",
-      prize: "",
+      status: "Planejado",
+      prize: null,
     },
   });
 
@@ -95,39 +91,60 @@ export const AddChampionshipModal: React.FC<AddChampionshipModalProps> = ({
   React.useEffect(() => {
     if (isOpen && defaultValues) {
       Object.entries(defaultValues).forEach(([key, value]) => {
-        setValue(key as keyof ChampionshipFormValues, value);
+        setValue(key as keyof FormValues, value);
       });
     } else if (isOpen && !defaultValues) {
       reset({
         name: "",
         description: "",
-        format: "single_elimination",
+        format: "single-elimination",
         start_date: "",
         end_date: "",
         location: "",
-        status: "planned",
-        prize: "",
+        status: "Planejado",
+        prize: null,
       });
     }
   }, [isOpen, defaultValues, setValue, reset]);
 
-  const handleFormSubmit = async (data: ChampionshipFormValues) => {
-    await onSubmit(data);
+  const handleFormSubmit = async (data: FormValues) => {
+    // Get user_id from session
+    const userId = session?.user?.id ? Number(session.user.id) : undefined;
+    
+    if (!userId && !isEditing) {
+      console.error('No user ID available for championship creation. Please log in again.');
+      return;
+    }
+    
+    // Format the data to match the API expectations
+    const formattedData: ChampionshipFormValues = {
+      ...data,
+      // Keep dates in YYYY-MM-DD format as expected by the backend
+      start_date: data.start_date,
+      end_date: data.end_date,
+      // Handle prize field - convert to null if empty string
+      prize: data.prize === "" || data.prize === undefined ? null : data.prize,
+      // Ensure description is either string or undefined (not empty string)
+      description: data.description?.trim() || undefined,
+      // Add user_id for new championships
+      ...(userId && { user_id: userId }),
+    };
+    
+    await onSubmit(formattedData);
     if (!isEditing) {
       reset();
     }
   };
 
   const formatOptions = [
-    { value: "single_elimination", label: "Eliminação Simples" },
-    { value: "double_elimination", label: "Eliminação Dupla" },
+    { value: "single-elimination", label: "Eliminação Simples" },
+    { value: "double-elimination", label: "Eliminação Dupla" },
   ];
 
   const statusOptions = [
-    { value: "planned", label: "Planejado" },
-    { value: "upcoming", label: "Próximo" },
-    { value: "ongoing", label: "Em Andamento" },
-    { value: "completed", label: "Finalizado" },
+    { value: "Planejado", label: "Planejado" },
+    { value: "Ativo", label: "Ativo" },
+    { value: "Finalizado", label: "Finalizado" },
   ];
 
   return (

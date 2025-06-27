@@ -64,7 +64,7 @@ export const createReactQueryService = <T extends Record<string, any>>({
   };
 
   // Update entity
-  const useUpdate = (id?: string | number) => {
+  const useUpdate = () => {
     const queryClient = useQueryClient();
     
     return useMutation<T, ApiError, { id: string | number; data: Partial<T> }>({

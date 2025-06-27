@@ -44,7 +44,7 @@ const authOptions: NextAuthOptions = {
           // Return user data with token
           if (data && data.token) {
             return {
-              id: data.user?.id?.toString() || "0",
+              id: data.user?.user_id?.toString() || "0", // Use user_id from API response
               email: credentials?.email || "",
               name: data.user?.name || credentials?.email?.split('@')[0] || "",
               role: "user", // You can add role handling if your API provides roles
@@ -70,12 +70,13 @@ const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role;
         token.token = user.token; // Store the API token in the JWT
+        token.userId = user.id; // Store the actual user ID from our API
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.sub!
+        session.user.id = token.userId as string || token.sub! // Use our custom userId or fallback to sub
         session.user.role = token.role as string
         session.user.token = token.token as string
       }
