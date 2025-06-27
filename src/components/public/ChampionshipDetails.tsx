@@ -703,15 +703,7 @@ export function ChampionshipDetails({
                     <Button
                       size="sm"
                       className="w-full mt-3 bg-red-500 hover:bg-red-600 text-white"
-                      onClick={async () => {
-                        try {
-                          await router.push(`/campeonatos/${championshipId}/equipes/${team.team_id}`);
-                          // Optionally, you can add a delay to ensure the route is fully loaded
-                          await new Promise(resolve => setTimeout(resolve, 100));
-                        } catch (error) {
-                          console.error('Navigation error:', error);
-                        }
-                      }}
+                      onClick={() => router.push(`/campeonatos/${championshipId}/equipes/${team.team_id}`)}
                     >
                       Ver Equipe
                     </Button>
@@ -840,7 +832,7 @@ export function ChampionshipDetails({
                                         </div>
                                         <div className={`flex items-center justify-between p-2 ${match.winner_team_id === match.teamB_id ? 'bg-slate-600' : 'bg-slate-800'} rounded ${match.status !== 'Finalizada' ? 'border-2 border-green-500' : ''}`}>
                                           <span className="text-white font-medium text-sm truncate pr-2">{match.TeamB?.name || `Team ${match.teamB_id}`}</span>
-                                          <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamB_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400 text-xs'}>
+                                          <span className={match.status === 'Finalizada' ? (match.winner_team_id === match.teamB_id ? 'text-green-400 font-bold' : 'text-slate-400') : 'text-yellow-400'}>
                                             {match.status === 'Finalizada' ? (match.score?.teamB || '0') : (match.date ? formatDateTime(match.date) : 'TBD')}
                                           </span>
                                         </div>

@@ -14,6 +14,8 @@ import { useGetAllSubscriptions } from "@/services/subscriptionService";
 import { useGetAllTeams, useGetAllParticipants, type TeamParticipant, type Team } from "@/services/teamService";
 import { useGetAllMatches, type Match } from "@/services/matchService";
 
+import { getSearchResultRoute } from '@/utils/searchNavigation';
+
 // Create a simple search function using the API data
 /**
  * Search function that filters through real API data
@@ -223,6 +225,20 @@ export default function HomePage() {
     return searchWithRealData(query, types, championshipsData, teamsData, matchesData, participantsData);
   };
 
+  // Improved result click handler with proper public routes
+  const handleResultClickNew = (result: SearchResult) => {
+    console.log('Result clicked:', result);
+    const navigationData = {
+      subscriptionsData: subscriptionsData,
+      matchesData: matchesData
+    };
+    const path = getSearchResultRoute(result, navigationData);
+    
+    if (path) {
+      router.push(path);
+    }
+  };
+
   const handleResultClick = (result: SearchResult) => {
     console.log('Result clicked:', result);
     let path = '';
@@ -378,7 +394,7 @@ export default function HomePage() {
             <UniversalSearchBar
               searchFunction={searchFunction}
               config={searchConfig}
-              onResultClick={handleResultClick}
+              onResultClick={handleResultClickNew}
               className="w-full"
             />
           </div>

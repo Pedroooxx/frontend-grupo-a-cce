@@ -11,6 +11,7 @@ import { Championship } from '@/types/championship';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
 import { useGetAllTeams, useGetAllParticipants, type TeamParticipant, type Team } from '@/services/teamService';
 import { useGetAllMatches, type Match } from '@/services/matchService';
+import { getSearchResultRoute } from '@/utils/searchNavigation';
 
 /**
  * Search function using real API data (same as home page)
@@ -256,50 +257,55 @@ export default function ChampionshipsListPage() {
     maxResults: 8,
   };
 
-  // Create search function that uses real data
+  // Create search function that uses all the fetched data
   const searchFunction = (query: string, types: string[]) => {
     return searchWithRealData(query, types, championshipsData, teamsData, matchesData, participantsData);
   };
 
+  // Improved result click handler with proper public routes
   const handleResultClick = (result: SearchResult) => {
     console.log('Result clicked:', result);
     let path = '';
     switch (result.type) {
       case 'championship':
         path = `/campeonatos/${result.id}`;
-        break;
+        break; 
       case 'team':
-        const teamMatch = matchesData.find((match: Match) =>
-          match.teamA_id === result.id || match.teamB_id === result.id
-        );
-        if (teamMatch) {
-          path = `/campeonatos/${teamMatch.championship_id}/equipes/${result.id}`;
+        // For teams from search, we need to find which championship they're in
+        // Look for their championship participation
+        const teamSubscriptions = subscriptionsData.filter(sub => sub.team_id === result.id);
+        if (teamSubscriptions.length > 0) {
+          // Use the first championship this team is subscribed to
+          const championshipId = teamSubscriptions[0].championship_id;
+          path = `/campeonatos/${championshipId}/equipes/${result.id}`;
         } else {
-          path = `/campeonatos/1/equipes/${result.id}`; // Fallback
+          // Fallback: stay on championships page
+          path = `/campeonatos`;
         }
         break;
       case 'player':
-        // Navigate to player's team page
+        // Navigate to player's team page within their championship
         const playerTeamId = result.metadata?.teamId;
         if (playerTeamId) {
-          const playerTeamMatch = matchesData.find((match: Match) =>
-            match.teamA_id === playerTeamId || match.teamB_id === playerTeamId
-          );
-          if (playerTeamMatch) {
-            path = `/campeonatos/${playerTeamMatch.championship_id}/equipes/${playerTeamId}`;
+          const playerTeamSubscriptions = subscriptionsData.filter(sub => sub.team_id === playerTeamId);
+          if (playerTeamSubscriptions.length > 0) {
+            const championshipId = playerTeamSubscriptions[0].championship_id;
+            path = `/campeonatos/${championshipId}/equipes/${playerTeamId}`;
           } else {
-            path = `/campeonatos/1/equipes/${playerTeamId}`;
+            path = `/campeonatos`;
           }
+        } else {
+          path = `/campeonatos`;
         }
         break;
       case 'match':
-        const match = matchesData.find((m: Match) => m.match_id === result.id);
+        const match = matchesData.find((m: any) => m.match_id === result.id);
         if (match) {
-          path = `/campeonatos/${match.championship_id}/partidas/${result.id}`;
+          path = `/campeonatos/${match.championship_id}/partidas/${match.match_id}`;
+        } else {
+          path = `/campeonatos`;
         }
         break;
-      default:
-        console.log('Unhandled search result type:', result.type);
     }
     if (path) {
       router.push(path);

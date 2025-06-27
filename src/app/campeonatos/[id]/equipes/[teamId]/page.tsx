@@ -28,75 +28,78 @@ import { StatsTab } from './StatsTab';
 import { useAllPlayersSummary } from '@/hooks/useStatistics';
 
 interface PageProps {
-  params: Promise<{
-    id: string;
-    teamId: string;
-  }>;
+  params: { id: string; teamId: string };
 }
 
-export default function TeamPublicPage(props: PageProps) {
-  // Use useEffect to handle the Promise-based params
-  const [params, setParams] = useState<{id: string, teamId: string}>({id: '', teamId: ''});
-  
-  useEffect(() => {
-    const loadParams = async () => {
-      const resolvedParams = await props.params;
-      setParams(resolvedParams);
-    };
-    loadParams();
-  }, [props.params]);
-
-  const [activeTab, setActiveTab] = useState<'overview' | 'players' | 'matches' | 'stats'>('overview');
+export default function TeamPublicPage({ params }: PageProps) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'overview' | 'players' | 'matches' | 'stats'>('overview');
+  const [paramsResolved, setParamsResolved] = useState<{id: string, teamId: string} | null>(null);
+  
+  // Handle async params in Next.js App Router
+  useEffect(() => {
+    const resolveParams = async () => {
+      try {
+        const resolvedParams = await Promise.resolve(params);
+        setParamsResolved(resolvedParams);
+      } catch (error) {
+        console.error('Error resolving params:', error);
+        notFound();
+      }
+    };
+    
+    resolveParams();
+  }, [params]);
 
-  const championshipId = parseInt(params.id);
-  const teamId = parseInt(params.teamId);
+  // Extract and validate params
+  const championshipId = paramsResolved ? Number(paramsResolved.id) : 0;
+  const teamId = paramsResolved ? Number(paramsResolved.teamId) : 0;
+  const validIds = Boolean(paramsResolved && 
+    Number.isFinite(championshipId) && 
+    Number.isFinite(teamId) && 
+    championshipId > 0 && 
+    teamId > 0);
 
-  // Fetch championship data using React Query (API)
+  // Fetch data only if params are valid
   const {
     data: championship,
     isLoading: isLoadingChampionship,
     isError: isChampionshipError,
-  } = useGetChampionshipById(championshipId);
+  } = useGetChampionshipById(championshipId, validIds);
 
-  // Fetch team data using React Query (API)
   const {
     data: team,
     isLoading: isLoadingTeam,
     isError: isTeamError,
-  } = useGetTeamById(teamId);
+  } = useGetTeamById(teamId, validIds);
 
-  // Fetch participants data
   const {
     data: allParticipants = [],
     isLoading: isLoadingParticipants,
     isError: isParticipantsError,
   } = useGetAllParticipants();
-  // Fetch subscriptions to verify team is in championship
+
   const {
     data: subscriptionsData = [],
     isLoading: isLoadingSubscriptions,
     isError: isSubscriptionsError,
   } = useGetAllSubscriptions();
 
-  // Fetch matches to show team matches in this championship
   const {
     data: allMatches = [],
     isLoading: isLoadingMatches,
     isError: isMatchesError,
   } = useGetAllMatches();
 
-  // Fetch team statistics for this championship
   const {
     data: teamStatistics = {},
     isLoading: isLoadingStatistics,
-  } = useGetChampionshipTeamHistory(championshipId);
+  } = useGetChampionshipTeamHistory(championshipId, validIds);
 
-  // Fetch players summary for statistics
   const { data: playersData = [], isLoading: isLoadingPlayersData } = useAllPlayersSummary();
 
   // Show loading state
-  if (isLoadingChampionship || isLoadingTeam || isLoadingParticipants || isLoadingSubscriptions || isLoadingMatches || isLoadingStatistics || isLoadingPlayersData) {
+  if (!paramsResolved || !validIds || isLoadingChampionship || isLoadingTeam || isLoadingParticipants || isLoadingSubscriptions || isLoadingMatches || isLoadingStatistics || isLoadingPlayersData) {
     return (
       <PublicLayout title="Carregando...">
         <div className="container mx-auto px-4 py-8">
@@ -112,7 +115,7 @@ export default function TeamPublicPage(props: PageProps) {
   }
 
   // Show error state or not found
-  if (isChampionshipError || isTeamError || !championship || !team) {
+  if (!paramsResolved || !validIds || isChampionshipError || isTeamError || !championship || !team) {
     notFound();
   }
 
@@ -120,10 +123,10 @@ export default function TeamPublicPage(props: PageProps) {
   const isTeamInChampionship = subscriptionsData.some(
     sub => sub.championship_id === championshipId && sub.team_id === teamId
   );
-
   if (!isTeamInChampionship) {
     notFound();
   }
+
   // Filter participants for this team
   const participants = allParticipants.filter(p => p.team_id === teamId);
   const players = participants.filter(p => !p.is_coach);
