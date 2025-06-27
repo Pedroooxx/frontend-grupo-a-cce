@@ -478,6 +478,7 @@ export default function GerenciarJogadores() {
             : undefined
         }
       />
+
       
       <ConfirmDeleteModal
         isOpen={isDeleteModalOpen}

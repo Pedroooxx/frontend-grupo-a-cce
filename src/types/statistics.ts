@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export interface ParticipantStatistic {
   statistic_id: number;
   participant_id: number;
@@ -113,3 +115,16 @@ export interface ParticipantStatisticInput {
   MVPs?: number;
   first_kills?: number;
 }
+
+export const participantStatisticSchema = z.object({
+  participant_id: z.number().positive('Participant ID must be a positive number'),
+  match_id: z.number().positive('Match ID must be a positive number'),
+  agent_id: z.number().positive('Agent ID must be a positive number'),
+  kills: z.number().nonnegative('Kills must be a non-negative number'),
+  assists: z.number().nonnegative('Assists must be a non-negative number'),
+  deaths: z.number().nonnegative('Deaths must be a non-negative number'),
+  spike_plants: z.number().nonnegative('Spike plants must be a non-negative number').optional(),
+  spike_defuses: z.number().nonnegative('Spike defuses must be a non-negative number').optional(),
+  MVPs: z.number().nonnegative('MVPs must be a non-negative number').optional(),
+  first_kills: z.number().nonnegative('First kills must be a non-negative number').optional(),
+});
