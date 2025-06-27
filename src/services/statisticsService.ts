@@ -105,6 +105,20 @@ class StatisticsService {
   }
 
   /**
+   * Get team statistics by team ID
+   */
+  async getTeamStatistics(teamId: number): Promise<TeamSummaryStatistic | null> {
+    try {
+      const teams = await this.getAllTeamsSummary();
+      const team = teams.find(t => t.team_id === teamId);
+      return team || null;
+    } catch (error) {
+      console.warn(`Error fetching statistics for team ${teamId}:`, error);
+      return null;
+    }
+  }
+
+  /**
    * Get agent statistics for a player
    */
   async getPlayerAgentStatistics(playerId: number): Promise<AgentStatistic[]> {
