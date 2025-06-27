@@ -38,13 +38,14 @@ interface PageProps {
   }>;
 }
 
-export default function TeamPublicPage({ params }: PageProps) {
+export default async function TeamPublicPage(props: PageProps) {
+  const params = await props.params;
+
   const [activeTab, setActiveTab] = useState<'overview' | 'players' | 'matches' | 'stats'>('overview');
   const router = useRouter();
 
-  const resolvedParams = use(params);
-  const championshipId = parseInt(resolvedParams.id);
-  const teamId = parseInt(resolvedParams.teamId);
+  const championshipId = parseInt(params.id);
+  const teamId = parseInt(params.teamId);
 
   // Fetch championship data using React Query (API)
   const {
