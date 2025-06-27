@@ -202,13 +202,14 @@ export default function ChampionshipsListPage() {
     }
   };
 
-  const filteredChampionships = championshipsData.filter((championship: Championship) => {
-    const matchesSearch = championship.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      championship.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const mappedStatus = mapApiStatusToFilter(championship.status);
-    const matchesStatus = statusFilter === 'all' || mappedStatus === statusFilter;
-
-    return matchesSearch && matchesStatus;
+  const filteredChampionships = championshipsData.filter(championship => {
+    const statusMatch = statusFilter === 'all' || championship.status === statusFilter;
+    const searchLower = searchQuery.toLowerCase();
+    const searchMatch = championship.name.toLowerCase().includes(searchLower) ||
+      (championship.description && championship.description.toLowerCase().includes(searchLower)) ||
+      (championship.location && championship.location.toLowerCase().includes(searchLower)) ||
+      (championship.status && championship.status.toLowerCase().includes(searchLower));
+    return statusMatch && searchMatch;
   });
 
   // Show loading state
