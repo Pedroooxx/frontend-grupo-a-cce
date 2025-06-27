@@ -25,13 +25,13 @@ export {
   useValidateTeam,
 } from "./teamService";
 export {
-  championshipService,
   useGetAllChampionships,
   useGetChampionshipById,
   useCreateChampionship,
   useUpdateChampionship,
   useDeleteChampionship,
 } from "./championshipService";
+
 export * from "./subscriptionService";
 export * from "./matchService";
 export * from "./statisticsService";

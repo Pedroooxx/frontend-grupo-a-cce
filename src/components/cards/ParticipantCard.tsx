@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, Edit, Trash2 } from "lucide-react";
-import type { DetailedPlayerStats } from "@/types/data-types";
 import Link from "next/link";
 
 interface ParticipantCardProps {

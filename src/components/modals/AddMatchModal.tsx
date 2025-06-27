@@ -10,7 +10,6 @@ import { MatchForm } from '@/components/forms/MatchForm';
 import { Calendar } from 'lucide-react';
 import type { MatchFormValues } from '@/types/match';
 import type { Championship } from '@/types/subscription';
-import type { PublicTeam } from '@/types/data-types';
 
 interface AddMatchModalProps {
   isOpen: boolean;

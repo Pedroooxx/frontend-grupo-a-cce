@@ -210,7 +210,7 @@ const TeamStatistics = () => {
         {selectedTab === 'overview' && (
           <>
             {/* Key Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card className="dashboard-card border-gray-700 p-6">
                 <div className="flex items-center space-x-3">
                   <div className="p-3 bg-green-500/20 rounded-lg">
@@ -219,17 +219,6 @@ const TeamStatistics = () => {
                   <div>
                     <p className="dashboard-text-muted text-sm">KDA da Equipe</p>
                     <p className="text-2xl font-bold text-white">{teamKda}</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="dashboard-card border-gray-700 p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-blue-500/20 rounded-lg">
-                    <Trophy className="w-6 h-6 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="dashboard-text-muted text-sm">Vitórias</p>
-                    <p className="text-2xl font-bold text-white">{team.wins}</p>
                   </div>
                 </div>
               </Card>

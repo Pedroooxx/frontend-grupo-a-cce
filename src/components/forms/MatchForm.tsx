@@ -14,7 +14,6 @@ import {
   AVAILABLE_STAGES 
 } from '@/types/match';
 import type { Championship } from '@/types/subscription';
-import type { PublicTeam } from '@/types/data-types';
 
 interface MatchFormProps {
   onSubmit: (data: MatchFormValues) => Promise<void>;

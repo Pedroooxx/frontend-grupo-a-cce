@@ -5,7 +5,6 @@ import { Trophy, Users, Calendar, TrendingUp, Target, Award } from "lucide-react
 import { Card } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
 import { useAllPlayersSummary, useAllTeamsSummary } from "@/hooks/useStatistics";
-import { championshipParticipations } from "@/data/data-mock";
 import { CardHeader } from "@/components/ui/CardHeader";
 import { useGetMatchesByStatus } from '@/services/matchService';
 import { Badge } from "@/components/ui/badge";
@@ -22,19 +21,10 @@ export function DashboardContent() {
   
   // Match count calculation needs to be updated when matches API is available
   const totalMatches = teams.reduce((acc, team) => acc + (team.total_matches || 0), 0) / 2;
-  
-  // Will be replaced with data from Championship API
-  const activeChampionships = championshipParticipations.filter(c => c.status === "Em andamento").length;
-  
   const totalKills = players.reduce((acc, player) => acc + (player.total_kills || 0), 0);
   const totalMVPs = players.reduce((acc, player) => acc + (player.mvp_count || 0), 0);
 
   const stats = [
-    {
-      title: "Campeonatos Ativos",
-      value: activeChampionships.toString(),
-      icon: Trophy,
-    },
     {
       title: "Equipes Registradas",
       value: totalTeams.toString(),

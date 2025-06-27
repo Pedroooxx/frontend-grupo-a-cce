@@ -3,7 +3,6 @@ import { use } from 'react';
 import { notFound } from 'next/navigation';
 import { useGetChampionshipById, useGetChampionshipMatches } from '@/services/championshipService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
-import { getMatchesByChampionshipId, getTeamsByChampionshipId } from '@/data/search-functions';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { ChampionshipDetails } from '@/components/public/ChampionshipDetails';
 import { Calendar, MapPin, Trophy, Users, Crown } from 'lucide-react';
@@ -39,10 +38,6 @@ export default function ChampionshipPublicPage({ params }: PageProps) {
     isLoading: isLoadingMatches,
     isError: isMatchesError,
   } = useGetChampionshipMatches(championshipId);
-
-  // For now, keep using mock data for matches and teams as requested for ChampionshipDetails component
-  const matches = getMatchesByChampionshipId(championshipId);
-  const teams = getTeamsByChampionshipId(championshipId);
 
   /**
    * Count teams for this championship using subscription data
@@ -159,8 +154,6 @@ export default function ChampionshipPublicPage({ params }: PageProps) {
         <ChampionshipDetails
           championshipId={championshipId}
           championshipName={championship.name}
-          matches={matches}
-          teams={teams}
         />
       </div>
     </PublicLayout>

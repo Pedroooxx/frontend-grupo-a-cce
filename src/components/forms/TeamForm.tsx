@@ -9,7 +9,6 @@ import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { MAX_PLAYERS, teamSchema, type TeamFormValues } from '@/types/teams';
 import { Badge } from '@/components/ui/badge';
-import { PublicParticipant } from '@/types/data-types';
 import { X, Check, AlertCircle } from 'lucide-react';
 
 

@@ -111,6 +111,13 @@ class StatisticsService {
     try {
       const teams = await this.getAllTeamsSummary();
       const team = teams.find(t => t.team_id === teamId);
+      if (team) {
+        const matchStats = await this.getMatchStatistics(teamId);
+        team.wins = matchStats.filter(match => match.winner_team_id === teamId).length;
+        team.losses = matchStats.filter(match => match.winner_team_id !== teamId).length;
+        team.total_matches = team.wins + team.losses;
+        team.win_rate = team.total_matches > 0 ? team.wins / team.total_matches : 0;
+      }
       return team || null;
     } catch (error) {
       console.warn(`Error fetching statistics for team ${teamId}:`, error);

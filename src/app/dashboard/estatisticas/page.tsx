@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '../_components/DashboardLayout';
-import { StatCard } from '@/components/statistics/StatCard';
 import { TopPlayersCard } from '@/components/statistics/TopPlayersCard';
 import { TeamRankingCard } from '@/components/statistics/TeamRankingCard';
 import { UniversalSearchBar } from '@/components/common/UniversalSearchBar';
@@ -12,15 +11,40 @@ import {
   useAllTeamsSummary
 } from '@/hooks/useStatistics';
 import { Card } from '@/components/ui/card';
-import { MapData } from '@/types/data-types';
 import { useEffect, useState, useMemo } from 'react';
 import { useGetAllChampionships } from '@/services/championshipService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
-import { useGetAllMatches, type Match as ServiceMatch } from '@/services/matchService';
 import { useGetAllTeams, useGetAllParticipants, type TeamParticipant, type Team } from '@/services/teamService';
+import { useGetAllMatches, type Match } from '@/services/matchService';
 import { Calendar, Crown, MapPin, Target, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import type { Championship } from '@/types/championship';
+
+/**
+ * StatCard component for displaying statistics
+ */
+interface StatCardProps {
+  stat: {
+    label: string;
+    valor: string;
+    crescimento: string;
+  };
+}
+
+const StatCard: React.FC<StatCardProps> = ({ stat }) => (
+  <Card className="dashboard-card border-gray-700 p-6">
+    <div className="flex items-center justify-between">
+      <div className="space-y-2">
+        <p className="text-gray-400 text-sm">{stat.label}</p>
+        <p className="text-3xl font-bold text-white">{stat.valor}</p>
+        <p className="text-green-400 text-sm font-medium">{stat.crescimento}</p>
+      </div>
+      <div className="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
+        <Trophy className="w-6 h-6 text-red-500" />
+      </div>
+    </div>
+  </Card>
+);
 
 /**
  * Search function using real API data (same as public page)
@@ -37,7 +61,7 @@ const searchWithRealData = (
   types: string[], 
   championshipsData: Championship[] = [], 
   teamsData: Team[] = [], 
-  matchesData: ServiceMatch[] = [],
+  matchesData: Match[] = [],
   participantsData: TeamParticipant[] = []
 ): SearchResult[] => {
   if (!query.trim()) return [];
@@ -134,7 +158,6 @@ const Estatisticas = () => {
   const router = useRouter();
   const { data: players = [], isLoading: isLoadingPlayers } = useAllPlayersSummary();
   const { data: teams = [], isLoading: isLoadingTeams } = useAllTeamsSummary();
-  const [mapData, setMapData] = useState<MapData[]>([]);
   const [isLoadingMapData, setIsLoadingMapData] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'Ativo' | 'Planejado' | 'Finalizado'>('all');
@@ -240,42 +263,6 @@ const Estatisticas = () => {
       }
     }
   ];
-
-  useEffect(() => {
-    // Here we would normally fetch map data from API
-    // For now, we'll simulate it with a timeout to show loading state
-    setIsLoadingMapData(true);
-    const timer = setTimeout(() => {
-      // When the API for maps is available, replace this with actual API call
-      const mockMapData: MapData[] = [
-        {
-          nome: "Ascent",
-          partidas: 24,
-          winRate: "58%",
-          avgScore: "312",
-          imagePath: "/maps/Ascent.png"
-        },
-        {
-          nome: "Bind",
-          partidas: 22,
-          winRate: "45%",
-          avgScore: "298",
-          imagePath: "/maps/Bind.png"
-        },
-        {
-          nome: "Haven",
-          partidas: 18,
-          winRate: "67%",
-          avgScore: "325",
-          imagePath: "/maps/Haven.png"
-        }
-      ];
-      setMapData(mockMapData);
-      setIsLoadingMapData(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleSearchResultClick = (result: SearchResult) => {
     let basePath = '';

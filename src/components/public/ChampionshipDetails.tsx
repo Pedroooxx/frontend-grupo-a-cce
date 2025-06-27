@@ -1,17 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { MapPin, Trophy, Users, Clock, Star, Target, Crown, Zap, BarChart3 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
-import { useGetChampionshipMatches, useGetChampionshipById } from '@/services/championshipService';
 import { useGetChampionshipTeamHistory } from '@/services/matchService';
+import { 
+  Users, 
+  Trophy, 
+  BarChart3, 
+  Clock, 
+  MapPin, 
+  Crown, 
+  Target, 
+  Zap, 
+  Star 
+} from 'lucide-react';
+import { 
+  useGetChampionshipById, 
+  useGetChampionshipMatches
+} from '@/services/championshipService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
 import { useGetAllTeams } from '@/services/teamService';
-import { PublicMatch } from '@/types/data-types';
-import { useMemo } from 'react';
 
 interface LocalTeam {
   team_id: number;
@@ -26,8 +37,6 @@ interface LocalTeam {
 interface ChampionshipDetailsProps {
   championshipId: number;
   championshipName: string;
-  matches: PublicMatch[];
-  teams: LocalTeam[];
 }
 
 export function ChampionshipDetails({
@@ -63,7 +72,7 @@ export function ChampionshipDetails({
   // Fetch match statistics for teams in this championship
   const {
     data: teamStatistics = {},
-    isLoading: isLoadingStatistics,
+    isLoading: isLoadingTeamStats,
   } = useGetChampionshipTeamHistory(championshipId);
 
   /**
@@ -89,6 +98,7 @@ export function ChampionshipDetails({
     const teamsWithStats = teamsInChampionship.map(team => {
       // Get real statistics from matches or default to 0
       const stats = teamStatistics[team.team_id] || {
+        team_id: team.team_id,
         wins: 0,
         losses: 0,
         total_matches: 0,
@@ -148,7 +158,7 @@ export function ChampionshipDetails({
    * Based on backend double elimination logic from doubleEliminationService.js
    */
   const getBracketStructure = (teamCount: number, format: string) => {
-    if (format === 'simple' || format === 'single') {
+    if (format === 'single-elimination' || format === 'single' || format === 'simple') {
       const rounds = [];
       let teamsInRound = teamCount;
       let roundNumber = 1;
@@ -187,7 +197,7 @@ export function ChampionshipDetails({
       }
 
       return { winners: rounds, losers: [] };
-    } else if (format === 'double') {
+    } else if (format === 'double-elimination') {
       // Upper bracket structure (matches backend exact stage names)
       const winnersRounds = [];
       let teamsInRound = teamCount;
@@ -342,7 +352,7 @@ export function ChampionshipDetails({
     console.log('Format:', championshipData?.format);
     console.log('Teams:', teamsCount);
     console.log('Winners Rounds:', bracketStructure.winners.map(r => `${r.name}: ${r.matches} matches`));
-    if (championshipData?.format === 'double') {
+    if (championshipData?.format === 'double-elimination') {
       console.log('Losers Rounds:', bracketStructure.losers.map(r => `${r.name}: ${r.matches} matches (${r.description || ''})`));
     }
   }
@@ -373,7 +383,7 @@ export function ChampionshipDetails({
   };
 
   // Show loading state
-  if (isLoadingChampionship || isLoadingSubscriptions || isLoadingMatches || isLoadingTeams || isLoadingStatistics) {
+  if (isLoadingChampionship || isLoadingSubscriptions || isLoadingMatches || isLoadingTeams || isLoadingTeamStats) {
     return (
       <div className="space-y-8 animate-pulse">
         <div className="h-12 bg-slate-700 rounded"></div>
@@ -463,13 +473,9 @@ export function ChampionshipDetails({
                 <div className="space-y-4">                  <div>
                   <label className="text-slate-400 text-sm">Formato</label>
                   <p className="text-white font-medium">
-                    {championshipData.format === 'double' ? 'Eliminação Dupla' :
-                      championshipData.format === 'single' ? 'Eliminação Simples' :
-                        championshipData.format === 'simple' ? 'Eliminação Simples' :
-                          championshipData.format === 'single_elimination' ? 'Eliminação Simples' :
-                            championshipData.format === 'double_elimination' ? 'Eliminação Dupla' :
-                              championshipData.format === 'round_robin' ? 'Pontos Corridos' :
-                                championshipData.format || 'Formato não definido'}
+                    {championshipData.format === 'double-elimination' ? 'Eliminação Dupla' :
+                      championshipData.format === 'single-elimination' ? 'Eliminação Simples' :
+                        championshipData.format || 'Formato não definido'}
                   </p>
                 </div>
                   <div>
@@ -697,7 +703,15 @@ export function ChampionshipDetails({
                     <Button
                       size="sm"
                       className="w-full mt-3 bg-red-500 hover:bg-red-600 text-white"
-                      onClick={() => router.push(`/campeonatos/${championshipId}/equipes/${team.team_id}`)}
+                      onClick={async () => {
+                        try {
+                          await router.push(`/campeonatos/${championshipId}/equipes/${team.team_id}`);
+                          // Optionally, you can add a delay to ensure the route is fully loaded
+                          await new Promise(resolve => setTimeout(resolve, 100));
+                        } catch (error) {
+                          console.error('Navigation error:', error);
+                        }
+                      }}
                     >
                       Ver Equipe
                     </Button>
@@ -720,13 +734,9 @@ export function ChampionshipDetails({
           {/* Tournament Bracket */}
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 overflow-x-auto">
             <div className="text-center mb-2">              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-              {championshipData?.format === 'double' ? 'Eliminação Dupla' :
-                championshipData?.format === 'single' ? 'Eliminação Simples' :
-                  championshipData?.format === 'simple' ? 'Eliminação Simples' :
-                    championshipData?.format === 'single_elimination' ? 'Eliminação Simples' :
-                      championshipData?.format === 'double_elimination' ? 'Eliminação Dupla' :
-                        championshipData?.format === 'round_robin' ? 'Pontos Corridos' :
-                          'Formato do Torneio'}
+              {championshipData?.format === 'double-elimination' ? 'Eliminação Dupla' :
+                championshipData?.format === 'single-elimination' ? 'Eliminação Simples' :
+                  'Formato do Torneio'}
             </Badge>
             </div>
             <h3 className="text-2xl font-bold text-white mb-8 text-center flex items-center justify-center">
@@ -734,7 +744,8 @@ export function ChampionshipDetails({
               Chaveamento do Torneio
             </h3>            {/* Dynamic Bracket Container */}
             {bracketStructure.winners.length > 0 ? (
-              <div className="mx-auto relative min-w-fit">                {championshipData?.format === 'double' ? (
+              <div className="mx-auto relative min-w-fit">
+                {championshipData?.format === 'double-elimination' ? (
                 /* Double Elimination Bracket - Winners Left, Losers Right, Grand Final Center */
                 <div className="flex justify-center items-start space-x-6">
                   {/* Winners Bracket - Left Side */}
