@@ -9,6 +9,7 @@ import {
   ChampionshipOverview,
   ParticipantStatisticInput
 } from '../types/statistics';
+import { useQuery } from '@tanstack/react-query';
 
 /**
  * Statistics service that aligns with the backend API endpoints for
@@ -44,7 +45,7 @@ class StatisticsService {
    * Get statistics for a specific match
    */
   async getMatchStatistics(matchId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/statistics/participants/match/${matchId}`);
+    return apiClient.get(`/participant-stats/match/${matchId}`);
   }
 
   /**
@@ -198,5 +199,17 @@ class StatisticsService {
     return apiClient.delete(`/championship-stats/${statisticId}`);
   }
 }
+
+/**
+ * React Query hook to get match statistics
+ */
+export const useGetMatchStatistics = (matchId: number, enabled = true) => {
+  return useQuery({
+    queryKey: ['match-statistics', matchId],
+    queryFn: () => statisticsService.getMatchStatistics(matchId),
+    enabled: enabled && matchId > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
 
 export const statisticsService = new StatisticsService();
