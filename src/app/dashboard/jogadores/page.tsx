@@ -13,10 +13,12 @@ import type { DetailedPlayerStats } from "@/types/data-types";
 import type { ParticipantFormValues } from "@/types/participant";
 import { Skull, Target, User, Filter } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import { DashboardLayout } from "../_components/DashboardLayout";
 import { SearchResult } from "@/hooks/useSearch";
 
 export default function GerenciarJogadores() {
+  const { data: session } = useSession();
   const { isOpen, openModal, closeModal } = useModal();
   const [editingPlayer, setEditingPlayer] = useState<Participant | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -156,6 +158,14 @@ export default function GerenciarJogadores() {
    */
   const handleSave = useCallback(
     async (form: ParticipantFormValues) => {
+      // Get user_id from session
+      const userId = session?.user?.id ? Number(session.user.id) : undefined;
+      
+      if (!userId && !editingPlayer) {
+        console.error('No user ID available for participant creation. Please log in again.');
+        return;
+      }
+
       // Build API payload: rename and convert types
       const payload = {
         name: form.nome,
@@ -164,7 +174,9 @@ export default function GerenciarJogadores() {
         phone: Number(form.phone.replace(/\D/g, '')),
         team_id: form.team_id!,
         is_coach: form.is_coach,
+        ...(userId && { user_id: userId }), // Add user_id only for creation
       } as const;
+      
       try {
         if (editingPlayer) {
           // Update existing participant
@@ -178,7 +190,7 @@ export default function GerenciarJogadores() {
         console.error('Erro ao salvar participante:', err);
       }
     },
-    [editingPlayer, createParticipant, updateParticipant, closeModal]
+    [editingPlayer, createParticipant, updateParticipant, closeModal, session]
   );
 
   const handleDelete = useCallback((id: number) => {
