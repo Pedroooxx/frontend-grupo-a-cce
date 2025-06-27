@@ -14,12 +14,15 @@ import { useGetAllSubscriptions, useCreateSubscription, useUpdateSubscription, u
 import { useGetAllTeams } from "@/services/teamService";
 import type { Team } from "@/services/teamService";
 import { useGetAllChampionships } from "@/services/championshipService";
-import type { Championship } from "@/services/championshipService";
+import type { Championship } from "@/types/championship";
 import type { Subscription, SubscriptionFormValues } from "@/types/subscription";
 import { toast } from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
 const Inscricoes = () => {
   const router = useRouter();
+  const { data: session } = useSession();
+  const userId = session?.user?.id ? Number(session.user.id) : undefined;
   // Data fetching hooks
   const { data: subscriptionsData = [], isLoading: isLoadingSubscriptions, isError: isGetSubscriptionsError, error: getSubscriptionsError } = useGetAllSubscriptions();
   const { data: teamsData = [], isLoading: isLoadingTeams, isError: isGetTeamsError, error: getTeamsError } = useGetAllTeams();
@@ -50,19 +53,24 @@ const Inscricoes = () => {
 
   // Map API data to display format
   const inscricoes = useMemo(() => {
-    return subscriptionsData.map((sub: Subscription) => {
-      const team = teamsData.find((t: Team) => t.team_id === sub.team_id);
-      const championship = championshipsData.find((c: Championship) => c.championship_id === sub.championship_id);
-      return {
-        subscription_id: sub.subscription_id,
-        championship_id: sub.championship_id,
-        team_id: sub.team_id,
-        subscription_date: sub.subscription_date,
-        team_name: team?.name || "",
-        championship_name: championship?.name || "",
-      };
-    });
-  }, [subscriptionsData, teamsData, championshipsData]);
+    return subscriptionsData
+      .filter((sub: Subscription) => {
+        const championship = championshipsData.find(c => c.championship_id === sub.championship_id);
+        return championship && championship.user_id === userId;
+      })
+      .map((sub: Subscription) => {
+        const team = teamsData.find((t: Team) => t.team_id === sub.team_id);
+        const championship = championshipsData.find((c: Championship) => c.championship_id === sub.championship_id);
+        return {
+          subscription_id: sub.subscription_id,
+          championship_id: sub.championship_id,
+          team_id: sub.team_id,
+          subscription_date: sub.subscription_date,
+          team_name: team?.name || "",
+          championship_name: championship?.name || "",
+        };
+      });
+  }, [subscriptionsData, teamsData, championshipsData, userId]);
 
   /**
    * Search function for subscriptions following teams page pattern
