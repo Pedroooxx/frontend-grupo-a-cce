@@ -91,14 +91,30 @@ const useDeleteChampionship = () => {
   const queryClient = useQueryClient();
   
   return useMutation<void, ApiError, string | number>({
-    mutationFn: (id) => 
-      apiClient.delete(`/championships/${id}`, { withAuth: true }),
+    mutationFn: async (id) => {
+      try {
+        await apiClient.delete(`/championships/${id}`, { withAuth: true });
+      } catch (error: any) {
+        console.error('Delete championship error:', error);
+        
+        // Re-throw with structured error information
+        if (error.response?.data?.error) {
+          const apiError = new Error(error.response.data.error) as any;
+          apiError.response = error.response;
+          throw apiError;
+        }
+        
+        throw error;
+      }
+    },
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['championships'] });
-      toast.success('Campeonato excluído com sucesso!');
+      queryClient.removeQueries({ queryKey: ['championships', id] });
+      // Don't show toast here - let the component handle it
     },
     onError: (error) => {
-      toast.error(`Erro ao excluir campeonato: ${error.message}`);
+      console.error('Championship deletion failed:', error);
+      // Don't show toast here - let the component handle it
     },
   });
 };

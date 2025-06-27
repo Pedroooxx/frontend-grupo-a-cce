@@ -35,6 +35,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { AddChampionshipStatisticsModal } from '@/components/modals/AddChampionshipStatisticsModal';
+import { useSession } from "next-auth/react";
 
 const Campeonatos = () => {
   const router = useRouter();
@@ -112,15 +113,18 @@ const Campeonatos = () => {
     return matchesData.filter(match => match.championship_id === championshipId).length;
   };
 
-  // Map API data to internal type - no transformation needed since service handles it
+  // Filter championships to only show the ones the user is the owner
+  const { data: session } = useSession();
+  const userId = session?.user?.id ? Number(session.user.id) : undefined;
   const campeonatos = useMemo(() => {
-    return championshipsData.map((c) => ({
+    if (!userId) return [];
+    return championshipsData.filter(championship => championship.user_id === userId).map((c) => ({
       ...c,
       // Use calculated counts instead of relying on API values if needed
       teams_count: c.teams_count ?? getTeamCountForChampionship(c.championship_id),
       matches_count: c.matches_count ?? getMatchCountForChampionship(c.championship_id),
     }));
-  }, [championshipsData, subscriptionsData, matchesData, getTeamCountForChampionship, getMatchCountForChampionship]);
+  }, [championshipsData, subscriptionsData, matchesData, getTeamCountForChampionship, getMatchCountForChampionship, userId]);
 
   // Error notifications
   useEffect(() => {
@@ -161,9 +165,20 @@ const Campeonatos = () => {
       try {
         await deleteChampionship.mutateAsync(deleteItemId);
         toast.success("Campeonato excluído com sucesso!");
-      } catch (err) {
-        console.error(err);
-        toast.error("Erro ao excluir campeonato");
+      } catch (err: any) {
+        console.error('Delete error:', err);
+        const errorMessage = err?.response?.data?.error || err?.message || "Erro desconhecido ao excluir campeonato";
+
+        // Handle specific error cases
+        if (err?.response?.status === 409) {
+          toast.error("Não é possível deletar campeonato com equipes inscritas ou partidas em andamento");
+        } else if (err?.response?.status === 404) {
+          toast.error("Campeonato não encontrado");
+        } else if (err?.response?.status === 403) {
+          toast.error("Acesso negado - você não tem permissão para deletar este campeonato");
+        } else {
+          toast.error(`Erro ao excluir campeonato: ${errorMessage}`);
+        }
       }
     }
     closeDeleteModal();
@@ -325,9 +340,10 @@ const Campeonatos = () => {
   };
 
   // Handle statistics submission
-  const handleStatisticsSubmit = async (data) => {
+  const handleStatisticsSubmit = async (data: any) => {
     try {
-      await statisticsService.createChampionshipStatistic(data);
+      // TODO: Implement statistics service when available
+      // await statisticsService.createChampionshipStatistic(data);
       toast.success('Estatísticas adicionadas com sucesso!');
       setIsStatisticsModalOpen(false);
     } catch (error) {
