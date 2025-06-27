@@ -31,11 +31,11 @@ export interface ChampionshipApiResponse {
   championship_id: number;
   name: string;
   description?: string;
-  format: "simple" | "double" | "single-elimination" | "double-elimination";
+  format: "single-elimination" | "double-elimination";
   start_date: string;
   end_date: string;
   location: string;
-  status: "Ativo" | "Planejado" | "Finalizado" | "ativo" | "planejado" | "finalizado";
+  status: "Ativo" | "Planejado" | "Finalizado" ;
   prize: number | string | null;
   user_id?: number;
   teams_count: number;
