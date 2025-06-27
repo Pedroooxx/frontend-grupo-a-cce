@@ -13,7 +13,11 @@ const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           console.log("NextAuth authorize with:", credentials);
-          
+
+          if (!process.env.JWT_SECRET) {
+            throw new Error("Missing JWT_SECRET environment variable");
+          }
+
           // Support for the demo credentials in UI
           if (credentials?.email === "admin@esports.com" && credentials?.password === "admin123") {
             console.log("Using demo credentials");
@@ -24,7 +28,7 @@ const authOptions: NextAuthOptions = {
               role: "admin"
             };
           }
-          
+
           // Call the actual API for authentication using config
           const response = await fetch(`${config.apiUrl}/auth/login`, {
             method: "POST",
@@ -34,13 +38,13 @@ const authOptions: NextAuthOptions = {
               password: credentials?.password
             })
           });
-          
+
           const data = await response.json();
-          
+
           if (!response.ok) {
             throw new Error(data.message || "Authentication failed");
           }
-          
+
           // Return user data with token
           if (data && data.token) {
             return {
@@ -51,7 +55,7 @@ const authOptions: NextAuthOptions = {
               token: data.token // Store the token in the user object
             };
           }
-          
+
           return null;
         } catch (error) {
           console.error("Auth error:", error);

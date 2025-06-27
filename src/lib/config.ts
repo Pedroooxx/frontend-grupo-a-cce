@@ -1,4 +1,3 @@
-
 /**
  * Application configuration object with type-safe environment variables
  */
@@ -21,6 +20,11 @@ export const config = {
      * Session token expiration in seconds (30 days)
      */
     sessionMaxAge: 30 * 24 * 60 * 60,
+
+    /**
+     * JSON Web Token secret key
+     */
+    jwtSecret: process.env.JWT_SECRET || 'default-jwt-secret', // Add JWT_SECRET
   },
   
   /**
