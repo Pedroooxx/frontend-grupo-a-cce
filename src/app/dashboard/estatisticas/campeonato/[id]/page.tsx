@@ -207,53 +207,6 @@ const ChampionshipStatistics = () => {
         {/* Overview Tab */}
         {selectedTab === 'overview' && (
           <>
-            {/* Key Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="dashboard-card border-gray-700 p-6 hover:border-purple-500/50 hover:bg-gray-800/50 transition-all duration-300">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-purple-500/20 rounded-lg">
-                    <Users className="w-6 h-6 text-purple-500" />
-                  </div>
-                  <div>
-                    <p className="dashboard-text-muted text-sm">Total de Equipes</p>
-                    <p className="text-2xl font-bold text-white">{mergedChampionshipData.total_teams}</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="dashboard-card border-gray-700 p-6 hover:border-blue-500/50 hover:bg-gray-800/50 transition-all duration-300">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-blue-500/20 rounded-lg">
-                    <Target className="w-6 h-6 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="dashboard-text-muted text-sm">Total de Jogadores</p>
-                    <p className="text-2xl font-bold text-white">{mergedChampionshipData.total_participants}</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="dashboard-card border-gray-700 p-6 hover:border-green-500/50 hover:bg-gray-800/50 transition-all duration-300">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-green-500/20 rounded-lg">
-                    <Trophy className="w-6 h-6 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="dashboard-text-muted text-sm">Partidas</p>
-                    <p className="text-2xl font-bold text-white">{mergedChampionshipData.total_matches}</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="dashboard-card border-gray-700 p-6 hover:border-yellow-500/50 hover:bg-gray-800/50 transition-all duration-300">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-yellow-500/20 rounded-lg">
-                    <TrendingUp className="w-6 h-6 text-yellow-500" />
-                  </div>
-                  <div>
-                    <p className="dashboard-text-muted text-sm">KDA Médio</p>
-                    <p className="text-2xl font-bold text-white">{mergedChampionshipData.highest_kda}</p>
-                  </div>
-                </div>
-              </Card>
-            </div>
 
             {/* Tournament Info */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

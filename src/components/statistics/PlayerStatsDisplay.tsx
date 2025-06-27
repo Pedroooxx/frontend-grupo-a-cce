@@ -56,7 +56,6 @@ export const PlayerStatsDisplay = ({ player }: PlayerStatsDisplayProps) => {
         <p className="dashboard-text-muted text-sm">{kills} kills</p>
       </Tooltip>
 
-      <p className="text-green-400 text-sm">{winRate} Taxa de vitória</p>
     </div>
   );
 };
