@@ -5,9 +5,8 @@ import { DashboardLayout } from '../_components/DashboardLayout';
 import { StatCard } from '@/components/statistics/StatCard';
 import { TopPlayersCard } from '@/components/statistics/TopPlayersCard';
 import { TeamRankingCard } from '@/components/statistics/TeamRankingCard';
-import { MapPerformanceCard } from '@/components/statistics/MapPerformanceCard';
 import { UniversalSearchBar } from '@/components/common/UniversalSearchBar';
-import { SearchResult, SearchConfig } from '@/hooks/useSearch';
+import { SearchResult } from '@/hooks/useSearch';
 import { 
   useAllPlayersSummary, 
   useAllTeamsSummary
@@ -226,16 +225,7 @@ const Estatisticas = () => {
         valor: players.reduce((acc, player) => acc + player.mvp_count, 0).toString(),
         crescimento: "+12%"
       }
-    },
-    {
-      stat: {
-        label: "Taxa de Vitória Média",
-        valor: teams.length > 0 
-          ? `${Math.round(teams.reduce((acc, team) => acc + team.win_rate, 0) / teams.length)}%` 
-          : "0%",
-        crescimento: "+5%"
-      }
-    },
+    }
   ];
 
   useEffect(() => {
@@ -334,20 +324,6 @@ const Estatisticas = () => {
           />
         </div>
 
-        {/* Status filter */}
-        <div className="flex justify-end mb-4">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="py-2 px-4 bg-slate-800 border border-slate-700 rounded-md text-white focus:outline-none focus:ring-2 focus-ring-blue-500"
-          >
-            <option value="all">Todos os Status</option>
-            <option value="Planejado">Planejados</option>
-            <option value="Ativo">Ativos</option>
-            <option value="Finalizado">Finalizados</option>
-          </select>
-        </div>
-
         {/* General Statistics */}
         {isLoadingPlayers || isLoadingTeams ? (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -401,22 +377,21 @@ const Estatisticas = () => {
           )}
         </div>
 
-        {/* Map Statistics */}
-        {isLoadingMapData ? (
-          <Card className="dashboard-card border-gray-700 p-6 animate-pulse">
-            <div className="h-6 bg-gray-700 rounded w-1/2 mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-40 bg-gray-700 rounded w-full"></div>
-              ))}
-            </div>
-          </Card>
-        ) : (
-          <MapPerformanceCard maps={mapData} />
-        )}
-
         {/* Recent Championships */}
         <div className="mt-8">
+          {/* Status filter */}
+        <div className="flex justify-end mb-4">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="py-2 px-4 bg-slate-800 border border-slate-700 rounded-md text-white focus:outline-none focus:ring-2 focus-ring-blue-500"
+          >
+            <option value="all">Todos os Status</option>
+            <option value="Planejado">Planejados</option>
+            <option value="Ativo">Ativos</option>
+            <option value="Finalizado">Finalizados</option>
+          </select>
+        </div>
           <h2 className="text-xl font-semibold text-white mb-4">Campeonatos Recentes</h2>
           
           {isLoadingChampionships ? (
