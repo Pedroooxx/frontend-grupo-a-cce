@@ -11,8 +11,9 @@ export interface Subscription {
 }
 
 interface SubscriptionResponse {
-  count: number;
-  subscriptions: Subscription[];
+  count?: number;
+  subscriptions?: Subscription[];
+  data?: Subscription[];
 }
 
 
@@ -30,11 +31,22 @@ export const useGetAllSubscriptions = (enabled = true) => {
   return useQuery<Subscription[], ApiError>({
     queryKey: ['subscriptions'],
     queryFn: async () => {
-      const result = await apiClient.get<SubscriptionResponse>(
+      const response = await apiClient.get<SubscriptionResponse>(
         '/subscriptions',
         { withAuth: true }
       );
-      return Array.isArray(result.subscriptions) ? result.subscriptions : [];
+      // Check if response has the expected structure
+      if (response && response.subscriptions && Array.isArray(response.subscriptions)) {
+        return response.subscriptions;
+      } else if (response && Array.isArray(response)) {
+        // Handle case where API directly returns array
+        return response;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        // Handle case where API returns data property
+        return response.data;
+      }
+      console.warn('Subscription service: Unexpected API response format', response);
+      return [];
     },
     enabled,
   });

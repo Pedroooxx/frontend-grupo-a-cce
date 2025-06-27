@@ -85,15 +85,35 @@ export const fetchApi = async <T = any>({
     console.log(`API Response: ${response.status} ${response.statusText}`);
     
     let responseData;
-    try {
-      responseData = await response.json();
-    } catch (error) {
-      console.warn("Failed to parse response as JSON:", error);
-      responseData = {};
+    const contentType = response.headers.get('content-type');
+    
+    // Only attempt to parse JSON if the content type is application/json
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        responseData = await response.json();
+      } catch (error) {
+        console.warn("Failed to parse response as JSON:", error);
+        responseData = { error: "Invalid JSON response" };
+      }
+    } else {
+      // For non-JSON responses, get text
+      const text = await response.text();
+      responseData = { raw: text, contentType };
+      console.warn("Non-JSON response:", contentType, text.substring(0, 100));
     }
     
     if (!response.ok) {
       console.error("API Error:", response.status, responseData);
+      
+      // Special handling for 404 errors
+      if (response.status === 404) {
+        // Return empty result for 404 errors to prevent breaking the app
+        if (method === "GET") {
+          console.warn(`Resource not found at ${url}, returning empty result`);
+          return (Array.isArray(responseData) ? [] : {}) as T;
+        }
+      }
+      
       throw new ApiError(
         responseData.message || `Error ${response.status}: ${response.statusText}`,
         response.status,

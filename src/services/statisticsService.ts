@@ -23,112 +23,188 @@ class StatisticsService {
    * Get all participant statistics
    */
   async getAllParticipantStatistics(): Promise<ParticipantStatistic[]> {
-    return apiClient.get('/statistics/participants');
+    try {
+      return await apiClient.get('/participant-stats');
+    } catch (error) {
+      console.warn('Error fetching all participant statistics:', error);
+      return [];
+    }
   }
 
   /**
    * Get participant statistic by ID
    */
-  async getParticipantStatisticById(statisticId: number): Promise<ParticipantStatistic> {
-    return apiClient.get(`/statistics/participants/${statisticId}`);
+  async getParticipantStatisticById(statisticId: number): Promise<ParticipantStatistic | null> {
+    try {
+      return await apiClient.get(`/participant-stats/${statisticId}`);
+    } catch (error) {
+      console.warn(`Error fetching participant statistic with ID ${statisticId}:`, error);
+      return null;
+    }
   }
 
   /**
    * Get statistics for a specific player
    */
   async getPlayerStatistics(playerId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/statistics/participants/player/${playerId}`);
+    try {
+      return await apiClient.get(`/participant-stats/player/${playerId}`);
+    } catch (error) {
+      console.warn(`Error fetching statistics for player ${playerId}:`, error);
+      return [];
+    }
   }
 
   /**
    * Get statistics for a specific match
    */
   async getMatchStatistics(matchId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/statistics/participants/match/${matchId}`);
+    try {
+      return await apiClient.get(`/participant-stats/match/${matchId}`);
+    } catch (error) {
+      console.warn(`Error fetching statistics for match ${matchId}:`, error);
+      return [];
+    }
   }
 
   /**
-   * Get top players by championship
+   * Get statistics for a team (list of participant stats)
    */
-  async getTopPlayersByChampionship(championshipId: number): Promise<ParticipantStatistic[]> {
-    return apiClient.get(`/statistics/participants/championship/${championshipId}/top-players`);
-  }
-
-  /**
-   * Get team statistics
-   */
-  async getTeamStatistics(teamId: number): Promise<TeamSummaryStatistic> {
-    return apiClient.get(`/statistics/teams/${teamId}`);
+  async getTeamParticipantStats(teamId: number): Promise<ParticipantStatistic[]> {
+    try {
+      return await apiClient.get(`/participant-stats/team/${teamId}`);
+    } catch (error) {
+      console.warn(`Error fetching statistics for team ${teamId}:`, error);
+      return [];
+    }
   }
 
   /**
    * Get all player summary statistics
    */
   async getAllPlayersSummary(): Promise<PlayerSummaryStatistic[]> {
-    return apiClient.get('/participant-stats/all-players');
+    try {
+      return await apiClient.get('/participant-stats/all-players');
+    } catch (error) {
+      console.warn('Error fetching all player summary statistics:', error);
+      return [];
+    }
   }
 
   /**
    * Get summary statistics for all teams
    */
   async getAllTeamsSummary(): Promise<TeamSummaryStatistic[]> {
-    return apiClient.get('/participant-stats/all-teams');
+    try {
+      return await apiClient.get('/participant-stats/all-teams');
+    } catch (error) {
+      console.warn('Error fetching all teams summary statistics:', error);
+      return [];
+    }
   }
 
   /**
    * Get agent statistics for a player
    */
   async getPlayerAgentStatistics(playerId: number): Promise<AgentStatistic[]> {
-    return apiClient.get(`/participant-stats/player/${playerId}/agents`);
+    try {
+      return await apiClient.get(`/participant-stats/player/${playerId}/agents`);
+    } catch (error) {
+      console.warn(`Error fetching agent statistics for player ${playerId}:`, error);
+      return [];
+    }
   }
 
   /**
    * Get map statistics for a player
    */
   async getPlayerMapStatistics(playerId: number): Promise<MapStatistic[]> {
-    return apiClient.get(`/participant-stats/player/${playerId}/maps`);
+    try {
+      return await apiClient.get(`/participant-stats/player/${playerId}/maps`);
+    } catch (error) {
+      console.warn(`Error fetching map statistics for player ${playerId}:`, error);
+      return [];
+    }
   }
 
   /**
    * Get agent statistics for a team
    */
   async getTeamAgentStatistics(teamId: number): Promise<AgentStatistic[]> {
-    return apiClient.get(`/participant-stats/team/${teamId}/agents`);
+    try {
+      return await apiClient.get(`/participant-stats/team/${teamId}/agents`);
+    } catch (error) {
+      console.warn(`Error fetching agent statistics for team ${teamId}:`, error);
+      return [];
+    }
   }
 
   /**
    * Get map statistics for a team
    */
   async getTeamMapStatistics(teamId: number): Promise<MapStatistic[]> {
-    return apiClient.get(`/participant-stats/team/${teamId}/maps`);
+    try {
+      return await apiClient.get(`/participant-stats/team/${teamId}/maps`);
+    } catch (error) {
+      console.warn(`Error fetching map statistics for team ${teamId}:`, error);
+      return [];
+    }
   }
 
-  /**
-   * Get championship history for a team
-   */
-  async getTeamChampionshipHistory(teamId: number): Promise<any[]> {
-    return apiClient.get(`/participant-stats/team/${teamId}/championships`);
+  async getTeamParticipantStatistics(teamId: number): Promise<ParticipantStatistic[]> {
+    try {
+      const response = await apiClient.get<ParticipantStatistic[]>(`/participant-stats/team/${teamId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching participant statistics for team ${teamId}:`, error);
+      return [];
+    }
+  }
+
+  async getTeamChampionshipHistory(teamId: number): Promise<any[]> { // Replace 'any' with a proper type
+    try {
+      const response = await apiClient.get<any[]>(`/championship-stats/team/${teamId}/history`);
+      return response.data;
+    } catch (error) {
+      console.warn(`Error fetching championship history for team ${teamId}:`, error);
+      return [];
+    }
   }
 
   /**
    * Create new participant statistic
    */
   async createParticipantStatistic(data: ParticipantStatisticInput): Promise<ParticipantStatistic> {
-    return apiClient.post('/participant-stats', data);
+    try {
+      return await apiClient.post('/participant-stats', data);
+    } catch (error) {
+      console.error('Error creating participant statistic:', error);
+      throw error;
+    }
   }
 
   /**
    * Update participant statistic
    */
   async updateParticipantStatistic(statisticId: number, data: Partial<ParticipantStatisticInput>): Promise<ParticipantStatistic> {
-    return apiClient.put(`/participant-stats/${statisticId}`, data);
+    try {
+      return await apiClient.put(`/participant-stats/${statisticId}`, data);
+    } catch (error) {
+      console.error(`Error updating participant statistic with ID ${statisticId}:`, error);
+      throw error;
+    }
   }
 
   /**
    * Delete participant statistic
    */
   async deleteParticipantStatistic(statisticId: number): Promise<void> {
-    return apiClient.delete(`/participant-stats/${statisticId}`);
+    try {
+      await apiClient.delete(`/participant-stats/${statisticId}`);
+    } catch (error) {
+      console.error(`Error deleting participant statistic with ID ${statisticId}:`, error);
+      throw error;
+    }
   }
 
   // ----------------------------------------------------
@@ -139,63 +215,230 @@ class StatisticsService {
    * Get championship overview
    */
   async getChampionshipOverview(championshipId: number): Promise<ChampionshipOverview> {
-    return apiClient.get(`/championship-stats/overview/${championshipId}`);
+    try {
+      return await apiClient.get(`/championship-stats/${championshipId}/overview`);
+    } catch (error) {
+      console.warn(`Error fetching overview for championship ${championshipId}:`, error);
+      return {
+        championship_id: championshipId,
+        name: 'Campeonato não encontrado',
+        status: 'unknown',
+        teams_count: 0,
+        matches_count: 0,
+        start_date: new Date().toISOString(),
+        end_date: new Date().toISOString()
+      };
+    }
   }
 
   /**
    * Get team statistics for a championship
    */
   async getChampionshipTeamStatistics(championshipId: number): Promise<any[]> {
-    return apiClient.get(`/championship-stats/overview/${championshipId}/teams`);
+    try {
+      return await apiClient.get(`/championship-stats/${championshipId}/teams`);
+    } catch (error) {
+      console.warn(`Error fetching team statistics for championship ${championshipId}:`, error);
+      return [];
+    }
   }
 
   /**
    * Get player statistics for a championship
    */
   async getChampionshipPlayerStatistics(championshipId: number): Promise<any[]> {
-    return apiClient.get(`/championship-stats/overview/${championshipId}/players`);
+    try {
+      return await apiClient.get(`/championship-stats/${championshipId}/players`);
+    } catch (error) {
+      console.warn(`Error fetching player statistics for championship ${championshipId}:`, error);
+      return [];
+    }
   }
 
   /**
-   * Get player's championship statistics
+   * Get top players by championship
    */
-  async getPlayerChampionshipStatistics(playerId: number): Promise<any> {
-    return apiClient.get(`/championship-stats/player/${playerId}`);
+  async getTopPlayersByChampionship(championshipId: number): Promise<ParticipantStatistic[]> {
+    try {
+      return await apiClient.get(`/championship-stats/${championshipId}/top-players`);
+    } catch (error) {
+      console.warn(`Error fetching top players for championship ${championshipId}:`, error);
+      return [];
+    }
+  }
+
+  async getTopPlayersByKDA(championshipId: number): Promise<PlayerSummaryStatistic[]> {
+    try {
+      const response = await apiClient.get<PlayerSummaryStatistic[]>(`/championship-stats/${championshipId}/top-players`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching top players for championship ${championshipId}:`, error);
+      return [];
+    }
+  }
+
+  // Mutations
+  async createParticipantStatistic(data: ParticipantStatisticInput): Promise<ParticipantStatistic> {
+    try {
+      return await apiClient.post('/participant-stats', data);
+    } catch (error) {
+      console.error('Error creating participant statistic:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update participant statistic
+   */
+  async updateParticipantStatistic(statisticId: number, data: Partial<ParticipantStatisticInput>): Promise<ParticipantStatistic> {
+    try {
+      return await apiClient.put(`/participant-stats/${statisticId}`, data);
+    } catch (error) {
+      console.error(`Error updating participant statistic with ID ${statisticId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete participant statistic
+   */
+  async deleteParticipantStatistic(statisticId: number): Promise<void> {
+    try {
+      await apiClient.delete(`/participant-stats/${statisticId}`);
+    } catch (error) {
+      console.error(`Error deleting participant statistic with ID ${statisticId}:`, error);
+      throw error;
+    }
+  }
+
+  // ----------------------------------------------------
+  // Championship Statistics Endpoints
+  // ----------------------------------------------------
+
+  /**
+   * Get championship overview
+   */
+  async getChampionshipOverview(championshipId: number): Promise<ChampionshipOverview> {
+    try {
+      return await apiClient.get(`/championship-stats/${championshipId}/overview`);
+    } catch (error) {
+      console.warn(`Error fetching overview for championship ${championshipId}:`, error);
+      return {
+        championship_id: championshipId,
+        name: 'Campeonato não encontrado',
+        status: 'unknown',
+        teams_count: 0,
+        matches_count: 0,
+        start_date: new Date().toISOString(),
+        end_date: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Get team statistics for a championship
+   */
+  async getChampionshipTeamStatistics(championshipId: number): Promise<any[]> {
+    try {
+      return await apiClient.get(`/championship-stats/${championshipId}/teams`);
+    } catch (error) {
+      console.warn(`Error fetching team statistics for championship ${championshipId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Get player statistics for a championship
+   */
+  async getChampionshipPlayerStatistics(championshipId: number): Promise<any[]> {
+    try {
+      return await apiClient.get(`/championship-stats/${championshipId}/players`);
+    } catch (error) {
+      console.warn(`Error fetching player statistics for championship ${championshipId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Get top players by championship
+   */
+  async getTopPlayersByChampionship(championshipId: number): Promise<ParticipantStatistic[]> {
+    try {
+      return await apiClient.get(`/championship-stats/${championshipId}/top-players`);
+    } catch (error) {
+      console.warn(`Error fetching top players for championship ${championshipId}:`, error);
+      return [];
+    }
+  }
+
+  async getTopPlayersByKDA(championshipId: number): Promise<PlayerSummaryStatistic[]> {
+    try {
+      const response = await apiClient.get<PlayerSummaryStatistic[]>(`/championship-stats/${championshipId}/top-players`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching top players for championship ${championshipId}:`, error);
+      return [];
+    }
   }
 
   /**
    * Create championship statistic
    */
   async createChampionshipStatistic(data: ChampionshipStatistic): Promise<ChampionshipStatistic> {
-    return apiClient.post('/championship-stats', data);
+    try {
+      return await apiClient.post('/championship-stats', data);
+    } catch (error) {
+      console.error('Error creating championship statistic:', error);
+      throw error;
+    }
   }
 
   /**
    * Get all championship statistics
    */
   async getAllChampionshipStatistics(): Promise<ChampionshipStatistic[]> {
-    return apiClient.get('/championship-stats');
+    try {
+      return await apiClient.get('/championship-stats');
+    } catch (error) {
+      console.warn('Error fetching all championship statistics:', error);
+      return [];
+    }
   }
 
   /**
    * Get championship statistic by ID
    */
-  async getChampionshipStatisticById(statisticId: number): Promise<ChampionshipStatistic> {
-    return apiClient.get(`/championship-stats/${statisticId}`);
+  async getChampionshipStatisticById(statisticId: number): Promise<ChampionshipStatistic | null> {
+    try {
+      return await apiClient.get(`/championship-stats/${statisticId}`);
+    } catch (error) {
+      console.warn(`Error fetching championship statistic with ID ${statisticId}:`, error);
+      return null;
+    }
   }
 
   /**
    * Update championship statistic
    */
   async updateChampionshipStatistic(statisticId: number, data: Partial<ChampionshipStatistic>): Promise<ChampionshipStatistic> {
-    return apiClient.put(`/championship-stats/${statisticId}`, data);
+    try {
+      return await apiClient.put(`/championship-stats/${statisticId}`, data);
+    } catch (error) {
+      console.error(`Error updating championship statistic with ID ${statisticId}:`, error);
+      throw error;
+    }
   }
 
   /**
    * Delete championship statistic
    */
   async deleteChampionshipStatistic(statisticId: number): Promise<void> {
-    return apiClient.delete(`/championship-stats/${statisticId}`);
+    try {
+      await apiClient.delete(`/championship-stats/${statisticId}`);
+    } catch (error) {
+      console.error(`Error deleting championship statistic with ID ${statisticId}:`, error);
+      throw error;
+    }
   }
 }
 

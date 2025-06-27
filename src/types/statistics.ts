@@ -86,16 +86,18 @@ export interface MapStatistic {
 }
 
 export interface ChampionshipOverview {
-  championship_id: number;
+  championship_id?: number;
   name: string;
-  start_date: string;
-  end_date: string;
+  start_date?: string;
+  end_date?: string;
   status: string;
-  total_teams: number;
-  total_matches: number;
-  total_participants: number;
-  highest_kills: number;
-  highest_kda: number;
+  total_teams?: number;
+  teams_count?: number; // Some endpoints might use this instead of total_teams
+  total_matches?: number;
+  matches_count?: number; // Some endpoints might use this instead of total_matches
+  total_participants?: number;
+  highest_kills?: number;
+  highest_kda?: number;
 }
 
 export interface ParticipantStatisticInput {
