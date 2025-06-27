@@ -14,6 +14,7 @@ import {
   useTeamParticipantStatistics
 } from '@/hooks/useStatistics';
 import { AgentStatistic, MapStatistic, TeamSummaryStatistic, ParticipantStatistic } from '@/types/statistics';
+import { useGetAllParticipants, TeamParticipant } from '@/services/teamService';
 
 // Fallback data to use when API calls fail
 const fallbackTeamData: TeamSummaryStatistic = {
@@ -45,14 +46,22 @@ interface ChampionshipHistoryEntry {
 const TeamStatistics = () => {
   const params = useParams();
   const teamId = parseInt(params?.id as string) || 1;
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'players' | 'championships' | 'performance'>('overview');
-  
+  const [selectedTab, setSelectedTab] = useState<'overview' | 'players'>('overview');
+  // Remove 'championships' and 'performance' tabs from the navigation
+  const tabs = [
+    { key: 'overview', label: 'Visão Geral' },
+    { key: 'players', label: 'Jogadores' }
+  ];  
   // Fetch team data from API
-  const { data: team = fallbackTeamData, isLoading: isLoadingTeamSummary } = useTeamStatistics(teamId);
+  const { data: teamData, isLoading: isLoadingTeamSummary } = useTeamStatistics(teamId);
   const { data: teamParticipantStats = [], isLoading: isLoadingParticipantStats } = useTeamParticipantStatistics(teamId);
   const { data: teamAgentStats = [], isLoading: isLoadingAgentStats } = useTeamAgentStatistics(teamId);
   const { data: teamMapStats = [], isLoading: isLoadingMapStats } = useTeamMapStatistics(teamId);
   const { data: championshipHistory = [], isLoading: isLoadingChampHistory } = useTeamChampionshipHistory(teamId);
+  const { data: teamParticipants = [], isLoading: isLoadingParticipants } = useGetAllParticipants();
+  
+  // Use fallback data if the API call fails or returns null
+  const team: TeamSummaryStatistic = (teamData && teamData.team_id > 0) ? teamData : fallbackTeamData;
   
   // Use fallback data if the API calls fail
   const mapStatsData = Array.isArray(teamMapStats) && teamMapStats.length > 0 ? teamMapStats : fallbackMapStats;
@@ -65,7 +74,7 @@ const TeamStatistics = () => {
     totalAssists: Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.assists || 0), 0) : 0,
     totalSpikePlants: Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.spike_plants || 0), 0) : 0,
     totalSpikeDefuses: Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.spike_defuses || 0), 0) : 0,
-    totalMVPs: Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.MVPs || 0), 0) : 0,
+    totalMVPs: Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.MVP || 0), 0) : 0,
     avgSpikePlants: Array.isArray(teamParticipantStats) && teamParticipantStats.length > 0 
       ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.spike_plants || 0), 0) / teamParticipantStats.length 
       : 0,
@@ -85,19 +94,14 @@ const TeamStatistics = () => {
         ((prev?.win_rate || 0) < (current?.win_rate || 0)) ? prev : current, mapStatsData[0])
     : null;
   
-  // Group participants by their statistics for the team (with error handling)
-  const teamPlayers = Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => {
-    if (!stat || !stat.participant_id) return acc;
-    
-    if (!acc[stat.participant_id]) {
-      acc[stat.participant_id] = {
-        participant_id: stat.participant_id,
-        stats: []
-      };
-    }
-    acc[stat.participant_id].stats.push(stat);
-    return acc;
-  }, {} as Record<number, { participant_id: number, stats: ParticipantStatistic[] }>) : {};
+  // Filter participants for this team - use participant stats to find team members
+  const teamPlayers = teamParticipants.filter((participant: TeamParticipant) => {
+    // Check if this participant has stats for the current team
+    return Array.isArray(teamParticipantStats) && 
+           teamParticipantStats.some((stat: ParticipantStatistic) => 
+             stat.participant_id === participant.participant_id && stat.team_id === team.team_id
+           );
+  });
 
   // Calculate team KDA
   const teamKda = team && team.total_deaths > 0 
@@ -106,7 +110,32 @@ const TeamStatistics = () => {
 
   const isLoading = isLoadingTeamSummary || isLoadingParticipantStats || isLoadingAgentStats || isLoadingMapStats || isLoadingChampHistory;
 
-  if (isLoading || !team) {
+  // Check if the team exists or if we have an error state
+  if (!isLoading && (!team || !team.team_id || team.team_name === "Equipe não encontrada")) {
+    return (
+      <DashboardLayout
+        title="ESTATÍSTICAS"
+        subtitle="EQUIPE NÃO ENCONTRADA"
+        breadcrumbs={[
+          { label: "DASHBOARD", href: "/dashboard" },
+          { label: "ESTATÍSTICAS", href: "/dashboard/estatisticas" },
+          { label: "EQUIPE NÃO ENCONTRADA" }
+        ]}
+      >
+        <div className="p-8 space-y-8">
+          <Card className="dashboard-card border-gray-700 p-6">
+            <div className="text-center space-y-4">
+              <Users className="w-16 h-16 text-gray-500 mx-auto" />
+              <h2 className="text-2xl font-bold text-white">Equipe não encontrada</h2>
+              <p className="text-gray-400">A equipe com ID {teamId} não foi encontrada no sistema.</p>
+            </div>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (isLoading) {
     return (
       <DashboardLayout
         title="ESTATÍSTICAS"
@@ -145,7 +174,7 @@ const TeamStatistics = () => {
             </div>
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-white">{team.team_name}</h1>
-              <p className="text-lg text-blue-400">{Object.keys(teamPlayers).length} jogadores registrados</p>
+              <p className="text-lg text-blue-400">{teamPlayers.length} jogadores registrados</p>
             </div>
             <div className="text-right space-y-2">
               <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
@@ -153,9 +182,6 @@ const TeamStatistics = () => {
                   championshipHistory.filter((c: ChampionshipHistoryEntry) => c.placement === 1).length : 
                   0} Títulos
               </Badge>
-              <p className="dashboard-text-muted text-sm">
-                {team.win_rate}% Taxa de Vitória
-              </p>
             </div>
           </div>
         </Card>
@@ -165,8 +191,6 @@ const TeamStatistics = () => {
           {[
             { key: 'overview', label: 'Visão Geral' },
             { key: 'players', label: 'Jogadores' },
-            { key: 'championships', label: 'Campeonatos' },
-            { key: 'performance', label: 'Performance' }
           ].map((tab) => (
             <button
               key={tab.key}
@@ -301,194 +325,69 @@ const TeamStatistics = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {Object.values(teamPlayers).map((player) => {
-                  const playerStats = player.stats;
-                  const kills = playerStats.reduce((acc, stat) => acc + stat.kills, 0);
-                  const deaths = playerStats.reduce((acc, stat) => acc + stat.deaths, 0);
-                  const assists = playerStats.reduce((acc, stat) => acc + stat.assists, 0);
-                  const mvps = playerStats.reduce((acc, stat) => acc + (stat.MVPs || 0), 0);
-                  const kda = deaths > 0 ? ((kills + assists) / deaths).toFixed(2) : 'Perfect';
-                  
-                  return (
-                    <Card key={player.participant_id} className="dashboard-card border-gray-700 p-6">
-                      <div className="flex items-center space-x-4 mb-4">
-                        <div className="p-3 bg-blue-500/20 rounded-lg">
-                          <User className="w-6 h-6 text-blue-500" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-white">ID do Participante: {player.participant_id}</h3>
-                          <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                            Jogador
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="dashboard-text-muted text-sm">KDA</span>
-                          <span className="text-white font-medium">{kda}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="dashboard-text-muted text-sm">Kills/Deaths/Assists</span>
-                          <span className="text-white font-medium">{kills}/{deaths}/{assists}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="dashboard-text-muted text-sm">MVPs</span>
-                          <span className="text-yellow-400 font-medium">{mvps}</span>
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Championships Tab */}
-        {selectedTab === 'championships' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Card className="dashboard-card border-gray-700 p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-blue-500/20 rounded-lg">
-                    <Trophy className="w-6 h-6 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="dashboard-text-muted text-sm">Participações</p>
-                    <p className="text-2xl font-bold text-white">{championshipHistory.length || 0}</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="dashboard-card border-gray-700 p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-yellow-500/20 rounded-lg">
-                    <Crown className="w-6 h-6 text-yellow-500" />
-                  </div>
-                  <div>
-                    <p className="dashboard-text-muted text-sm">Títulos</p>
-                    <p className="text-2xl font-bold text-white">
-                      {championshipHistory.length > 0 ? 
-                        championshipHistory.filter((c: ChampionshipHistoryEntry) => c.placement === 1).length : 
-                        0}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="dashboard-card border-gray-700 p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-green-500/20 rounded-lg">
-                    <TrendingUp className="w-6 h-6 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="dashboard-text-muted text-sm">Taxa de Sucesso</p>
-                    <p className="text-2xl font-bold text-white">
-                      {championshipHistory.length > 0 ? 
-                        Math.round((championshipHistory.filter((c: ChampionshipHistoryEntry) => c.placement === 1).length / championshipHistory.length) * 100) :
-                        0}%
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <h2 className="text-2xl font-bold text-white">Histórico de Campeonatos</h2>
-            {isLoadingChampHistory ? (
-              <div className="grid grid-cols-1 gap-6">
-                {[...Array(3)].map((_, i) => (
-                  <Card key={i} className="dashboard-card border-gray-700 p-6 animate-pulse">
-                    <div className="h-16 bg-gray-700 rounded w-full"></div>
+                {teamPlayers.length === 0 ? (
+                  <Card className="dashboard-card border-gray-700 p-6 col-span-full">
+                    <p className="text-center text-gray-400">Nenhum jogador encontrado para esta equipe.</p>
                   </Card>
-                ))}
-              </div>
-            ) : championshipHistory.length === 0 ? (
-              <Card className="dashboard-card border-gray-700 p-6">
-                <p className="text-center text-gray-400">Nenhum campeonato registrado para esta equipe.</p>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 gap-6">
-                {championshipHistory.map((championship: ChampionshipHistoryEntry, index: number) => (
-                  <Card key={index} className="dashboard-card border-gray-700 p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold text-white">{championship.championship_name}</h3>
-                        <p className="dashboard-text-muted text-sm">{championship.matches_played} partidas jogadas</p>
-                      </div>
-                      <div className="text-right space-y-2">
-                        <Badge className={`${
-                          championship.status === 'Finalizado' 
-                            ? 'bg-gray-500/20 text-gray-400 border-gray-500/30'
-                            : 'bg-green-500/20 text-green-400 border-green-500/30'
-                        }`}>
-                          {championship.status}
-                        </Badge>
-                        <p className="text-white font-medium">#{championship.placement}º Lugar</p>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Performance Tab */}
-        {selectedTab === 'performance' && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white">Análise de Performance</h2>
-            {isLoadingAgentStats || isLoadingMapStats ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="dashboard-card border-gray-700 p-6 animate-pulse">
-                  <div className="h-8 bg-gray-700 rounded w-40 mb-6"></div>
-                  <div className="space-y-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-6 bg-gray-700 rounded w-full"></div>
-                    ))}
-                  </div>
-                </Card>
-                <Card className="dashboard-card border-gray-700 p-6 animate-pulse">
-                  <div className="h-8 bg-gray-700 rounded w-40 mb-6"></div>
-                  <div className="space-y-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-6 bg-gray-700 rounded w-full"></div>
-                    ))}
-                  </div>
-                </Card>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="dashboard-card border-gray-700 p-6">
-                  <h3 className="text-xl font-bold text-white mb-6">Performance por Mapa</h3>
-                  <div className="space-y-4">
-                    {mapStatsData.length === 0 && (
-                      <p className="text-center text-gray-400">Nenhuma estatística de mapa disponível.</p>
-                    )}
-                    {mapStatsData.map((mapStat, index) => (
-                      <div key={index} className="flex justify-between">
-                        <span className="dashboard-text-muted">{mapStat.map_name}</span>
-                        <span className={mapStat.win_rate > 50 ? "text-green-400 font-medium" : "text-red-400 font-medium"}>
-                          {mapStat.win_rate}% ({mapStat.wins}W - {mapStat.losses}L)
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-
-                <Card className="dashboard-card border-gray-700 p-6">
-                  <h3 className="text-xl font-bold text-white mb-6">Performance por Agente</h3>
-                  <div className="space-y-4">
-                    {agentStatsData.length === 0 && (
-                      <p className="text-center text-gray-400">Nenhuma estatística de agente disponível.</p>
-                    )}
-                    {agentStatsData.map((agentStat, index) => (
-                      <div key={index} className="flex justify-between">
-                        <span className="dashboard-text-muted">{agentStat.agent_name || `Agent ${agentStat.agent_id}`}</span>
-                        <span className="text-white font-medium">
-                          KDA: {agentStat.kda_ratio.toFixed(2)} ({agentStat.win_rate}% Win Rate)
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
+                ) : (
+                  teamPlayers.map((player: TeamParticipant) => {
+                    // Find statistics for this participant
+                    const playerStats = Array.isArray(teamParticipantStats) 
+                      ? teamParticipantStats.filter((stat: ParticipantStatistic) => stat.participant_id === player.participant_id)
+                      : [];
+                    
+                    const kills = playerStats.reduce((acc: number, stat: ParticipantStatistic) => acc + (stat.kills || 0), 0);
+                    const deaths = playerStats.reduce((acc: number, stat: ParticipantStatistic) => acc + (stat.deaths || 0), 0);
+                    const assists = playerStats.reduce((acc: number, stat: ParticipantStatistic) => acc + (stat.assists || 0), 0);
+                    const mvps = playerStats.reduce((acc: number, stat: ParticipantStatistic) => acc + (stat.MVP || 0), 0);
+                    const kda = deaths > 0 ? ((kills + assists) / deaths).toFixed(2) : 'Perfect';
+                    
+                    return (
+                      <Card key={player.participant_id} className="dashboard-card border-gray-700 p-6">
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="p-3 bg-blue-500/20 rounded-lg">
+                            <User className="w-6 h-6 text-blue-500" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-white">{player.nickname}</h3>
+                            <p className="dashboard-text-muted text-sm">{player.name}</p>
+                            <Badge className={player.is_coach 
+                              ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
+                              : "bg-green-500/20 text-green-400 border-green-500/30"
+                            }>
+                              {player.is_coach ? 'Técnico' : 'Jogador'}
+                            </Badge>
+                          </div>
+                        </div>
+                        {!player.is_coach && (
+                          <div className="space-y-3">
+                            <div className="flex justify-between">
+                              <span className="dashboard-text-muted text-sm">KDA</span>
+                              <span className="text-white font-medium">{kda}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="dashboard-text-muted text-sm">Kills/Deaths/Assists</span>
+                              <span className="text-white font-medium">{kills}/{deaths}/{assists}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="dashboard-text-muted text-sm">MVPs</span>
+                              <span className="text-yellow-400 font-medium">{mvps}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="dashboard-text-muted text-sm">Partidas</span>
+                              <span className="text-white font-medium">{playerStats.length}</span>
+                            </div>
+                          </div>
+                        )}
+                        {player.is_coach && (
+                          <div className="text-center text-gray-400 text-sm">
+                            Responsável técnico da equipe
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })
+                )}
               </div>
             )}
           </div>

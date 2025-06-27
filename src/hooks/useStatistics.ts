@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { statisticsService } from '@/services';
+import { statisticsService } from '@/services/statisticsService';
 import { 
   PlayerSummaryStatistic,
   TeamSummaryStatistic,
@@ -72,64 +72,47 @@ export const useAllTeamsSummary = () => {
 };
 
 export const useTeamStatistics = (teamId: number) => {
-  return useQuery<TeamSummaryStatistic>({
-    queryKey: STATS_QUERY_KEYS.TEAM(teamId),
+  return useQuery<TeamSummaryStatistic | null>({
+    queryKey: ['team-statistics', teamId],
     queryFn: () => statisticsService.getTeamStatistics(teamId),
-    enabled: !!teamId,
-    retry: false, // Don't retry on failure, service returns fallback
+    enabled: teamId > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
 export const useTeamAgentStatistics = (teamId: number) => {
   return useQuery<AgentStatistic[]>({
-    queryKey: STATS_QUERY_KEYS.TEAM_AGENTS(teamId),
-    queryFn: async () => {
-      try {
-        return await statisticsService.getTeamAgentStatistics(teamId);
-      } catch (error) {
-        console.warn(`Error fetching agent statistics for team ${teamId}:`, error);
-        return []; // Return empty array on error
-      }
-    },
-    enabled: !!teamId
+    queryKey: ['team-agent-statistics', teamId],
+    queryFn: () => statisticsService.getTeamAgentStatistics(teamId),
+    enabled: teamId > 0,
+    staleTime: 5 * 60 * 1000,
   });
 };
 
 export const useTeamParticipantStatistics = (teamId: number) => {
   return useQuery<ParticipantStatistic[]>({
-    queryKey: STATS_QUERY_KEYS.TEAM_PARTICIPANTS(teamId),
+    queryKey: ['team-participant-statistics', teamId],
     queryFn: () => statisticsService.getTeamParticipantStatistics(teamId),
-    enabled: !!teamId,
+    enabled: teamId > 0,
+    staleTime: 5 * 60 * 1000,
   });
 };
 
 export const useTeamMapStatistics = (teamId: number) => {
   return useQuery<MapStatistic[]>({
-    queryKey: STATS_QUERY_KEYS.TEAM_MAPS(teamId),
-    queryFn: async () => {
-      try {
-        return await statisticsService.getTeamMapStatistics(teamId);
-      } catch (error) {
-        console.warn(`Error fetching map statistics for team ${teamId}:`, error);
-        return []; // Return empty array on error
-      }
-    },
-    enabled: !!teamId
+    queryKey: ['team-map-statistics', teamId],
+    queryFn: () => statisticsService.getTeamMapStatistics(teamId),
+    enabled: teamId > 0,
+    staleTime: 5 * 60 * 1000,
   });
 };
 
 export const useTeamChampionshipHistory = (teamId: number) => {
-  return useQuery({
-    queryKey: STATS_QUERY_KEYS.TEAM_CHAMPIONSHIPS(teamId),
-    queryFn: async () => {
-      try {
-        return await statisticsService.getTeamChampionshipHistory(teamId);
-      } catch (error) {
-        console.warn(`Error fetching championship history for team ${teamId}:`, error);
-        return []; // Return empty array on error
-      }
-    },
-    enabled: !!teamId
+  return useQuery<any[]>({
+    queryKey: ['team-championship-history', teamId],
+    queryFn: () => statisticsService.getTeamChampionshipHistory(teamId),
+    enabled: teamId > 0,
+    staleTime: 5 * 60 * 1000,
   });
 };
 

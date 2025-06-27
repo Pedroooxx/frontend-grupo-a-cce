@@ -5,7 +5,6 @@ import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { AddTeamModal } from "@/components/modals/AddTeamModal";
 import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
 import { Button } from "@/components/ui/button";
-import { searchTeams } from "@/data/search-functions";
 import { useModal } from "@/hooks/useModal";
 import { SearchResult } from "@/hooks/useSearch";
 import { TeamDisplay, TeamFormValues } from "@/types/teams";
@@ -62,8 +61,9 @@ const GerenciarEquipes = () => {
     }
     
     return teamsData.map((team: Team) => {
-      const coach = team.Participants.find((p: TeamParticipant) => p.is_coach);
-      const members = team.Participants
+      const participants = team.Participants || [];
+      const coach = participants.find((p: TeamParticipant) => p.is_coach);
+      const members = participants
         .filter((p: TeamParticipant) => !p.is_coach)
         .map((p: TeamParticipant) => ({
           nickname: p.nickname,
@@ -83,7 +83,7 @@ const GerenciarEquipes = () => {
   // Extract all participants from teams and filter available coaches and players
   const allParticipants = useMemo(() => {
     return teamsData.flatMap((team: Team) => 
-      team.Participants.map((participant: TeamParticipant) => ({
+      (team.Participants || []).map((participant: TeamParticipant) => ({
         ...participant,
         team_id: team.team_id,
         team_name: team.name,
@@ -180,9 +180,41 @@ const GerenciarEquipes = () => {
   };
 
   const handleSearchResultClick = (result: SearchResult) => {
-    if (result.type === "team") {
-      router.push(`/dashboard/equipes/${result.id}`);
+    if (result.type === "match") {
+      router.push(`/campeonatos/${result.metadata?.championshipId}/partidas/${result.id}`);
+    } else if (result.type === "team") {
+      // Redirect to the statistics page instead of the teams page
+      router.push(`/dashboard/estatisticas/equipe/${result.id}`);
     }
+  };
+
+  const searchTeams = (query: string, types: string[]): SearchResult[] => {
+    if (!types.includes("team") || !query.trim()) {
+      return [];
+    }
+
+    const searchQuery = query.toLowerCase();
+    return teams
+      .filter(team =>
+        team.name.toLowerCase().includes(searchQuery) ||
+        team.coach.toLowerCase().includes(searchQuery) ||
+        team.members.some(member =>
+          member.name.toLowerCase().includes(searchQuery) ||
+          member.nickname.toLowerCase().includes(searchQuery)
+        )
+      )
+      .map(team => ({
+        id: typeof team.id === 'string' ? parseInt(team.id) : team.id,
+        name: team.name,
+        type: "team" as const,
+        subtitle: `${team.coach} • ${team.members.length} jogadores`,
+        metadata: {
+          coach: team.coach,
+          memberCount: team.members.length,
+          championship: team.championship,
+        },
+      }))
+      .slice(0, 6);
   };
 
   // Convert TeamParticipant to PublicParticipant format for TeamForm compatibility

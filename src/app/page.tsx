@@ -61,15 +61,19 @@ const searchWithRealData = (
   if (types.includes("team")) {
     const teamResults = teamsData
       .filter(team =>
-        team.name.toLowerCase().includes(searchQuery)
+        team.name.toLowerCase().includes(searchQuery) ||
+        team.Participants?.some((participant: TeamParticipant) =>
+          participant.name.toLowerCase().includes(searchQuery) ||
+          participant.nickname.toLowerCase().includes(searchQuery)
+        )
       )
       .map(team => ({
         id: team.team_id,
         name: team.name,
         type: "team",
-        subtitle: `${team.participants_count || 0} jogadores`,
+        subtitle: `${team.Participants?.length || 0} jogadores`,
         metadata: {
-          participantsCount: team.participants_count || 0,
+          participantsCount: team.Participants?.length || 0,
         },
       }));
     results.push(...teamResults);
@@ -226,14 +230,8 @@ export default function HomePage() {
         path = `/campeonatos/${result.id}`;
         break; 
       case 'team':
-        const teamMatch = matchesData.find((match: Match) =>
-          match.teamA_id === result.id || match.teamB_id === result.id
-        );
-        if (teamMatch) {
-          path = `/campeonatos/${teamMatch.championship_id}/equipes/${result.id}`;
-        } else {
-          path = `/campeonatos/1/equipes/${result.id}`;
-        }
+        // Navigate to team detail page in dashboard
+        path = `/dashboard/equipes/${result.id}`;
         break;
       case 'player':
         // Navigate to player's team page

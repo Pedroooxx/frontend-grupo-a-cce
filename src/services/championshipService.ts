@@ -13,14 +13,16 @@ const transformChampionshipData = (apiData: ChampionshipApiResponse): Championsh
   return {
     ...apiData,
     // Normalize format to our standard format
-    format: apiData.format === "simple" ? "single-elimination" : 
-            apiData.format === "double" ? "double-elimination" :
+    format: (apiData.format as string) === "simple" ? "single-elimination" : 
+            (apiData.format as string) === "double" ? "double-elimination" :
             apiData.format as "single-elimination" | "double-elimination",
     // Normalize status to capitalized Portuguese
     status: typeof apiData.status === "string" && apiData.status.toLowerCase() === "ativo" ? "Ativo" :
             typeof apiData.status === "string" && apiData.status.toLowerCase() === "planejado" ? "Planejado" :
             typeof apiData.status === "string" && apiData.status.toLowerCase() === "finalizado" ? "Finalizado" :
             apiData.status as "Ativo" | "Planejado" | "Finalizado",
+    // Ensure prize is always a string
+    prize: apiData.prize === null ? "" : String(apiData.prize),
   };
 };
 

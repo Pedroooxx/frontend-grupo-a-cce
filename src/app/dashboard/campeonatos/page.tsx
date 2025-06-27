@@ -116,7 +116,7 @@ const Campeonatos = () => {
       teams_count: c.teams_count ?? getTeamCountForChampionship(c.championship_id),
       matches_count: c.matches_count ?? getMatchCountForChampionship(c.championship_id),
     }));
-  }, [championshipsData, subscriptionsData, matchesData]);
+  }, [championshipsData, subscriptionsData, matchesData, getTeamCountForChampionship, getMatchCountForChampionship]);
 
   // Error notifications
   useEffect(() => {
@@ -170,13 +170,13 @@ const Campeonatos = () => {
     // Transform data to match backend API format
     const transformedData = {
       ...data,
-      // Ensure prize is properly formatted (null, number, or string)
+      // Ensure prize is properly formatted as string (required by Championship interface)
       prize: data.prize === null || data.prize === undefined || data.prize === "" 
-        ? null 
-        : data.prize,
+        ? "" 
+        : String(data.prize),
       // Status should remain as-is (Ativo, Planejado, Finalizado)
       status: data.status,
-      // Format should remain as-is (single-elimination, double-elimination)
+      // Format should remain as-is (simple, double)
       format: data.format
     };
     
@@ -203,16 +203,6 @@ const Campeonatos = () => {
       'Ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
       'Finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
       'Planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
-      // Legacy mappings for backwards compatibility
-      'em andamento': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
-      'ongoing': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
-      'finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
-      'completed': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
-      'próximo': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
-      'upcoming': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
-      'planned': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
-      'planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
-      'ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
     };
     
     const config = statusConfig[status] || statusConfig[status.toLowerCase()] || 
@@ -268,19 +258,16 @@ const Campeonatos = () => {
     console.log('Result clicked:', result);
     
     if (result.type === 'championship') {
-      // In dashboard, navigate to championship details in dashboard context
-      router.push(`/dashboard/campeonatos/${result.id}`);
+      // Redirect to statistics page for the championship
+      router.push(`/dashboard/estatisticas/campeonato/${result.id}`);
     } else if (result.type === 'team') {
-      // Handle team navigation in dashboard context
       router.push(`/dashboard/equipes/${result.id}`);
     } else if (result.type === 'player') {
-      // Handle player navigation in dashboard context
       const playerTeamId = result.metadata?.teamId;
       if (playerTeamId) {
         router.push(`/dashboard/equipes/${playerTeamId}`);
       }
     } else if (result.type === 'match') {
-      // Handle match navigation in dashboard context
       const championshipId = result.metadata?.championshipId;
       if (championshipId) {
         router.push(`/dashboard/campeonatos/${championshipId}/partidas/${result.id}`);
@@ -454,7 +441,7 @@ const Campeonatos = () => {
                     {championship.prize && (
                       <div className="flex items-center text-yellow-500 text-sm">
                         <Crown className="w-4 h-4 mr-2" />
-                        <span>{typeof championship.prize === 'string' ? championship.prize : `R$ ${championship.prize.toLocaleString('pt-BR')}`}</span>
+                        <span>{championship.prize}</span>
                       </div>
                     )}
                     <div className="flex items-center justify-between text-slate-300 text-sm">
@@ -476,7 +463,7 @@ const Campeonatos = () => {
                       variant="outline"
                       size="sm"
                       className="flex-1 border-slate-600 text-slate-300 hover:text-white flex items-center justify-center"
-                      onClick={() => router.push(`/dashboard/campeonatos/${championship.championship_id}`)}
+                      onClick={() => router.push(`/dashboard/estatisticas/campeonato/${championship.championship_id}`)}
                     >
                       Ver Detalhes
                       <ArrowRight className="w-4 h-4 ml-2" />
