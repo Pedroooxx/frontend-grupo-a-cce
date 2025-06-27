@@ -5,21 +5,7 @@ import { createReactQueryService } from './reactQueryService';
 import { apiClient, ApiError } from '@/lib/apiClient';
 import { useQuery } from '@tanstack/react-query';
 import { Match } from '@/types/match';
-
-export interface Championship {
-  championship_id: number;
-  name: string;
-  description: string;
-  format: string;
-  start_date: string;
-  end_date: string;
-  location: string;
-  status: string;
-  prize: string;
-  user_id: number;
-  teams_count: number;
-  matches_count: number;
-}
+import type { Championship } from '@/types/championship';
 
 export const championshipService = createReactQueryService<Championship>({
   entityName: 'Campeonato',

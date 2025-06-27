@@ -7,8 +7,9 @@ export interface Championship {
   end_date: string;
   location: string;
   status: "Ativo" | "Planejado" | "Finalizado";
-  prize: number | string;
+  prize: string;
   user_id?: number;
+  teams_count?: number;
   matches_count: number;
 }
 

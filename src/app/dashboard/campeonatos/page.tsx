@@ -108,44 +108,15 @@ const Campeonatos = () => {
     return matchesData.filter(match => match.championship_id === championshipId).length;
   };
 
-  // Map API data to internal type
+  // Map API data to internal type - no transformation needed since service handles it
   const campeonatos = useMemo(() => {
-    return championshipsData.map((c) => {
-      // Map status from API to internal format
-      const mapStatus = (apiStatus: string): 'Ativo' | 'Planejado' | 'Finalizado' => {
-        switch (apiStatus) {
-          case 'ongoing':
-          case 'Ativo':
-            return 'Ativo';
-          case 'upcoming':
-          case 'planned':
-          case 'Planejado':
-            return 'Planejado';
-          case 'completed':
-          case 'Finalizado':
-            return 'Finalizado';
-          default:
-            return 'Planejado';
-        }
-      };
-
-      return {
-        championship_id: c.championship_id,
-        name: c.name,
-        description: c.description,
-        format: (c.format === 'single_elimination' ? 'simple' : 'double') as 'simple' | 'double',
-        start_date: c.start_date,
-        end_date: c.end_date,
-        location: c.location,
-        status: mapStatus(c.status),
-        prize: typeof c.prize === 'string' ? Number(c.prize) : c.prize,
-        user_id: c.user_id,
-        // Use calculated counts instead of relying on API values
-        teams_count: getTeamCountForChampionship(c.championship_id),
-        matches_count: getMatchCountForChampionship(c.championship_id),
-      };
-    });
-  }, [championshipsData, subscriptionsData, matchesData]);
+    return championshipsData.map((c) => ({
+      ...c,
+      // Use calculated counts instead of relying on API values if needed
+      teams_count: c.teams_count ?? getTeamCountForChampionship(c.championship_id),
+      matches_count: c.matches_count ?? getMatchCountForChampionship(c.championship_id),
+    }));
+  }, [championshipsData, subscriptionsData, matchesData, getTeamCountForChampionship, getMatchCountForChampionship]);
 
   // Error notifications
   useEffect(() => {
@@ -196,13 +167,28 @@ const Campeonatos = () => {
 
   // Handle saving championship (create/edit)
   const handleSaveChampionship = useCallback(async (data: ChampionshipFormValues) => {
-    const payload = { ...data, prize: String(data.prize) };
+    // Transform data to match backend API format
+    const transformedData = {
+      ...data,
+      // Ensure prize is properly formatted as string (required by Championship interface)
+      prize: data.prize === null || data.prize === undefined || data.prize === "" 
+        ? "" 
+        : String(data.prize),
+      // Status should remain as-is (Ativo, Planejado, Finalizado)
+      status: data.status,
+      // Format should remain as-is (simple, double)
+      format: data.format
+    };
+    
+    // Debug: Log the payload being sent to the API
+    console.log('Championship payload being sent:', transformedData);
+    
     try {
       if (editingChampionship) {
-        await updateChampionship.mutateAsync({ id: editingChampionship.championship_id, data: payload });
+        await updateChampionship.mutateAsync({ id: editingChampionship.championship_id, data: transformedData });
         toast.success("Campeonato atualizado com sucesso!");
       } else {
-        await createChampionship.mutateAsync(payload);
+        await createChampionship.mutateAsync(transformedData);
         toast.success("Campeonato criado com sucesso!");
       }
       closeModal();
@@ -213,19 +199,10 @@ const Campeonatos = () => {
   }, [editingChampionship, createChampionship, updateChampionship, closeModal]);
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
+    const statusConfig: Record<string, { label: string; color: string }> = {
       'Ativo': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
       'Finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
       'Planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
-      // Legacy mappings for backwards compatibility
-      'em andamento': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
-      'ongoing': { label: 'Ativo', color: 'bg-green-500/20 text-green-400' },
-      'finalizado': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
-      'completed': { label: 'Finalizado', color: 'bg-blue-500/20 text-blue-400' },
-      'próximo': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
-      'upcoming': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
-      'planned': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
-      'planejado': { label: 'Planejado', color: 'bg-yellow-500/20 text-yellow-400' },
     };
     
     const config = statusConfig[status] || statusConfig[status.toLowerCase()] || 
@@ -281,19 +258,16 @@ const Campeonatos = () => {
     console.log('Result clicked:', result);
     
     if (result.type === 'championship') {
-      // In dashboard, navigate to championship details in dashboard context
-      router.push(`/dashboard/campeonatos/${result.id}`);
+      // Redirect to statistics page for the championship
+      router.push(`/dashboard/estatisticas/campeonato/${result.id}`);
     } else if (result.type === 'team') {
-      // Handle team navigation in dashboard context
       router.push(`/dashboard/equipes/${result.id}`);
     } else if (result.type === 'player') {
-      // Handle player navigation in dashboard context
       const playerTeamId = result.metadata?.teamId;
       if (playerTeamId) {
         router.push(`/dashboard/equipes/${playerTeamId}`);
       }
     } else if (result.type === 'match') {
-      // Handle match navigation in dashboard context
       const championshipId = result.metadata?.championshipId;
       if (championshipId) {
         router.push(`/dashboard/campeonatos/${championshipId}/partidas/${result.id}`);
@@ -467,7 +441,7 @@ const Campeonatos = () => {
                     {championship.prize && (
                       <div className="flex items-center text-yellow-500 text-sm">
                         <Crown className="w-4 h-4 mr-2" />
-                        <span>{typeof championship.prize === 'string' ? championship.prize : `R$ ${championship.prize.toLocaleString('pt-BR')}`}</span>
+                        <span>{championship.prize}</span>
                       </div>
                     )}
                     <div className="flex items-center justify-between text-slate-300 text-sm">
@@ -489,7 +463,7 @@ const Campeonatos = () => {
                       variant="outline"
                       size="sm"
                       className="flex-1 border-slate-600 text-slate-300 hover:text-white flex items-center justify-center"
-                      onClick={() => router.push(`/dashboard/campeonatos/${championship.championship_id}`)}
+                      onClick={() => router.push(`/dashboard/estatisticas/campeonato/${championship.championship_id}`)}
                     >
                       Ver Detalhes
                       <ArrowRight className="w-4 h-4 ml-2" />
