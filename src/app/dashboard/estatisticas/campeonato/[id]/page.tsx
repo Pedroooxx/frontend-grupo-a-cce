@@ -390,10 +390,6 @@ const ChampionshipStatistics = () => {
                     <span className="dashboard-text-muted">KDA Médio</span>
                     <span className="text-green-400 font-medium">{kdaRatio}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="dashboard-text-muted">Maior Kill</span>
-                    <span className="text-white font-medium">{mergedChampionshipData.highest_kills}</span>
-                  </div>
                 </div>
               </Card>
 
