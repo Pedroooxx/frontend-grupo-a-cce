@@ -21,6 +21,8 @@ import {
 import { useGetChampionshipById } from '@/services/championshipService';
 import { useGetMatchById } from '@/services/matchService';
 import { useGetTeamById } from '@/services/teamService';
+import { useGetMatchStatistics } from '@/services/statisticsService';
+import { useGetAllAgents } from '@/services/agentService';
 import PublicLayout from '@/components/layout/PublicLayout';
 
 interface PageProps {
@@ -33,8 +35,8 @@ interface PageProps {
 /**
  * Match Public Page Component
  * 
- * Displays detailed match information including teams, participants, and placeholder statistics.
- * Since match statistics are not available in the API, all stats are displayed as 0.
+ * Displays detailed match information including teams, participants, and statistics.
+ * Fetches real match statistics from the API including kills, deaths, assists, and MVPs.
  * Team participants are fetched from the teams API and displayed with their nicknames.
  * 
  * @param {PageProps} props - Component props containing championship ID and match ID
@@ -70,8 +72,19 @@ export default function MatchPublicPage({ params }: PageProps) {
     data: teamB,
     isLoading: isLoadingTeamB,
   } = useGetTeamById(match?.TeamB?.team_id || 0, !!match?.TeamB?.team_id);
+
+  // Fetch match statistics
+  const {
+    data: matchStatistics = [],
+    isLoading: isLoadingStats,
+    isError: isStatsError
+  } = useGetMatchStatistics(matchId, !!match);
+
+  // Fetch all agents for agent name lookup
+  const { data: agents = [], isLoading: isLoadingAgents } = useGetAllAgents();
+
   // Loading state
-  if (isLoadingChampionship || isLoadingMatch || isLoadingTeamA || isLoadingTeamB) {
+  if (isLoadingChampionship || isLoadingMatch || isLoadingTeamA || isLoadingTeamB || isLoadingStats || isLoadingAgents) {
     return (
       <PublicLayout title="Carregando...">
         <div className="container mx-auto px-4 py-8">
@@ -125,26 +138,38 @@ export default function MatchPublicPage({ params }: PageProps) {
   // Get participants for each team (excluding coaches for stats display)
   const teamAParticipants = teamA?.Participants?.filter(p => !p.is_coach) || [];
   const teamBParticipants = teamB?.Participants?.filter(p => !p.is_coach) || [];
-  // Since stats don't exist in API, create placeholder stats with 0 values
-  const createPlayerStats = (participants: any[]) => {
+
+  // Create player stats from API data or fallback to placeholder
+  const createPlayerStats = (participants: any[], teamId: number) => {
     if (!participants || participants.length === 0) {
       return [];
     }
-    return participants.map((participant) => ({
-      participant_id: participant.participant_id,
-      participant_name: participant.name,
-      participant_nickname: participant.nickname,
-      agent_name: 'N/A', // No agent data available
-      kills: 0,
-      deaths: 0,
-      assists: 0,
-      total_score: 0,
-      mvp: false // No one is MVP with 0 stats
-    }));
+    
+    return participants.map((participant) => {
+      // Find statistics for this participant in the match
+      const participantStats = matchStatistics.find(stat => 
+        stat.participant_id === participant.participant_id
+      );
+      
+      // Fetch agent name based on agent_id
+      const agent = agents.find((a: { agent_id: number }) => a.agent_id === participantStats?.agent_id);
+      
+      return {
+        participant_id: participant.participant_id,
+        participant_name: participant.name,
+        participant_nickname: participant.nickname,
+        agent_name: agent?.name || 'N/A',
+        kills: participantStats?.kills || 0,
+        deaths: participantStats?.deaths || 0,
+        assists: participantStats?.assists || 0,
+        total_score: participantStats?.total_score || 0,
+        mvp: participantStats?.MVP || false,
+      };
+    });
   };
 
-  const teamAStats = createPlayerStats(teamAParticipants);
-  const teamBStats = createPlayerStats(teamBParticipants);
+  const teamAStats = createPlayerStats(teamAParticipants, match?.TeamA?.team_id || 0);
+  const teamBStats = createPlayerStats(teamBParticipants, match?.TeamB?.team_id || 0);
 
   const getKDA = (kills: number, deaths: number, assists: number) => {
     return deaths === 0 ? kills + assists : ((kills + assists) / deaths).toFixed(2);
@@ -389,10 +414,16 @@ export default function MatchPublicPage({ params }: PageProps) {
                             </td>
                           </tr>
                         ))
+                      ) : isStatsError ? (
+                        <tr>
+                          <td colSpan={8} className="px-4 py-8 text-center text-red-400">
+                            Erro ao carregar estatísticas dos jogadores
+                          </td>
+                        </tr>
                       ) : (
                         <tr>
                           <td colSpan={8} className="px-4 py-8 text-center text-slate-400">
-                            Nenhum jogador encontrado para esta equipe
+                            {isLoadingStats ? 'Carregando estatísticas...' : 'Nenhuma estatística encontrada para esta equipe'}
                           </td>
                         </tr>
                       )}
@@ -445,10 +476,16 @@ export default function MatchPublicPage({ params }: PageProps) {
                             </td>
                           </tr>
                         ))
+                      ) : isStatsError ? (
+                        <tr>
+                          <td colSpan={8} className="px-4 py-8 text-center text-red-400">
+                            Erro ao carregar estatísticas dos jogadores
+                          </td>
+                        </tr>
                       ) : (
                         <tr>
                           <td colSpan={8} className="px-4 py-8 text-center text-slate-400">
-                            Nenhum jogador encontrado para esta equipe
+                            {isLoadingStats ? 'Carregando estatísticas...' : 'Nenhuma estatística encontrada para esta equipe'}
                           </td>
                         </tr>
                       )}

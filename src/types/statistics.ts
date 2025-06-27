@@ -2,16 +2,17 @@ export interface ParticipantStatistic {
   statistic_id: number;
   participant_id: number;
   match_id: number;
+  team_id: number;
   agent_id: number;
   kills: number;
   assists: number;
   deaths: number;
   spike_plants?: number;
   spike_defuses?: number;
-  MVPs?: number;
-  first_kills?: number;
-  created_at?: string;
-  updated_at?: string;
+  MVP?: number;
+  kda: number;
+  average_combat_score: number;
+  total_score: number;
 }
 
 export interface PlayerSummaryStatistic {
