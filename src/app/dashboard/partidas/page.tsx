@@ -15,7 +15,7 @@ import {
   Match 
 } from "@/services/matchService";
 import { useGetAllTeams, Team } from "@/services/teamService";
-import { useGetAllChampionships, Championship } from "@/services/championshipService";
+import { useGetAllChampionships } from "@/services/championshipService";
 import { AddMatchModal } from "@/components/modals/AddMatchModal";
 import { MatchFormValues } from "@/types/match";
 import { Championship as SubscriptionChampionship } from "@/types/subscription";
