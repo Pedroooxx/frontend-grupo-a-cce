@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,16 +12,55 @@ import {
   useChampionshipPlayerStatistics,
   useTopPlayersByChampionship
 } from '@/hooks/useStatistics';
+import { useGetAllSubscriptions } from '@/services/subscriptionService';
+import { useGetChampionshipMatches } from '@/services/matchService';
 
 const ChampionshipStatistics = () => {
   const params = useParams();
   const championshipId = parseInt(params.id as string) || 1;
   
-  const { data: championshipOverview, isLoading: isLoadingOverview } = useChampionshipOverview(championshipId);
+  // Fetch championship statistics
+  const { data: championshipOverview = {
+    name: 'Campeonato não encontrado',
+    status: 'unknown',
+    teams_count: 0,
+    matches_count: 0,
+    championship_id: championshipId
+  }, isLoading: isLoadingOverview } = useChampionshipOverview(championshipId);
+  
   const { data: teamStats = [], isLoading: isLoadingTeamStats } = useChampionshipTeamStatistics(championshipId);
-  const { data: playerStats = [], isLoading: isLoadingPlayerStats } = useChampionshipPlayerStatistics(championshipId);
+  const { data: playerStats = Array.isArray([]) ? [] : [], isLoading: isLoadingPlayerStats } = useChampionshipPlayerStatistics(championshipId);
   const { data: topPlayers = [], isLoading: isLoadingTopPlayers } = useTopPlayersByChampionship(championshipId);
   
+  // Get subscriptions to calculate team counts
+  const { data: subscriptionsData = [], isLoading: isLoadingSubscriptions } = useGetAllSubscriptions();
+  
+  // Get championship matches
+  const { data: matchesData = [], isLoading: isLoadingMatches } = useGetChampionshipMatches(championshipId);
+  
+  // Calculate team count for this championship
+  const teamCount = useMemo(() => {
+    if (!subscriptionsData || !subscriptionsData.length) {
+      // If championship overview has teams_count, use it
+      if (championshipOverview && championshipOverview.teams_count !== undefined) {
+        return championshipOverview.teams_count;
+      }
+      return 0;
+    }
+    
+    // Filter subscriptions by championship_id to get unique teams
+    const championshipSubscriptions = subscriptionsData.filter(
+      subscription => subscription.championship_id === championshipId
+    );
+    // Get unique team IDs for this championship
+    const uniqueTeamIds = new Set(championshipSubscriptions.map(sub => sub.team_id));
+    return uniqueTeamIds.size;
+  }, [subscriptionsData, championshipId, championshipOverview]);
+  
+  const matchCount = useMemo(() => {
+    return matchesData.length;
+  }, [matchesData]);
+
   const [selectedTab, setSelectedTab] = useState<'overview' | 'teams' | 'players' | 'matches' | 'stats'>('overview');
 
   const getStatusColor = (status: string) => {
@@ -44,7 +83,7 @@ const ChampionshipStatistics = () => {
     }
   };
 
-  if (isLoadingOverview || !championshipOverview) {
+  if (isLoadingOverview) {
     return (
       <DashboardLayout
         title="ESTATÍSTICAS"
@@ -64,23 +103,34 @@ const ChampionshipStatistics = () => {
     );
   }
 
-  // Calculate additional stats from the player statistics
-  const totalKills = playerStats.reduce((acc: number, player: any) => acc + player.total_kills, 0);
-  const totalDeaths = playerStats.reduce((acc: number, player: any) => acc + player.total_deaths, 0);
+  // Calculate additional stats from the player statistics - safely handle empty arrays or non-arrays
+  const totalKills = Array.isArray(playerStats) 
+    ? playerStats.reduce((acc: number, player: any) => acc + (player?.total_kills || 0), 0) 
+    : 0;
+    
+  const totalDeaths = Array.isArray(playerStats)
+    ? playerStats.reduce((acc: number, player: any) => acc + (player?.total_deaths || 0), 0) 
+    : 0;
+    
   const kdaRatio = totalDeaths > 0 ? (totalKills / totalDeaths).toFixed(2) : '0';
   
-  // Sort teams and players for rankings
-  const sortedTeams = [...teamStats].sort((a: any, b: any) => b.points - a.points);
-  const sortedPlayers = [...playerStats].sort((a: any, b: any) => b.kda_ratio - a.kda_ratio);
+  // Sort teams and players for rankings - safely handle empty arrays or non-arrays
+  const sortedTeams = Array.isArray(teamStats) && teamStats.length > 0
+    ? [...teamStats].sort((a: any, b: any) => (b?.points || 0) - (a?.points || 0)) 
+    : [];
+    
+  const sortedPlayers = Array.isArray(playerStats) && playerStats.length > 0
+    ? [...playerStats].sort((a: any, b: any) => (b?.kda_ratio || 0) - (a?.kda_ratio || 0)) 
+    : [];
 
   return (
     <DashboardLayout
       title="ESTATÍSTICAS"
-      subtitle={`CAMPEONATO - ${championshipOverview.name.toUpperCase()}`}
+      subtitle={`CAMPEONATO - ${championshipOverview?.name?.toUpperCase() || 'SEM NOME'}`}
       breadcrumbs={[
         { label: "DASHBOARD", href: "/dashboard" },
         { label: "ESTATÍSTICAS", href: "/dashboard/estatisticas" },
-        { label: championshipOverview.name.toUpperCase() }
+        { label: championshipOverview?.name?.toUpperCase() || 'SEM NOME' }
       ]}
     >
       <div className="p-8 space-y-8">
@@ -96,8 +146,8 @@ const ChampionshipStatistics = () => {
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-300">
-                    {new Date(championshipOverview.start_date).toLocaleDateString('pt-BR')} - 
-                    {new Date(championshipOverview.end_date).toLocaleDateString('pt-BR')}
+                    {championshipOverview?.start_date ? new Date(championshipOverview.start_date).toLocaleDateString('pt-BR') : 'Data não definida'} - 
+                    {championshipOverview?.end_date ? new Date(championshipOverview.end_date).toLocaleDateString('pt-BR') : 'Data não definida'}
                   </span>
                 </div>
               </div>
@@ -197,11 +247,11 @@ const ChampionshipStatistics = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="dashboard-text-muted">Total de Times</span>
-                    <span className="text-white font-medium">{championshipOverview.total_teams}</span>
+                    <span className="text-white font-medium">{teamCount || championshipOverview.total_teams || 0}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="dashboard-text-muted">Total de Partidas</span>
-                    <span className="text-white font-medium">{championshipOverview.total_matches}</span>
+                    <span className="text-white font-medium">{matchCount || championshipOverview.total_matches || 0}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="dashboard-text-muted">KDA Médio do Torneio</span>

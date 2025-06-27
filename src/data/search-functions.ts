@@ -110,26 +110,35 @@ export const getTeamsByChampionshipId = (
   return publicTeams.filter((team) => teamIds.has(team.team_id));
 };
 
-// Busca específica para jogadores (baseada em publicParticipants)
+/**
+ * Busca específica para jogadores
+ * @param query - String de busca 
+ * @param types - Tipos de busca (deve incluir "player" para funcionar)
+ * @param playerData - Dados de jogadores para buscar, se não fornecidos usa publicParticipants
+ * @returns Array de resultados de busca
+ */
 export const searchPlayers = (
   query: string,
-  types: string[] = ["player"]
+  types: string[] = ["player"],
+  playerData: any[] = publicParticipants
 ): SearchResult[] => {
+  if (!query.trim() || !types.includes("player") || !Array.isArray(playerData)) return [];
+  
   const searchQuery = query.toLowerCase();
 
-  return publicParticipants
+  return playerData
     .filter(
       (participant) =>
-        participant.nickname.toLowerCase().includes(searchQuery) ||
-        participant.name.toLowerCase().includes(searchQuery) ||
-        participant.team_name.toLowerCase().includes(searchQuery) ||
-        participant.phone.includes(searchQuery)
+        (participant.nickname && participant.nickname.toLowerCase().includes(searchQuery)) ||
+        (participant.name && participant.name.toLowerCase().includes(searchQuery)) ||
+        (participant.team_name && participant.team_name.toLowerCase().includes(searchQuery)) ||
+        (participant.phone && String(participant.phone).includes(searchQuery))
     )
     .map((participant) => ({
       id: participant.participant_id,
-      name: participant.nickname,
+      name: participant.nickname || '',
       type: "player",
-      subtitle: `${participant.name} - ${participant.team_name}`,
+      subtitle: `${participant.name || ''} - ${participant.team_name || ''}`,
       metadata: {
         fullName: participant.name,
         teamName: participant.team_name,
@@ -141,30 +150,38 @@ export const searchPlayers = (
         kills: participant.total_kills,
         deaths: participant.total_deaths,
         assists: participant.total_assists,
+        teamId: participant.team_id,
       },
     }));
 };
 
-// Busca específica para equipes (baseada em publicTeams)
+/**
+ * Busca específica para equipes
+ * @param query - String de busca
+ * @param types - Tipos de busca (deve incluir "team" para funcionar)
+ * @param teamData - Dados de equipes para buscar, se não fornecidos usa publicTeams
+ * @returns Array de resultados de busca
+ */
 export const searchTeams = (
   query: string,
-  types: string[] = ["team"]
+  types: string[] = ["team"],
+  teamData: any[] = publicTeams
 ): SearchResult[] => {
-  if (!query.trim()) return [];
+  if (!query.trim() || !types.includes("team") || !Array.isArray(teamData)) return [];
 
   const searchQuery = query.toLowerCase();
 
-  return publicTeams
+  return teamData
     .filter(
       (team) =>
-        team.name.toLowerCase().includes(searchQuery) ||
-        team.manager_name.toLowerCase().includes(searchQuery)
+        (team.name && team.name.toLowerCase().includes(searchQuery)) ||
+        (team.manager_name && team.manager_name.toLowerCase().includes(searchQuery))
     )
     .map((team) => ({
       id: team.team_id,
-      name: team.name,
+      name: team.name || '',
       type: "team",
-      subtitle: `${team.participants_count} jogadores - Gerenciado por ${team.manager_name}`,
+      subtitle: `${team.participants_count || 0} jogadores${team.manager_name ? ` - Gerenciado por ${team.manager_name}` : ''}`,
       metadata: {
         managerName: team.manager_name,
         participantsCount: team.participants_count,
@@ -176,21 +193,28 @@ export const searchTeams = (
     }));
 };
 
-// Busca específica para campeonatos (baseada em publicChampionships)
+/**
+ * Busca específica para campeonatos
+ * @param query - String de busca
+ * @param types - Tipos de busca (deve incluir "championship" para funcionar)
+ * @param championshipData - Dados de campeonatos para buscar, se não fornecidos usa publicChampionships
+ * @returns Array de resultados de busca
+ */
 export const searchChampionships = (
   query: string,
-  types: string[] = ["championship"]
+  types: string[] = ["championship"],
+  championshipData: any[] = publicChampionships
 ): SearchResult[] => {
-  if (!query.trim()) return [];
+  if (!query.trim() || !types.includes("championship") || !Array.isArray(championshipData)) return [];
 
   const searchQuery = query.toLowerCase();
 
-  return publicChampionships
+  return championshipData
     .filter(
       (championship) =>
-        championship.name.toLowerCase().includes(searchQuery) ||
-        championship.description.toLowerCase().includes(searchQuery) ||
-        championship.location.toLowerCase().includes(searchQuery)
+        (championship.name && championship.name.toLowerCase().includes(searchQuery)) ||
+        (championship.description && championship.description.toLowerCase().includes(searchQuery)) ||
+        (championship.location && championship.location.toLowerCase().includes(searchQuery))
     )
     .map((championship) => ({
       id: championship.championship_id,
@@ -211,14 +235,25 @@ export const searchChampionships = (
     }));
 };
 
-// Busca geral (estatísticas) - jogadores, equipes e campeonatos
+/**
+ * Busca geral (estatísticas) - jogadores, equipes e campeonatos
+ * @param query - String de busca
+ * @param types - Tipos de busca a incluir
+ * @param playerData - Dados de jogadores (opcional)
+ * @param teamData - Dados de equipes (opcional)
+ * @param championshipData - Dados de campeonatos (opcional)
+ * @returns Array de resultados de busca combinados
+ */
 export const searchStatistics = (
   query: string,
-  types: string[] = ["player", "team", "championship"]
+  types: string[] = ["player", "team", "championship"],
+  playerData?: any[],
+  teamData?: any[],
+  championshipData?: any[]
 ): SearchResult[] => {
-  const playerResults = searchPlayers(query, types);
-  const teamResults = searchTeams(query, types);
-  const championshipResults = searchChampionships(query, types);
+  const playerResults = searchPlayers(query, types, playerData);
+  const teamResults = searchTeams(query, types, teamData);
+  const championshipResults = searchChampionships(query, types, championshipData);
 
   return [...playerResults, ...teamResults, ...championshipResults];
 };

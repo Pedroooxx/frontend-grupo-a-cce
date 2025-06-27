@@ -1,0 +1,588 @@
+'use client'
+
+import { useState } from 'react';
+import { useParams } from 'next/navigation';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { DashboardLayout } from '../../../_components/DashboardLayout';
+import { Users, Trophy, Target, TrendingUp, User, Crown, Shield } from 'lucide-react';
+import { 
+  useTeamStatistics, 
+  useAllTeamsSummary, 
+  useTeamAgentStatistics, 
+  useTeamMapStatistics, 
+  useTeamChampionshipHistory 
+} from '@/hooks/useStatistics';
+import { TeamSummaryStatistic } from '@/types/statistics';
+
+// Fallback data to use when API calls fail
+const fallbackTeamData: TeamSummaryStatistic = {
+  team_id: 0,
+  team_name: "Equipe não encontrada",
+  logo_url: "",
+  user_id: 0,
+  total_matches: 0,
+  matches_won: 0,
+  matches_lost: 0,
+  win_rate: 0,
+  total_kills: 0,
+  total_deaths: 0,
+  total_assists: 0,
+  participants_count: 0,
+  avg_match_score: 0,
+  wins: 0,
+  losses: 0,
+  kda_ratio: 0,
+  matches_played: 0
+};
+
+const fallbackMapStats = [
+  {
+    map_name: "Ascent",
+    matches_played: 0,
+    matches_won: 0,
+    win_rate: 0,
+    avg_score: 0,
+    image_path: "/maps/Ascent.png"
+  },
+  {
+    map_name: "Bind",
+    matches_played: 0,
+    matches_won: 0,
+    win_rate: 0,
+    avg_score: 0,
+    image_path: "/maps/Bind.png"
+  }
+];
+
+const fallbackAgentStats = [
+  {
+    agent_name: "Jett",
+    matches_played: 0,
+    win_rate: 0,
+    pick_rate: 0,
+    avg_kills: 0,
+    avg_deaths: 0,
+    avg_assists: 0
+  },
+  {
+    agent_name: "Omen",
+    matches_played: 0,
+    win_rate: 0,
+    pick_rate: 0,
+    avg_kills: 0,
+    avg_deaths: 0,
+    avg_assists: 0
+  }
+];
+
+const TeamStatistics = () => {
+  const params = useParams();
+  const teamId = parseInt(params?.id as string) || 1;
+  const [selectedTab, setSelectedTab] = useState<'overview' | 'players' | 'championships' | 'performance'>('overview');
+  
+  // Fetch team data from API
+  const { data: teamsSummary = [], isLoading: isLoadingTeamSummary } = useAllTeamsSummary();
+  const { data: teamStats = [], isLoading: isLoadingTeamStats } = useTeamStatistics(teamId);
+  const { data: teamAgentStats = [], isLoading: isLoadingAgentStats } = useTeamAgentStatistics(teamId);
+  const { data: teamMapStats = [], isLoading: isLoadingMapStats } = useTeamMapStatistics(teamId);
+  const { data: championshipHistory = [], isLoading: isLoadingChampHistory } = useTeamChampionshipHistory(teamId);
+  
+  // Find the team in the summary data or use fallback
+  const team = teamsSummary.find(t => t.team_id === teamId) || fallbackTeamData;
+  
+  // Use fallback data if the API calls fail
+  const mapStatsData = Array.isArray(teamMapStats) && teamMapStats.length > 0 ? teamMapStats : fallbackMapStats;
+  const agentStatsData = Array.isArray(teamAgentStats) && teamAgentStats.length > 0 ? teamAgentStats : fallbackAgentStats;
+  const championshipHistoryData = Array.isArray(championshipHistory) && championshipHistory.length > 0 ? championshipHistory : [];
+
+  // Calculate aggregated stats from teamStats safely
+  const aggregatedStats = {
+    totalKills: Array.isArray(teamStats) ? teamStats.reduce((acc: number, stat: any) => acc + (stat?.kills || 0), 0) : 0,
+    totalDeaths: Array.isArray(teamStats) ? teamStats.reduce((acc: number, stat: any) => acc + (stat?.deaths || 0), 0) : 0,
+    totalAssists: Array.isArray(teamStats) ? teamStats.reduce((acc: number, stat: any) => acc + (stat?.assists || 0), 0) : 0,
+    totalSpikePlants: Array.isArray(teamStats) ? teamStats.reduce((acc: number, stat: any) => acc + (stat?.spike_plants || 0), 0) : 0,
+    totalSpikeDefuses: Array.isArray(teamStats) ? teamStats.reduce((acc: number, stat: any) => acc + (stat?.spike_defuses || 0), 0) : 0,
+    totalMVPs: Array.isArray(teamStats) ? teamStats.reduce((acc: number, stat: any) => acc + (stat?.MVPs || 0), 0) : 0,
+    avgSpikePlants: Array.isArray(teamStats) && teamStats.length > 0 
+      ? teamStats.reduce((acc: number, stat: any) => acc + (stat?.spike_plants || 0), 0) / teamStats.length 
+      : 0,
+    avgSpikeDefuses: Array.isArray(teamStats) && teamStats.length > 0 
+      ? teamStats.reduce((acc: number, stat: any) => acc + (stat?.spike_defuses || 0), 0) / teamStats.length 
+      : 0,
+  };
+  
+  // Get best and worst maps safely
+  const bestMap = Array.isArray(mapStatsData) && mapStatsData.length > 0 
+    ? mapStatsData.reduce((prev, current) => 
+        ((prev?.win_rate || 0) > (current?.win_rate || 0)) ? prev : current, mapStatsData[0])
+    : null;
+    
+  const worstMap = Array.isArray(mapStatsData) && mapStatsData.length > 0
+    ? mapStatsData.reduce((prev, current) => 
+        ((prev?.win_rate || 0) < (current?.win_rate || 0)) ? prev : current, mapStatsData[0])
+    : null;
+  
+  // Group participants by their statistics for the team (with error handling)
+  const teamPlayers = Array.isArray(teamStats) ? teamStats.reduce((acc: Record<string, any>, stat: any) => {
+    if (!stat || !stat.participant_id) return acc;
+    
+    if (!acc[stat.participant_id]) {
+      acc[stat.participant_id] = {
+        participant_id: stat.participant_id,
+        stats: []
+      };
+    }
+    acc[stat.participant_id].stats.push(stat);
+    return acc;
+  }, {} as Record<string, any>) : {};
+
+  // Calculate team KDA
+  const teamKda = team?.total_deaths > 0 
+    ? ((team.total_kills + team.total_assists) / team.total_deaths).toFixed(2)
+    : "0";
+
+  const isLoading = isLoadingTeamSummary || isLoadingTeamStats || isLoadingAgentStats || isLoadingMapStats || isLoadingChampHistory;
+
+  if (isLoading) {
+    return (
+      <DashboardLayout
+        title="ESTATÍSTICAS"
+        subtitle="CARREGANDO..."
+        breadcrumbs={[
+          { label: "DASHBOARD", href: "/dashboard" },
+          { label: "ESTATÍSTICAS", href: "/dashboard/estatisticas" },
+          { label: "CARREGANDO..." }
+        ]}
+      >
+        <div className="p-8 space-y-8">
+          <Card className="dashboard-card border-gray-700 p-6 animate-pulse">
+            <div className="h-20 bg-gray-700 rounded w-full"></div>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout
+      title="ESTATÍSTICAS"
+      subtitle={`EQUIPE - ${team.team_name.toUpperCase()}`}
+      breadcrumbs={[
+        { label: "DASHBOARD", href: "/dashboard" },
+        { label: "ESTATÍSTICAS", href: "/dashboard/estatisticas" },
+        { label: team.team_name.toUpperCase() }
+      ]}
+    >
+      <div className="p-8 space-y-8">
+        {/* Team Overview */}
+        <Card className="dashboard-card border-gray-700 p-6">
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="md:w-1/4">
+              <div className="bg-slate-700 rounded-lg p-6 text-center">
+                {team.logo_url ? (
+                  <img src={team.logo_url} alt={team.team_name} className="w-32 h-32 rounded-full mx-auto" />
+                ) : (
+                  <Shield className="w-32 h-32 p-4 mx-auto text-white bg-slate-600 rounded-full" />
+                )}
+                <h2 className="text-2xl font-bold mt-4 text-white">{team.team_name}</h2>
+                <p className="text-slate-300 text-sm mt-2">{team.participants_count} membros</p>
+                <div className="mt-4 inline-flex gap-2">
+                  <Badge className="bg-green-500/20 text-green-400 border border-green-500/30">
+                    {team.win_rate || 0}% Taxa de vitórias
+                  </Badge>
+                </div>
+              </div>
+            </div>
+            
+            <div className="md:w-3/4">
+              <h3 className="text-xl font-bold text-white mb-4">Estatísticas Gerais</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-slate-700 p-4 rounded-lg text-center">
+                  <p className="text-slate-400 mb-1">Vitórias</p>
+                  <p className="text-2xl font-bold text-white">{team.matches_won || 0}</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg text-center">
+                  <p className="text-slate-400 mb-1">Derrotas</p>
+                  <p className="text-2xl font-bold text-white">{team.matches_lost || 0}</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg text-center">
+                  <p className="text-slate-400 mb-1">Taxa de vitória</p>
+                  <p className="text-2xl font-bold text-white">{team.win_rate || 0}%</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg text-center">
+                  <p className="text-slate-400 mb-1">KDA</p>
+                  <p className="text-2xl font-bold text-white">{teamKda}</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg text-center">
+                  <p className="text-slate-400 mb-1">Kills</p>
+                  <p className="text-2xl font-bold text-white">{team.total_kills || 0}</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg text-center">
+                  <p className="text-slate-400 mb-1">Deaths</p>
+                  <p className="text-2xl font-bold text-white">{team.total_deaths || 0}</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg text-center">
+                  <p className="text-slate-400 mb-1">Assists</p>
+                  <p className="text-2xl font-bold text-white">{team.total_assists || 0}</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg text-center">
+                  <p className="text-slate-400 mb-1">Pontuação média</p>
+                  <p className="text-2xl font-bold text-white">{Math.round(team.avg_match_score || 0)}</p>
+                </div>
+              </div>
+
+              {/* Additional stats */}
+              <h3 className="text-xl font-bold text-white mt-6 mb-4">Desempenho nos Mapas</h3>
+              {mapStatsData.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {mapStatsData.slice(0, 4).map((mapStat: any, index) => (
+                    <div key={index} className="bg-slate-700 p-4 rounded-lg flex items-center">
+                      <div className="w-16 h-16 mr-4 overflow-hidden rounded-md">
+                        <img 
+                          src={mapStat.image_path || `/maps/${mapStat.map_name}.png`} 
+                          alt={mapStat.map_name} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Fallback to default map image if specific one not found
+                            (e.target as HTMLImageElement).src = '/maps/Ascent.png';
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-white">{mapStat.map_name}</h4>
+                        <p className="text-sm text-slate-400">{mapStat.matches_played} partidas</p>
+                        <div className="flex items-center justify-between mt-1">
+                          <Badge className={`${mapStat.win_rate >= 50 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {mapStat.win_rate || 0}% WR
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-400">Nenhum dado de mapa disponível.</p>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Tab Navigation */}
+        <div className="flex border-b border-slate-700 mb-6">
+          <button
+            className={`px-4 py-2 ${selectedTab === 'overview' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400'}`}
+            onClick={() => setSelectedTab('overview')}
+          >
+            Visão Geral
+          </button>
+          <button
+            className={`px-4 py-2 ${selectedTab === 'players' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400'}`}
+            onClick={() => setSelectedTab('players')}
+          >
+            Jogadores
+          </button>
+          <button
+            className={`px-4 py-2 ${selectedTab === 'championships' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400'}`}
+            onClick={() => setSelectedTab('championships')}
+          >
+            Campeonatos
+          </button>
+          <button
+            className={`px-4 py-2 ${selectedTab === 'performance' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-slate-400'}`}
+            onClick={() => setSelectedTab('performance')}
+          >
+            Desempenho
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {selectedTab === 'overview' && (
+          <div>
+            {/* Overview tab content */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Best and Worst Maps */}
+              <Card className="dashboard-card border-gray-700 p-6">
+                <h3 className="text-xl font-bold text-white mb-4">Melhor Mapa</h3>
+                {bestMap ? (
+                  <div className="bg-slate-700 p-4 rounded-lg flex items-start">
+                    <div className="w-24 h-24 mr-4 overflow-hidden rounded-md">
+                      <img 
+                        src={bestMap.image_path || `/maps/${bestMap.map_name}.png`} 
+                        alt={bestMap.map_name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/maps/Ascent.png';
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white text-lg">{bestMap.map_name}</h4>
+                      <p className="text-green-400 font-bold">{bestMap.win_rate || 0}% Taxa de Vitória</p>
+                      <p className="text-sm text-slate-400">{bestMap.matches_played} partidas jogadas</p>
+                      <p className="text-sm text-slate-400">Pontuação média: {bestMap.avg_score || 0}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-slate-400">Dados do mapa não disponíveis</p>
+                )}
+              </Card>
+
+              <Card className="dashboard-card border-gray-700 p-6">
+                <h3 className="text-xl font-bold text-white mb-4">Piores Mapas</h3>
+                {worstMap ? (
+                  <div className="bg-slate-700 p-4 rounded-lg flex items-start">
+                    <div className="w-24 h-24 mr-4 overflow-hidden rounded-md">
+                      <img 
+                        src={worstMap.image_path || `/maps/${worstMap.map_name}.png`} 
+                        alt={worstMap.map_name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/maps/Ascent.png';
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white text-lg">{worstMap.map_name}</h4>
+                      <p className="text-red-400 font-bold">{worstMap.win_rate || 0}% Taxa de Vitória</p>
+                      <p className="text-sm text-slate-400">{worstMap.matches_played} partidas jogadas</p>
+                      <p className="text-sm text-slate-400">Pontuação média: {worstMap.avg_score || 0}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-slate-400">Dados do mapa não disponíveis</p>
+                )}
+              </Card>
+            </div>
+
+            {/* Recent Championships */}
+            <Card className="dashboard-card border-gray-700 p-6 mt-6">
+              <h3 className="text-xl font-bold text-white mb-4">Campeonatos Recentes</h3>
+              {championshipHistoryData.length > 0 ? (
+                <div className="space-y-3">
+                  {championshipHistoryData.map((champ: any, index: number) => (
+                    <div key={index} className="bg-slate-700 p-4 rounded-lg flex justify-between items-center">
+                      <div className="flex items-center">
+                        <Trophy className="text-yellow-500 mr-2" />
+                        <div>
+                          <h4 className="font-medium text-white">{champ.championship_name || `Campeonato #${champ.championship_id || index}`}</h4>
+                          <p className="text-xs text-slate-400">{champ.placement || 'Posição não informada'}</p>
+                        </div>
+                      </div>
+                      <Badge className={
+                        champ.placement === 1 ? 'bg-yellow-500/20 text-yellow-400' : 
+                        champ.placement === 2 ? 'bg-slate-400/20 text-slate-400' :
+                        champ.placement === 3 ? 'bg-amber-600/20 text-amber-500' :
+                        'bg-blue-500/20 text-blue-400'
+                      }>
+                        {champ.placement === 1 ? '1º Lugar' : 
+                         champ.placement === 2 ? '2º Lugar' : 
+                         champ.placement === 3 ? '3º Lugar' : 
+                         `${champ.placement}º Lugar` || 'Participante'}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-400">Sem participações em campeonatos registradas.</p>
+              )}
+            </Card>
+          </div>
+        )}
+
+        {selectedTab === 'players' && (
+          <div>
+            <h3 className="text-xl font-bold text-white mb-4">Jogadores da Equipe</h3>
+            {Object.keys(teamPlayers).length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Object.values(teamPlayers).map((player: any) => {
+                  const playerStats = player.stats;
+                  const kills = playerStats.reduce((acc: number, stat: any) => acc + (stat?.kills || 0), 0);
+                  const deaths = playerStats.reduce((acc: number, stat: any) => acc + (stat?.deaths || 0), 0);
+                  const assists = playerStats.reduce((acc: number, stat: any) => acc + (stat?.assists || 0), 0);
+                  const mvps = playerStats.reduce((acc: number, stat: any) => acc + (stat?.MVPs || 0), 0);
+                  const kda = deaths > 0 ? ((kills + assists) / deaths).toFixed(2) : "0.00";
+                  
+                  return (
+                    <Card key={player.participant_id} className="dashboard-card border-gray-700 p-6">
+                      <div className="flex items-start">
+                        <div className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-600 mr-4">
+                          <User className="text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">ID: {player.participant_id}</h3>
+                          <p className="text-sm text-slate-400">{playerStats[0]?.nickname || "Jogador"}</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                          <span className="text-slate-400">Kills</span>
+                          <span className="text-white font-medium">{kills}</span>
+                        </div>
+                        <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                          <span className="text-slate-400">Deaths</span>
+                          <span className="text-white font-medium">{deaths}</span>
+                        </div>
+                        <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                          <span className="text-slate-400">Assists</span>
+                          <span className="text-white font-medium">{assists}</span>
+                        </div>
+                        <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                          <span className="text-slate-400">KDA</span>
+                          <span className="text-white font-medium">{kda}</span>
+                        </div>
+                        <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                          <span className="text-slate-400">MVPs</span>
+                          <span className="text-white font-medium">{mvps}</span>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-slate-400">Não há jogadores registrados para esta equipe.</p>
+            )}
+          </div>
+        )}
+
+        {selectedTab === 'championships' && (
+          <div>
+            <h3 className="text-xl font-bold text-white mb-4">Histórico de Campeonatos</h3>
+            {championshipHistoryData.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {championshipHistoryData.map((champ: any, index: number) => (
+                  <Card key={index} className="dashboard-card border-gray-700 p-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-lg font-bold text-white">{champ.championship_name || `Campeonato #${champ.championship_id || index}`}</h4>
+                        <p className="text-sm text-slate-400">{new Date(champ.date || Date.now()).toLocaleDateString()}</p>
+                      </div>
+                      <Badge className={
+                        champ.placement === 1 ? 'bg-yellow-500/20 text-yellow-400' : 
+                        champ.placement === 2 ? 'bg-slate-400/20 text-slate-400' :
+                        champ.placement === 3 ? 'bg-amber-600/20 text-amber-500' :
+                        'bg-blue-500/20 text-blue-400'
+                      }>
+                        {champ.placement === 1 ? '1º Lugar' : 
+                        champ.placement === 2 ? '2º Lugar' : 
+                        champ.placement === 3 ? '3º Lugar' : 
+                        `${champ.placement}º Lugar` || 'Participante'}
+                      </Badge>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      <div className="bg-slate-700 p-3 rounded-md flex justify-between">
+                        <span className="text-slate-400">Vitórias</span>
+                        <span className="text-white font-medium">{champ.wins || 0}</span>
+                      </div>
+                      <div className="bg-slate-700 p-3 rounded-md flex justify-between">
+                        <span className="text-slate-400">Derrotas</span>
+                        <span className="text-white font-medium">{champ.losses || 0}</span>
+                      </div>
+                      <div className="bg-slate-700 p-3 rounded-md flex justify-between">
+                        <span className="text-slate-400">KDA</span>
+                        <span className="text-white font-medium">{champ.kda || "0.00"}</span>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-400">Sem participações em campeonatos registradas.</p>
+            )}
+          </div>
+        )}
+
+        {selectedTab === 'performance' && (
+          <div>
+            <h3 className="text-xl font-bold text-white mb-4">Desempenho por Agente</h3>
+            {agentStatsData.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {agentStatsData.map((agent: any, index: number) => (
+                  <Card key={index} className="dashboard-card border-gray-700 p-6">
+                    <h4 className="text-lg font-bold text-white">{agent.agent_name}</h4>
+                    <div className="mt-4 space-y-2">
+                      <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                        <span className="text-slate-400">Partidas</span>
+                        <span className="text-white font-medium">{agent.matches_played || 0}</span>
+                      </div>
+                      <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                        <span className="text-slate-400">Taxa de vitória</span>
+                        <span className="text-white font-medium">{agent.win_rate || 0}%</span>
+                      </div>
+                      <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                        <span className="text-slate-400">Taxa de escolha</span>
+                        <span className="text-white font-medium">{agent.pick_rate || 0}%</span>
+                      </div>
+                      <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                        <span className="text-slate-400">Kills (média)</span>
+                        <span className="text-white font-medium">{agent.avg_kills || 0}</span>
+                      </div>
+                      <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                        <span className="text-slate-400">Deaths (média)</span>
+                        <span className="text-white font-medium">{agent.avg_deaths || 0}</span>
+                      </div>
+                      <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                        <span className="text-slate-400">Assists (média)</span>
+                        <span className="text-white font-medium">{agent.avg_assists || 0}</span>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-400">Sem estatísticas de agentes disponíveis.</p>
+            )}
+            
+            <h3 className="text-xl font-bold text-white mt-8 mb-4">Desempenho por Mapa</h3>
+            {mapStatsData.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {mapStatsData.map((mapStat: any, index: number) => (
+                  <Card key={index} className="dashboard-card border-gray-700 p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="w-16 h-16 mr-4 overflow-hidden rounded-md">
+                        <img 
+                          src={mapStat.image_path || `/maps/${mapStat.map_name}.png`} 
+                          alt={mapStat.map_name} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/maps/Ascent.png';
+                          }}
+                        />
+                      </div>
+                      <h4 className="text-lg font-bold text-white">{mapStat.map_name}</h4>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                        <span className="text-slate-400">Partidas</span>
+                        <span className="text-white font-medium">{mapStat.matches_played || 0}</span>
+                      </div>
+                      <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                        <span className="text-slate-400">Vitórias</span>
+                        <span className="text-white font-medium">{mapStat.matches_won || 0}</span>
+                      </div>
+                      <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                        <span className="text-slate-400">Taxa de vitória</span>
+                        <span className={`font-medium ${mapStat.win_rate >= 50 ? 'text-green-400' : 'text-red-400'}`}>
+                          {mapStat.win_rate || 0}%
+                        </span>
+                      </div>
+                      <div className="bg-slate-700 p-2 rounded-md flex justify-between">
+                        <span className="text-slate-400">Pontuação média</span>
+                        <span className="text-white font-medium">{mapStat.avg_score || 0}</span>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-400">Sem estatísticas de mapas disponíveis.</p>
+            )}
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default TeamStatistics;

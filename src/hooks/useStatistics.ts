@@ -23,6 +23,7 @@ export const STATS_QUERY_KEYS = {
   PLAYER_MAPS: (id: number) => ['player-maps-stats', id],
   TEAM_AGENTS: (id: number) => ['team-agents-stats', id],
   TEAM_MAPS: (id: number) => ['team-maps-stats', id],
+  TEAM_PARTICIPANTS: (id: number) => ['team-participants-stats', id],
   TEAM_CHAMPIONSHIPS: (id: number) => ['team-championships-stats', id],
   TOP_PLAYERS: (championshipId: number) => ['top-players', championshipId],
   CHAMPIONSHIP_OVERVIEW: (id: number) => ['championship-overview', id],
@@ -71,25 +72,48 @@ export const useAllTeamsSummary = () => {
 };
 
 export const useTeamStatistics = (teamId: number) => {
-  return useQuery<ParticipantStatistic[]>({
+  return useQuery<TeamSummaryStatistic>({
     queryKey: STATS_QUERY_KEYS.TEAM(teamId),
     queryFn: () => statisticsService.getTeamStatistics(teamId),
-    enabled: !!teamId
+    enabled: !!teamId,
+    retry: false, // Don't retry on failure, service returns fallback
   });
 };
 
 export const useTeamAgentStatistics = (teamId: number) => {
   return useQuery<AgentStatistic[]>({
     queryKey: STATS_QUERY_KEYS.TEAM_AGENTS(teamId),
-    queryFn: () => statisticsService.getTeamAgentStatistics(teamId),
+    queryFn: async () => {
+      try {
+        return await statisticsService.getTeamAgentStatistics(teamId);
+      } catch (error) {
+        console.warn(`Error fetching agent statistics for team ${teamId}:`, error);
+        return []; // Return empty array on error
+      }
+    },
     enabled: !!teamId
+  });
+};
+
+export const useTeamParticipantStatistics = (teamId: number) => {
+  return useQuery<ParticipantStatistic[]>({
+    queryKey: STATS_QUERY_KEYS.TEAM_PARTICIPANTS(teamId),
+    queryFn: () => statisticsService.getTeamParticipantStatistics(teamId),
+    enabled: !!teamId,
   });
 };
 
 export const useTeamMapStatistics = (teamId: number) => {
   return useQuery<MapStatistic[]>({
     queryKey: STATS_QUERY_KEYS.TEAM_MAPS(teamId),
-    queryFn: () => statisticsService.getTeamMapStatistics(teamId),
+    queryFn: async () => {
+      try {
+        return await statisticsService.getTeamMapStatistics(teamId);
+      } catch (error) {
+        console.warn(`Error fetching map statistics for team ${teamId}:`, error);
+        return []; // Return empty array on error
+      }
+    },
     enabled: !!teamId
   });
 };
@@ -97,7 +121,14 @@ export const useTeamMapStatistics = (teamId: number) => {
 export const useTeamChampionshipHistory = (teamId: number) => {
   return useQuery({
     queryKey: STATS_QUERY_KEYS.TEAM_CHAMPIONSHIPS(teamId),
-    queryFn: () => statisticsService.getTeamChampionshipHistory(teamId),
+    queryFn: async () => {
+      try {
+        return await statisticsService.getTeamChampionshipHistory(teamId);
+      } catch (error) {
+        console.warn(`Error fetching championship history for team ${teamId}:`, error);
+        return []; // Return empty array on error
+      }
+    },
     enabled: !!teamId
   });
 };
@@ -112,11 +143,21 @@ export const useMatchStatistics = (matchId: number) => {
 };
 
 // Championship Statistics Hooks
+export const useTopPlayersByKDA = (championshipId: number) => {
+  return useQuery<PlayerSummaryStatistic[]>({
+    queryKey: STATS_QUERY_KEYS.TOP_PLAYERS(championshipId),
+    queryFn: () => statisticsService.getTopPlayersByKDA(championshipId),
+    enabled: !!championshipId
+  });
+};
+
 export const useChampionshipOverview = (championshipId: number) => {
   return useQuery<ChampionshipOverview>({
     queryKey: STATS_QUERY_KEYS.CHAMPIONSHIP_OVERVIEW(championshipId),
     queryFn: () => statisticsService.getChampionshipOverview(championshipId),
-    enabled: !!championshipId
+    enabled: !!championshipId,
+    retry: false,
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 };
 
@@ -124,7 +165,8 @@ export const useChampionshipTeamStatistics = (championshipId: number) => {
   return useQuery({
     queryKey: STATS_QUERY_KEYS.CHAMPIONSHIP_TEAMS(championshipId),
     queryFn: () => statisticsService.getChampionshipTeamStatistics(championshipId),
-    enabled: !!championshipId
+    enabled: !!championshipId,
+    retry: false
   });
 };
 
@@ -132,7 +174,8 @@ export const useChampionshipPlayerStatistics = (championshipId: number) => {
   return useQuery({
     queryKey: STATS_QUERY_KEYS.CHAMPIONSHIP_PLAYERS(championshipId),
     queryFn: () => statisticsService.getChampionshipPlayerStatistics(championshipId),
-    enabled: !!championshipId
+    enabled: !!championshipId,
+    retry: false
   });
 };
 
@@ -140,7 +183,9 @@ export const useTopPlayersByChampionship = (championshipId: number) => {
   return useQuery<ParticipantStatistic[]>({
     queryKey: STATS_QUERY_KEYS.TOP_PLAYERS(championshipId),
     queryFn: () => statisticsService.getTopPlayersByChampionship(championshipId),
-    enabled: !!championshipId
+    enabled: !!championshipId,
+    retry: false,
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 };
 

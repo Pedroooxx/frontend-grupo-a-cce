@@ -8,50 +8,87 @@ import { DashboardLayout } from '../../../_components/DashboardLayout';
 import { Users, Trophy, Target, TrendingUp, User, Crown, Shield } from 'lucide-react';
 import { 
   useTeamStatistics, 
-  useAllTeamsSummary, 
   useTeamAgentStatistics, 
   useTeamMapStatistics, 
-  useTeamChampionshipHistory 
+  useTeamChampionshipHistory,
+  useTeamParticipantStatistics
 } from '@/hooks/useStatistics';
+import { AgentStatistic, MapStatistic, TeamSummaryStatistic, ParticipantStatistic } from '@/types/statistics';
+
+// Fallback data to use when API calls fail
+const fallbackTeamData: TeamSummaryStatistic = {
+  team_id: 0,
+  team_name: "Equipe não encontrada",
+  total_kills: 0,
+  total_deaths: 0,
+  total_assists: 0,
+  total_matches: 0,
+  wins: 0,
+  losses: 0,
+  win_rate: 0,
+  mvp_count: 0,
+  avg_match_score: 0,
+};
+
+const fallbackMapStats: MapStatistic[] = [];
+const fallbackAgentStats: AgentStatistic[] = [];
+
+interface ChampionshipHistoryEntry {
+  championship_name: string;
+  start_date: string;
+  end_date: string;
+  placement: number;
+  status: string;
+  matches_played: number;
+}
 
 const TeamStatistics = () => {
   const params = useParams();
-  const teamId = parseInt(params.id as string) || 1;
+  const teamId = parseInt(params?.id as string) || 1;
   const [selectedTab, setSelectedTab] = useState<'overview' | 'players' | 'championships' | 'performance'>('overview');
   
   // Fetch team data from API
-  const { data: teamsSummary = [], isLoading: isLoadingTeamSummary } = useAllTeamsSummary();
-  const { data: teamStats = [], isLoading: isLoadingTeamStats } = useTeamStatistics(teamId);
+  const { data: team = fallbackTeamData, isLoading: isLoadingTeamSummary } = useTeamStatistics(teamId);
+  const { data: teamParticipantStats = [], isLoading: isLoadingParticipantStats } = useTeamParticipantStatistics(teamId);
   const { data: teamAgentStats = [], isLoading: isLoadingAgentStats } = useTeamAgentStatistics(teamId);
   const { data: teamMapStats = [], isLoading: isLoadingMapStats } = useTeamMapStatistics(teamId);
   const { data: championshipHistory = [], isLoading: isLoadingChampHistory } = useTeamChampionshipHistory(teamId);
   
-  // Find the team in the summary data
-  const team = teamsSummary.find(t => t.team_id === teamId);
+  // Use fallback data if the API calls fail
+  const mapStatsData = Array.isArray(teamMapStats) && teamMapStats.length > 0 ? teamMapStats : fallbackMapStats;
+  const agentStatsData = Array.isArray(teamAgentStats) && teamAgentStats.length > 0 ? teamAgentStats : fallbackAgentStats;
 
-  // Calculate aggregated stats from teamStats
+  // Calculate aggregated stats from teamParticipantStats safely
   const aggregatedStats = {
-    totalKills: teamStats.reduce((acc, stat) => acc + stat.kills, 0),
-    totalDeaths: teamStats.reduce((acc, stat) => acc + stat.deaths, 0),
-    totalAssists: teamStats.reduce((acc, stat) => acc + stat.assists, 0),
-    totalSpikePlants: teamStats.reduce((acc, stat) => acc + (stat.spike_plants || 0), 0),
-    totalSpikeDefuses: teamStats.reduce((acc, stat) => acc + (stat.spike_defuses || 0), 0),
-    totalMVPs: teamStats.reduce((acc, stat) => acc + (stat.MVPs || 0), 0),
-    avgSpikePlants: teamStats.length > 0 ? teamStats.reduce((acc, stat) => acc + (stat.spike_plants || 0), 0) / teamStats.length : 0,
-    avgSpikeDefuses: teamStats.length > 0 ? teamStats.reduce((acc, stat) => acc + (stat.spike_defuses || 0), 0) / teamStats.length : 0,
+    totalKills: Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.kills || 0), 0) : 0,
+    totalDeaths: Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.deaths || 0), 0) : 0,
+    totalAssists: Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.assists || 0), 0) : 0,
+    totalSpikePlants: Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.spike_plants || 0), 0) : 0,
+    totalSpikeDefuses: Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.spike_defuses || 0), 0) : 0,
+    totalMVPs: Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.MVPs || 0), 0) : 0,
+    avgSpikePlants: Array.isArray(teamParticipantStats) && teamParticipantStats.length > 0 
+      ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.spike_plants || 0), 0) / teamParticipantStats.length 
+      : 0,
+    avgSpikeDefuses: Array.isArray(teamParticipantStats) && teamParticipantStats.length > 0 
+      ? teamParticipantStats.reduce((acc, stat) => acc + (stat?.spike_defuses || 0), 0) / teamParticipantStats.length 
+      : 0,
   };
   
-  // Get best and worst maps
-  const bestMap = teamMapStats.length > 0 
-    ? teamMapStats.reduce((prev, current) => (prev.win_rate > current.win_rate) ? prev : current)
+  // Get best and worst maps safely
+  const bestMap = Array.isArray(mapStatsData) && mapStatsData.length > 0 
+    ? mapStatsData.reduce((prev, current) => 
+        ((prev?.win_rate || 0) > (current?.win_rate || 0)) ? prev : current, mapStatsData[0])
     : null;
     
-  const worstMap = teamMapStats.length > 0
-    ? teamMapStats.reduce((prev, current) => (prev.win_rate < current.win_rate) ? prev : current)
+  const worstMap = Array.isArray(mapStatsData) && mapStatsData.length > 0
+    ? mapStatsData.reduce((prev, current) => 
+        ((prev?.win_rate || 0) < (current?.win_rate || 0)) ? prev : current, mapStatsData[0])
     : null;
   
-  // Group participants by their statistics for the team
-  const teamPlayers = teamStats.reduce((acc, stat) => {
+  // Group participants by their statistics for the team (with error handling)
+  const teamPlayers = Array.isArray(teamParticipantStats) ? teamParticipantStats.reduce((acc, stat) => {
+    if (!stat || !stat.participant_id) return acc;
+    
     if (!acc[stat.participant_id]) {
       acc[stat.participant_id] = {
         participant_id: stat.participant_id,
@@ -60,16 +97,16 @@ const TeamStatistics = () => {
     }
     acc[stat.participant_id].stats.push(stat);
     return acc;
-  }, {} as Record<number, { participant_id: number, stats: typeof teamStats }>) || {};
+  }, {} as Record<number, { participant_id: number, stats: ParticipantStatistic[] }>) : {};
 
   // Calculate team KDA
   const teamKda = team && team.total_deaths > 0 
     ? ((team.total_kills + team.total_assists) / team.total_deaths).toFixed(2)
     : "0";
 
-  const isLoading = isLoadingTeamSummary || isLoadingTeamStats || isLoadingAgentStats || isLoadingMapStats;
+  const isLoading = isLoadingTeamSummary || isLoadingParticipantStats || isLoadingAgentStats || isLoadingMapStats || isLoadingChampHistory;
 
-  if (isLoadingTeamSummary || !team) {
+  if (isLoading || !team) {
     return (
       <DashboardLayout
         title="ESTATÍSTICAS"
@@ -113,7 +150,7 @@ const TeamStatistics = () => {
             <div className="text-right space-y-2">
               <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
                 {championshipHistory.length > 0 ? 
-                  championshipHistory.filter((c: any) => c.placement === 1).length : 
+                  championshipHistory.filter((c: ChampionshipHistoryEntry) => c.placement === 1).length : 
                   0} Títulos
               </Badge>
               <p className="dashboard-text-muted text-sm">
@@ -253,7 +290,7 @@ const TeamStatistics = () => {
         {selectedTab === 'players' && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-white">Elenco da Equipe</h2>
-            {isLoadingTeamStats ? (
+            {isLoadingParticipantStats ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[...Array(4)].map((_, i) => (
                   <Card key={i} className="dashboard-card border-gray-700 p-6 animate-pulse">
@@ -272,8 +309,6 @@ const TeamStatistics = () => {
                   const mvps = playerStats.reduce((acc, stat) => acc + (stat.MVPs || 0), 0);
                   const kda = deaths > 0 ? ((kills + assists) / deaths).toFixed(2) : 'Perfect';
                   
-                  // We need additional player data that isn't in teamStats
-                  // Would need to fetch from another endpoint to get complete data
                   return (
                     <Card key={player.participant_id} className="dashboard-card border-gray-700 p-6">
                       <div className="flex items-center space-x-4 mb-4">
@@ -281,7 +316,7 @@ const TeamStatistics = () => {
                           <User className="w-6 h-6 text-blue-500" />
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold text-white">ID: {player.participant_id}</h3>
+                          <h3 className="text-lg font-bold text-white">ID do Participante: {player.participant_id}</h3>
                           <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
                             Jogador
                           </Badge>
@@ -333,7 +368,7 @@ const TeamStatistics = () => {
                     <p className="dashboard-text-muted text-sm">Títulos</p>
                     <p className="text-2xl font-bold text-white">
                       {championshipHistory.length > 0 ? 
-                        championshipHistory.filter((c: any) => c.placement === 1).length : 
+                        championshipHistory.filter((c: ChampionshipHistoryEntry) => c.placement === 1).length : 
                         0}
                     </p>
                   </div>
@@ -348,7 +383,7 @@ const TeamStatistics = () => {
                     <p className="dashboard-text-muted text-sm">Taxa de Sucesso</p>
                     <p className="text-2xl font-bold text-white">
                       {championshipHistory.length > 0 ? 
-                        Math.round((championshipHistory.filter((c: any) => c.placement === 1).length / championshipHistory.length) * 100) :
+                        Math.round((championshipHistory.filter((c: ChampionshipHistoryEntry) => c.placement === 1).length / championshipHistory.length) * 100) :
                         0}%
                     </p>
                   </div>
@@ -371,7 +406,7 @@ const TeamStatistics = () => {
               </Card>
             ) : (
               <div className="grid grid-cols-1 gap-6">
-                {championshipHistory.map((championship: any, index: number) => (
+                {championshipHistory.map((championship: ChampionshipHistoryEntry, index: number) => (
                   <Card key={index} className="dashboard-card border-gray-700 p-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -400,7 +435,7 @@ const TeamStatistics = () => {
         {selectedTab === 'performance' && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-white">Análise de Performance</h2>
-            {isLoadingMapStats ? (
+            {isLoadingAgentStats || isLoadingMapStats ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card className="dashboard-card border-gray-700 p-6 animate-pulse">
                   <div className="h-8 bg-gray-700 rounded w-40 mb-6"></div>
@@ -424,7 +459,10 @@ const TeamStatistics = () => {
                 <Card className="dashboard-card border-gray-700 p-6">
                   <h3 className="text-xl font-bold text-white mb-6">Performance por Mapa</h3>
                   <div className="space-y-4">
-                    {teamMapStats.map((mapStat, index) => (
+                    {mapStatsData.length === 0 && (
+                      <p className="text-center text-gray-400">Nenhuma estatística de mapa disponível.</p>
+                    )}
+                    {mapStatsData.map((mapStat, index) => (
                       <div key={index} className="flex justify-between">
                         <span className="dashboard-text-muted">{mapStat.map_name}</span>
                         <span className={mapStat.win_rate > 50 ? "text-green-400 font-medium" : "text-red-400 font-medium"}>
@@ -432,16 +470,16 @@ const TeamStatistics = () => {
                         </span>
                       </div>
                     ))}
-                    {teamMapStats.length === 0 && (
-                      <p className="text-center text-gray-400">Nenhuma estatística de mapa disponível.</p>
-                    )}
                   </div>
                 </Card>
 
                 <Card className="dashboard-card border-gray-700 p-6">
                   <h3 className="text-xl font-bold text-white mb-6">Performance por Agente</h3>
                   <div className="space-y-4">
-                    {teamAgentStats.map((agentStat, index) => (
+                    {agentStatsData.length === 0 && (
+                      <p className="text-center text-gray-400">Nenhuma estatística de agente disponível.</p>
+                    )}
+                    {agentStatsData.map((agentStat, index) => (
                       <div key={index} className="flex justify-between">
                         <span className="dashboard-text-muted">{agentStat.agent_name || `Agent ${agentStat.agent_id}`}</span>
                         <span className="text-white font-medium">
@@ -449,9 +487,6 @@ const TeamStatistics = () => {
                         </span>
                       </div>
                     ))}
-                    {teamAgentStats.length === 0 && (
-                      <p className="text-center text-gray-400">Nenhuma estatística de agente disponível.</p>
-                    )}
                   </div>
                 </Card>
               </div>

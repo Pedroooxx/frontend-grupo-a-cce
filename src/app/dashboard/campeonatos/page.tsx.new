@@ -16,8 +16,6 @@ import {
   useGetAllChampionships,
   useUpdateChampionship,
 } from "@/services/championshipService";
-import { useGetAllSubscriptions } from '@/services/subscriptionService';
-import { useGetAllMatches } from '@/services/matchService';
 import type { Championship, ChampionshipFormValues } from "@/types/championship";
 import { 
   ArrowRight,
@@ -56,57 +54,10 @@ const Campeonatos = () => {
     error: getError,
   } = useGetAllChampionships();
 
-  // Fetch subscriptions to count teams per championship
-  const {
-    data: subscriptionsData = [],
-    isLoading: isLoadingSubscriptions,
-    isError: isSubscriptionsError,
-  } = useGetAllSubscriptions();
-
-  // Fetch matches data
-  const {
-    data: matchesData = [],
-    isLoading: isLoadingMatches,
-    isError: isMatchesError,
-  } = useGetAllMatches();
-
   // Mutation hooks
   const createChampionship = useCreateChampionship();
   const updateChampionship = useUpdateChampionship();
   const deleteChampionship = useDeleteChampionship();
-
-  /**
-   * Count teams for a specific championship using subscription data
-   */
-  const getTeamCountForChampionship = (championshipId: number): number => {
-    if (!subscriptionsData || !subscriptionsData.length) {
-      // If this championship has teams_count already available, use it
-      const championship = championshipsData.find(c => c.championship_id === championshipId);
-      if (championship && championship.teams_count !== undefined) {
-        return championship.teams_count;
-      }
-      return 0;
-    }
-
-    // Filter subscriptions by championship_id to get unique teams
-    const championshipSubscriptions = subscriptionsData.filter(
-      subscription => subscription.championship_id === championshipId
-    );
-
-    // Get unique team IDs for this championship
-    const uniqueTeamIds = new Set(championshipSubscriptions.map(sub => sub.team_id));
-    return uniqueTeamIds.size;
-  };
-
-  /**
-   * Count matches for a specific championship
-   */
-  const getMatchCountForChampionship = (championshipId: number): number => {
-    if (!matchesData.length) {
-      return 0;
-    }
-    return matchesData.filter(match => match.championship_id === championshipId).length;
-  };
 
   // Map API data to internal type
   const campeonatos = useMemo(() => {
@@ -140,19 +91,16 @@ const Campeonatos = () => {
         status: mapStatus(c.status),
         prize: typeof c.prize === 'string' ? Number(c.prize) : c.prize,
         user_id: c.user_id,
-        // Use calculated counts instead of relying on API values
-        teams_count: getTeamCountForChampionship(c.championship_id),
-        matches_count: getMatchCountForChampionship(c.championship_id),
+        teams_count: (c as any).teams_count ?? 0,
+        matches_count: (c as any).matches_count ?? 0,
       };
     });
-  }, [championshipsData, subscriptionsData, matchesData]);
+  }, [championshipsData]);
 
   // Error notifications
   useEffect(() => {
     if (isGetError && getError) toast.error(`Erro ao carregar campeonatos: ${getError.message}`);
-    if (isSubscriptionsError) toast.error("Erro ao carregar inscrições");
-    if (isMatchesError) toast.error("Erro ao carregar partidas");
-  }, [isGetError, getError, isSubscriptionsError, isMatchesError]);
+  }, [isGetError, getError]);
 
   // Open modal for creating new championship
   const handleCreateChampionship = () => {
@@ -355,7 +303,7 @@ const Campeonatos = () => {
         { label: "CAMPEONATOS" },
       ]}
     >
-      {isLoadingChampionships || isLoadingSubscriptions || isLoadingMatches ? (
+      {isLoadingChampionships ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
@@ -473,12 +421,12 @@ const Campeonatos = () => {
                     <div className="flex items-center justify-between text-slate-300 text-sm">
                       <div className="flex items-center">
                         <Users className="w-4 h-4 text-red-500 mr-2" />
-                        <span>{getTeamCountForChampionship(championship.championship_id)} equipes</span>
+                        <span>{championship.teams_count} equipes</span>
                       </div>
-                      {getMatchCountForChampionship(championship.championship_id) > 0 && (
+                      {championship.matches_count > 0 && (
                         <div className="flex items-center">
                           <Target className="w-4 h-4 text-red-500 mr-2" />
-                          <span>{getMatchCountForChampionship(championship.championship_id)} partidas</span>
+                          <span>{championship.matches_count} partidas</span>
                         </div>
                       )}
                     </div>
@@ -529,7 +477,7 @@ const Campeonatos = () => {
                   </p>
                   <p className="text-2xl font-bold text-white">
                     {campeonatos.filter(
-                      (c: Championship) =>
+                      (c) =>
                         c.status === "Ativo"
                     ).length}
                   </p>
@@ -545,7 +493,7 @@ const Campeonatos = () => {
                   <p className="dashboard-text-muted text-sm">Equipes Totais</p>
                   <p className="text-2xl font-bold text-white">
                     {campeonatos.reduce(
-                      (sum: number, c: Championship) => sum + getTeamCountForChampionship(c.championship_id),
+                      (sum, c) => sum + c.teams_count,
                       0
                     )}
                   </p>
@@ -563,7 +511,7 @@ const Campeonatos = () => {
                     {campeonatos.length > 0
                       ? campeonatos
                           .sort(
-                            (a: Championship, b: Championship) =>
+                            (a, b) =>
                               new Date(b.end_date).getTime() -
                               new Date(a.end_date).getTime()
                           )[0]?.name
