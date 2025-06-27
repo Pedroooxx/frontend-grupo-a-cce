@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '../../../_components/DashboardLayout';
-import { Trophy, Users, Target, Calendar, MapPin, Crown, Zap, TrendingUp, Award, Timer, DollarSign } from 'lucide-react';
+import { Trophy, Users, Target, Calendar, MapPin, Crown, Zap, TrendingUp, Award, Timer, DollarSign, Trash2 } from 'lucide-react';
 import {
   useChampionshipOverview,
   useChampionshipTeamStatistics,
@@ -14,6 +14,7 @@ import {
 } from '@/hooks/useStatistics';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
 import { useGetChampionshipMatches, useGetChampionshipById } from '@/services/championshipService';
+import { Button } from '@/components/ui/button';
 
 const ChampionshipStatistics = () => {
   const params = useParams();
@@ -184,6 +185,27 @@ const ChampionshipStatistics = () => {
             </div>
           </div>
         </Card>
+
+        <div className='flex justify-between items-center '>
+          <Button className='bg-green-500 hover:bg-green-600 text-white'>
+            Gerar Chaveamento
+          </Button>
+
+          <Button className='bg-blue-500 hover:bg-blue-600 text-white'>
+            Gerar proxima Fase
+          </Button>
+
+          <Button>
+            Adicionar Estatistica de campeonato
+          </Button>
+
+          <Button>
+            Editar Estatistica de campeonato
+          </Button>
+          <Button>
+            <Trash2 className="w-4 h-4 mr-2" />
+          </Button>
+        </div>
 
         {/* Navigation Tabs */}
         <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg">

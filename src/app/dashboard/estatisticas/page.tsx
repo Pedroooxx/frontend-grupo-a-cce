@@ -15,36 +15,15 @@ import { useEffect, useState, useMemo } from 'react';
 import { useGetAllChampionships } from '@/services/championshipService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
 import { useGetAllTeams, useGetAllParticipants, type TeamParticipant, type Team } from '@/services/teamService';
-import { useGetAllMatches, type Match } from '@/services/matchService';
-import { Calendar, Crown, MapPin, Target, Trophy, Users } from 'lucide-react';
+import { ArrowRight, Calendar, Crown, MapPin, Target, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
+import { useGetAllMatches, type Match as ServiceMatch } from '@/services/matchService';
 import type { Championship } from '@/types/championship';
-
-/**
- * StatCard component for displaying statistics
- */
-interface StatCardProps {
-  stat: {
-    label: string;
-    valor: string;
-    crescimento: string;
-  };
-}
-
-const StatCard: React.FC<StatCardProps> = ({ stat }) => (
-  <Card className="dashboard-card border-gray-700 p-6">
-    <div className="flex items-center justify-between">
-      <div className="space-y-2">
-        <p className="text-gray-400 text-sm">{stat.label}</p>
-        <p className="text-3xl font-bold text-white">{stat.valor}</p>
-        <p className="text-green-400 text-sm font-medium">{stat.crescimento}</p>
-      </div>
-      <div className="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
-        <Trophy className="w-6 h-6 text-red-500" />
-      </div>
-    </div>
-  </Card>
-);
+import { Button } from '@/components/ui/button';
+import { AddChampionshipStatisticsModal } from '@/components/modals/AddChampionshipStatisticsModal';
+import { ChampionshipStatisticInput } from '@/types/statistics';
+import { statisticsService } from '@/services';
+import { StatCard } from '@/components/statistics/StatCard';
 
 /**
  * Search function using real API data (same as public page)
@@ -61,7 +40,7 @@ const searchWithRealData = (
   types: string[], 
   championshipsData: Championship[] = [], 
   teamsData: Team[] = [], 
-  matchesData: Match[] = [],
+  matchesData: ServiceMatch[] = [],
   participantsData: TeamParticipant[] = []
 ): SearchResult[] => {
   if (!query.trim()) return [];
@@ -161,6 +140,7 @@ const Estatisticas = () => {
   const [isLoadingMapData, setIsLoadingMapData] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'Ativo' | 'Planejado' | 'Finalizado'>('all');
+  const [isModalOpen, setModalOpen] = useState(false);
 
   // Fetch championships from API
   const {
@@ -264,6 +244,7 @@ const Estatisticas = () => {
     }
   ];
 
+
   const handleSearchResultClick = (result: SearchResult) => {
     let basePath = '';
     switch (result.type) {
@@ -297,6 +278,19 @@ const Estatisticas = () => {
 
     return matchesSearch && matchesStatus;
   });
+
+  const handleModalOpen = () => setModalOpen(true);
+  const handleModalClose = () => setModalOpen(false);
+
+  const handleSubmit = async (data: ChampionshipStatisticInput) => {
+    try {
+      await statisticsService.createChampionshipStatistic(data);
+      alert('Estatísticas adicionadas com sucesso!');
+      handleModalClose();
+    } catch (error) {
+      console.error('Erro ao adicionar estatísticas:', error);
+    }
+  };
 
   return (
     <DashboardLayout
@@ -474,6 +468,16 @@ const Estatisticas = () => {
                       </div>
                     </div>
 
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 border-slate-600 text-slate-300 hover:text-white flex items-center justify-center"
+                      onClick={handleModalOpen}
+                    >
+                     Adicionar Estatísticas 
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
                     <Link
                       href={`/dashboard/estatisticas/campeonato/${championship.championship_id}`}
                       className="w-full border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors py-2 rounded-md flex items-center justify-center mt-auto text-sm"
@@ -510,6 +514,11 @@ const Estatisticas = () => {
           )}
         </div>
       </div>
+      <AddChampionshipStatisticsModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSubmit={handleSubmit}
+      />
     </DashboardLayout>
   );
 };

@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { AddChampionshipStatisticsModal } from '@/components/modals/AddChampionshipStatisticsModal';
 
 const Campeonatos = () => {
   const router = useRouter();
@@ -47,6 +48,9 @@ const Campeonatos = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
   const [deleteItemName, setDeleteItemName] = useState<string>("");
+
+  // Statistics modal state
+  const [isStatisticsModalOpen, setIsStatisticsModalOpen] = useState(false);
 
   // Fetch championships from backend
   const {
@@ -320,6 +324,17 @@ const Campeonatos = () => {
     });
   };
 
+  // Handle statistics submission
+  const handleStatisticsSubmit = async (data) => {
+    try {
+      await statisticsService.createChampionshipStatistic(data);
+      toast.success('Estatísticas adicionadas com sucesso!');
+      setIsStatisticsModalOpen(false);
+    } catch (error) {
+      toast.error('Erro ao adicionar estatísticas.');
+    }
+  };
+
   return (
     <DashboardLayout
       title="GERENCIAR"
@@ -468,6 +483,7 @@ const Campeonatos = () => {
                       Ver Detalhes
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -567,6 +583,13 @@ const Campeonatos = () => {
         title="Confirmar exclusão"
         entityName={`campeonato ${deleteItemName}`}
         isLoading={deleteChampionship.isPending || createChampionship.isPending || updateChampionship.isPending}
+      />
+
+      {/* Add Championship Statistics Modal */}
+      <AddChampionshipStatisticsModal
+        isOpen={isStatisticsModalOpen}
+        onClose={() => setIsStatisticsModalOpen(false)}
+        onSubmit={handleStatisticsSubmit}
       />
     </DashboardLayout>
   );

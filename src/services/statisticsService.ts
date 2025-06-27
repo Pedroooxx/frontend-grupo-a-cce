@@ -7,7 +7,8 @@ import {
   AgentStatistic,
   MapStatistic,
   ChampionshipOverview,
-  ParticipantStatisticInput
+  ParticipantStatisticInput,
+  ChampionshipStatisticInput
 } from '../types/statistics';
 import { useQuery } from '@tanstack/react-query';
 
@@ -364,6 +365,15 @@ export const useGetMatchStatistics = (matchId: number, enabled = true) => {
     enabled: enabled && matchId > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+};
+
+export const createChampionshipStatistic = async (data: ChampionshipStatisticInput): Promise<ChampionshipStatistic> => {
+  const response = await apiClient.post<ChampionshipStatistic>(
+    '/championship-stats',
+    data,
+    { withAuth: true }
+  );
+  return response;
 };
 
 export const statisticsService = new StatisticsService();
