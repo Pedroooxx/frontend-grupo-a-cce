@@ -20,9 +20,9 @@ import Link from 'next/link';
 import { useGetAllMatches, type Match as ServiceMatch } from '@/services/matchService';
 import type { Championship } from '@/types/championship';
 import { Button } from '@/components/ui/button';
-import { AddChampionshipStatisticsModal } from '@/components/modals/AddChampionshipStatisticsModal';
 import { ChampionshipStatisticInput } from '@/types/statistics';
 import { statisticsService } from '@/services';
+import AddChampionshipStatisticsModal from '@/components/modals/AddChampionshipStatisticsModal';
 
 /**
  * Search function using real API data (same as public page)
@@ -282,8 +282,19 @@ const Estatisticas = () => {
   const handleModalClose = () => setModalOpen(false);
 
   const handleSubmit = async (data: ChampionshipStatisticInput) => {
+    const completeData: ChampionshipStatisticInput = {
+      ...data,
+      team_id: 1, // Example value, replace with actual data
+      championship_id: 123, // Example value, replace with actual data
+      participant_id: 456, // Example value, replace with actual data
+      spike_plants: 0, // Example value, replace with actual data
+      spike_defuses: 0, // Example value, replace with actual data
+      MVPs: 0, // Example value, replace with actual data
+      first_kills: 0, // Example value, replace with actual data
+    };
+
     try {
-      await statisticsService.createChampionshipStatistic(data);
+      await statisticsService.createChampionshipStatistic(completeData);
       alert('Estatísticas adicionadas com sucesso!');
       handleModalClose();
     } catch (error) {
