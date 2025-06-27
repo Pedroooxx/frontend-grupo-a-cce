@@ -45,9 +45,12 @@ export interface Team {
 }
 
 export interface Player {
-  id: number;
-  nome: string;
+  participant_id: number;
+  name: string;
   nickname: string;
+  birth_date: string;
+  team_id: number;
+  is_coach: boolean;
   equipe: string;
   phone: string;
   kills: number;

@@ -9,7 +9,6 @@ import { useModal } from "@/hooks/useModal";
 import { useAllPlayersSummary } from "@/hooks/useStatistics";
 import { useCreateParticipant, useDeleteParticipant, useGetAllParticipants, useUpdateParticipant, type Participant } from "@/services/participantService";
 import { useGetAllTeams, type Team } from "@/services/teamService";
-import type { DetailedPlayerStats } from "@/types/data-types";
 import type { ParticipantFormValues } from "@/types/participant";
 import { Skull, Target, User, Filter } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";

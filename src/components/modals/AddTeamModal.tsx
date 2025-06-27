@@ -9,7 +9,6 @@ import {
 import { TeamForm } from '@/components/forms/TeamForm';
 import { Users } from 'lucide-react';
 import type { TeamFormValues } from '@/types/teams';
-import type { PublicParticipant } from '@/types/data-types';
 
 interface AddTeamModalProps {
   isOpen: boolean;

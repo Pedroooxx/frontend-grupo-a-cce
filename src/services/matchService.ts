@@ -178,11 +178,31 @@ export const useGetChampionshipTeamHistory = (championshipId: number | string, e
   return useQuery<Record<number, TeamStatistics>, ApiError>({
     queryKey: ['matches', 'championship', championshipId, 'statistics'],
     queryFn: async () => {
+      // First, get all completed matches for this championship
       const response = await apiClient.get<MatchResponse>(`/matches?championship_id=${championshipId}`, { withAuth: true });
       const matches = response.data;
       
+      // Get all teams in this championship to ensure we include teams with no matches yet
+      const teamsResponse = await apiClient.get<{success: boolean, data: MatchTeam[]}>(`/championships/${championshipId}/teams`, { withAuth: true })
+        .catch(() => ({ success: true, data: [] })); // Fallback if API doesn't support this endpoint
+      
+      const teamsInChampionship = teamsResponse.data || [];
+      
       // Calculate statistics for each team
       const teamStats: Record<number, TeamStatistics> = {};
+      
+      // Initialize all teams from the championship
+      teamsInChampionship.forEach(team => {
+        if (!teamStats[team.team_id]) {
+          teamStats[team.team_id] = {
+            team_id: team.team_id,
+            wins: 0,
+            losses: 0,
+            total_matches: 0,
+            win_rate: 0
+          };
+        }
+      });
       
       matches.forEach(match => {
         // Only count finished matches for statistics
@@ -221,18 +241,14 @@ export const useGetChampionshipTeamHistory = (championshipId: number | string, e
             teamStats[match.teamB_id].wins++;
             teamStats[match.teamA_id].losses++;
           }
-          
-          // Calculate win rates
-          teamStats[match.teamA_id].win_rate = 
-            teamStats[match.teamA_id].total_matches > 0 
-              ? teamStats[match.teamA_id].wins / teamStats[match.teamA_id].total_matches 
-              : 0;
-              
-          teamStats[match.teamB_id].win_rate = 
-            teamStats[match.teamB_id].total_matches > 0 
-              ? teamStats[match.teamB_id].wins / teamStats[match.teamB_id].total_matches 
-              : 0;
         }
+      });
+      
+      // Calculate win rates after processing all matches
+      Object.keys(teamStats).forEach(teamIdStr => {
+        const teamId = parseInt(teamIdStr);
+        const stats = teamStats[teamId];
+        stats.win_rate = stats.total_matches > 0 ? stats.wins / stats.total_matches : 0;
       });
       
       return teamStats;

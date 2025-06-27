@@ -1,6 +1,5 @@
 "use client";
 import TeamCard from "@/components/cards/TeamCard";
-import TeamFooterCard from "@/components/cards/TeamFooterCard";
 import { UniversalSearchBar } from "@/components/common/UniversalSearchBar";
 import { AddTeamModal } from "@/components/modals/AddTeamModal";
 import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
@@ -8,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/useModal";
 import { SearchResult } from "@/hooks/useSearch";
 import { TeamDisplay, TeamFormValues } from "@/types/teams";
-import { PublicParticipant } from "@/types/data-types";
 import { useGetAllTeams, useCreateTeam, useUpdateTeam, useDeleteTeam, Team, TeamParticipant } from "@/services/teamService";
+import { Player } from "@/types/participant";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState, useMemo, useEffect } from "react";
@@ -59,7 +58,7 @@ const GerenciarEquipes = () => {
       console.error('teamsData is not an array:', teamsData);
       return [];
     }
-    
+
     return teamsData.map((team: Team) => {
       const participants = team.Participants || [];
       const coach = participants.find((p: TeamParticipant) => p.is_coach);
@@ -82,7 +81,7 @@ const GerenciarEquipes = () => {
 
   // Extract all participants from teams and filter available coaches and players
   const allParticipants = useMemo(() => {
-    return teamsData.flatMap((team: Team) => 
+    return teamsData.flatMap((team: Team) =>
       (team.Participants || []).map((participant: TeamParticipant) => ({
         ...participant,
         team_id: team.team_id,
@@ -94,7 +93,7 @@ const GerenciarEquipes = () => {
   const availableCoaches = useMemo(() => {
     return allParticipants.filter((participant) => participant.is_coach);
   }, [allParticipants]);
-  
+
   const availablePlayers = useMemo(() => {
     return allParticipants.filter((player) => !player.is_coach);
   }, [allParticipants]);
@@ -217,23 +216,22 @@ const GerenciarEquipes = () => {
       .slice(0, 6);
   };
 
-  // Convert TeamParticipant to PublicParticipant format for TeamForm compatibility
-  const mapParticipantToPublic = useCallback((participant: TeamParticipant & { team_id: number; team_name: string }): PublicParticipant => {
+  // Convert TeamParticipant to Player format for TeamForm compatibility
+  const mapParticipantToPublic = useCallback((participant: TeamParticipant): Player => {
     return {
       participant_id: participant.participant_id,
       name: participant.name,
       nickname: participant.nickname,
-      birth_date: "", // Not available in TeamParticipant
-      team_id: participant.team_id,
-      team_name: participant.team_name,
       is_coach: participant.is_coach,
-      kda_ratio: 0, // Default values for statistics
-      total_kills: 0,
-      total_deaths: 0,
-      total_assists: 0,
-      win_rate: 0,
-      mvp_count: 0,
-      phone: "", // Not available in TeamParticipant
+      birth_date: "",
+      team_id: 0,
+      equipe: "",
+      phone: "",
+      kills: 0,
+      deaths: 0,
+      assists: 0,
+      kda: "",
+      winRate: ""
     };
   }, []);
 
@@ -254,7 +252,7 @@ const GerenciarEquipes = () => {
     const selectedParticipants = allParticipants.filter((player) =>
       editingTeam.members.some((member) => member.nickname === player.nickname)
     );
-    
+
     return selectedParticipants.map(mapParticipantToPublic);
   }, [editingTeam, allParticipants, mapParticipantToPublic]);
 
@@ -336,11 +334,9 @@ const GerenciarEquipes = () => {
         {/* Stats das equipes */}
         {!isLoadingGet && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            <TeamFooterCard
-              totalTeams={teams.length}
-              totalPlayers={totalPlayers}
-              totalCoaches={totalCoaches}
-            />
+            totalTeams={teams.length}
+            totalPlayers={totalPlayers}
+            totalCoaches={totalCoaches}
           </div>
         )}
       </div>
@@ -356,12 +352,12 @@ const GerenciarEquipes = () => {
         defaultValues={
           editingTeam
             ? {
-                name: editingTeam.name,
-                manager_name: editingTeam.coach !== "Sem técnico" ? editingTeam.coach : undefined,
-                member_ids: getSelectedPlayers().map(
-                  (p: PublicParticipant) => p.participant_id
-                ),
-              }
+              name: editingTeam.name,
+              manager_name: editingTeam.coach !== "Sem técnico" ? editingTeam.coach : undefined,
+              member_ids: getSelectedPlayers().map(
+                (p: Player) => p.participant_id
+              ),
+            }
             : undefined
         }
       />

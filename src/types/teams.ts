@@ -1,6 +1,4 @@
-import { PublicTeam, PublicParticipant } from './data-types';
 import { z } from 'zod';
-
 
 export const MAX_PLAYERS = 5;
 
@@ -24,32 +22,6 @@ export interface TeamCardProps {
   team: TeamDisplay;
   onEdit?: (team: TeamDisplay) => void;
   onDelete?: (id: string | number) => void; // This is correct as is
-}
-
-/**
- * Utility function to convert PublicTeam and PublicParticipant data
- * to the TeamDisplay format needed by TeamCard component
- */
-export function mapTeamToDisplay(
-  team: PublicTeam, 
-  participants: PublicParticipant[]
-): TeamDisplay {
-  const teamMembers = participants
-    .filter(player => player.team_name === team.name && !player.is_coach)
-    .map(player => ({
-      nickname: player.nickname,
-      name: player.name,
-    }));
-
-  return {
-    id: team.team_id,
-    name: team.name,
-    coach: team.manager_name,
-    members: teamMembers,
-    championship: team.championships_participated > 0
-      ? `Participando de ${team.championships_participated} campeonatos`
-      : "Nenhum campeonato ativo",
-  };
 }
 
 // Schema and types for team form

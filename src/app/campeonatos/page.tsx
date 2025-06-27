@@ -2,7 +2,8 @@
 import { UniversalSearchBar } from '@/components/common/UniversalSearchBar';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { SearchConfig, SearchResult } from '@/hooks/useSearch';
-import { useGetAllChampionships, type Championship } from '@/services/championshipService';
+import { useGetAllChampionships } from '@/services/championshipService';
+import { Championship } from '@/types/championship';
 import { useGetAllMatches, type Match } from '@/services/matchService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
 import { useGetAllParticipants, useGetAllTeams, type Team, type TeamParticipant } from '@/services/teamService';

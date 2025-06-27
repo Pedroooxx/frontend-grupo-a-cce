@@ -1,7 +1,6 @@
 'use client'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { use } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -22,14 +21,11 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useGetChampionshipById } from '@/services/championshipService';
-import { useGetTeamById } from '@/services/teamService';
-import { useGetAllParticipants } from '@/services/participantService';
-import { useGetAllSubscriptions } from '@/services/subscriptionService';
-import { useGetAllMatches, useGetChampionshipTeamHistory } from '@/services/matchService';
-import { useAllPlayersSummary } from '@/hooks/useStatistics';
+import { useGetChampionshipById, useGetTeamById, useGetAllParticipants, useGetAllSubscriptions, useGetAllMatches, useGetChampionshipTeamHistory } from '@/services';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { StatsTab } from './StatsTab';
+// Import from useStatistics hook instead of trying to use the non-existent service
+import { useAllPlayersSummary } from '@/hooks/useStatistics';
 
 interface PageProps {
   params: Promise<{
@@ -38,8 +34,17 @@ interface PageProps {
   }>;
 }
 
-export default async function TeamPublicPage(props: PageProps) {
-  const params = await props.params;
+export default function TeamPublicPage(props: PageProps) {
+  // Use useEffect to handle the Promise-based params
+  const [params, setParams] = useState<{id: string, teamId: string}>({id: '', teamId: ''});
+  
+  useEffect(() => {
+    const loadParams = async () => {
+      const resolvedParams = await props.params;
+      setParams(resolvedParams);
+    };
+    loadParams();
+  }, [props.params]);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'players' | 'matches' | 'stats'>('overview');
   const router = useRouter();
@@ -382,7 +387,6 @@ export default async function TeamPublicPage(props: PageProps) {
                         <div>
                           <h3 className="text-lg font-semibold text-white">{coach.nickname}</h3>
                           <p className="text-slate-400 text-sm">{coach.name}</p>
-                          <p className="text-slate-500 text-xs">{calculateAge(coach.birth_date)} anos</p>
                         </div>
                       </div>
                     </div>
@@ -412,7 +416,6 @@ export default async function TeamPublicPage(props: PageProps) {
                           <div>
                             <h3 className="text-lg font-semibold text-white">{player.nickname}</h3>
                             <p className="text-slate-400 text-sm">{player.name}</p>
-                            <p className="text-slate-500 text-xs">{calculateAge(player.birth_date)} anos</p>
                           </div>
                         </div>
                         {/* MVP count from statistics */}

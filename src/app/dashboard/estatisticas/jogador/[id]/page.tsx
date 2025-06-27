@@ -12,7 +12,6 @@ import {
   usePlayerAgentStatistics,
   usePlayerMapStatistics
 } from '@/hooks/useStatistics';
-import { detailedPlayersStats } from "@/data/data-mock"; // Fallback if API fails
 
 const PlayerStatistics = () => {
   const params = useParams();
