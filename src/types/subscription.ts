@@ -15,7 +15,7 @@ export interface Subscription {
   subscription_id: number;
   championship_id: number;
   team_id: number;
-  subscription_date: string;
+  subscription_date: Date;
   championship_name?: string; // For display purposes
   team_name?: string; // For display purposes
 }
@@ -33,7 +33,7 @@ export const subscriptionSchema = z.object({
   }).refine(val => val > 0, {
     message: 'Selecione uma equipe válida'
   }),
-  subscription_date: z.string().default(() => new Date().toISOString().split('T')[0]),
+  subscription_date: z.string().default(() => new Date().toISOString().split('T')[0]).transform((val) => new Date(val)),
 });
  
 export type SubscriptionFormValues = z.infer<typeof subscriptionSchema>;

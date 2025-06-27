@@ -65,45 +65,35 @@ const Inscricoes = () => {
   }, [subscriptionsData, teamsData, championshipsData]);
 
   /**
-   * Search function using real subscription data
+   * Search function for subscriptions following teams page pattern
    * @param query - Search query string  
    * @param types - Array of search types to include
    * @returns Array of search results
    */
-  const searchSubscriptions = useCallback(
-    (query: string, types: string[] = ["inscription"]): SearchResult[] => {
-      // Prevent search during loading state
-      if (isLoadingSubscriptions || isLoadingTeams || isLoadingChampionships) {
-        return [];
-      }
-      
-      if (!query.trim() || !types.includes("inscription") || !Array.isArray(inscricoes)) {
-        return [];
-      }
+  const searchSubscriptions = (query: string, types: string[]): SearchResult[] => {
+    if (!types.includes("inscription") || !query.trim()) {
+      return [];
+    }
 
-      const searchQuery = query.toLowerCase();
-      
-      return inscricoes
-        .filter((inscription) =>
-          inscription && 
-          (inscription.team_name && inscription.team_name.toLowerCase().includes(searchQuery)) ||
-          (inscription.championship_name && inscription.championship_name.toLowerCase().includes(searchQuery))
-        )
-        .map((inscription) => ({
-          id: inscription.subscription_id,
-          name: `${inscription.team_name} - ${inscription.championship_name}`,
-          type: "inscription" as const,
-          subtitle: `Inscrito em ${new Date(inscription.subscription_date).toLocaleDateString("pt-BR")}`,
-          metadata: {
-            teamId: inscription.team_id,
-            championshipId: inscription.championship_id,
-            subscriptionDate: inscription.subscription_date,
-          },
-        }))
-        .slice(0, 6); // maxResults from config
-    },
-    [inscricoes, isLoadingSubscriptions, isLoadingTeams, isLoadingChampionships]
-  );
+    const searchQuery = query.toLowerCase();
+    return inscricoes
+      .filter(inscription =>
+        inscription.team_name.toLowerCase().includes(searchQuery) ||
+        inscription.championship_name.toLowerCase().includes(searchQuery)
+      )
+      .map(inscription => ({
+        id: inscription.subscription_id,
+        name: `${inscription.team_name} - ${inscription.championship_name}`,
+        type: "inscricao" as const,
+        subtitle: `Inscrição em ${new Date(inscription.subscription_date).toLocaleDateString("pt-BR")}`,
+        metadata: {
+          teamId: inscription.team_id,
+          championshipId: inscription.championship_id,
+          subscriptionDate: inscription.subscription_date,
+        },
+      }))
+      .slice(0, 6);
+  };
 
   const { isOpen, openModal, closeModal } = useModal();
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
@@ -175,19 +165,14 @@ const Inscricoes = () => {
   );
 
   const handleSearchResultClick = (result: SearchResult) => {
-    if (result.type === "inscription" && result.id) {
-      console.log("Inscrição selecionada:", result);
+    if (result.type === "inscricao" && result.id) {
+      // Find the subscription by ID and open edit modal
+      const subscription = inscricoes.find(sub => sub.subscription_id === result.id);
+      if (subscription) {
+        handleEdit(subscription);
+      }
     }
   };
-
-  // Memoized search configuration
-  const searchConfig = useMemo(() => ({
-    searchTypes: ["inscription"],
-    placeholder: "Buscar inscrições por equipe ou campeonato...",
-    maxResults: 6,
-    minQueryLength: 1,
-    debounceMs: 300,
-  }), []);
 
   const totalInscricoes = inscricoes.length;
   const ultimaInscricao = totalInscricoes > 0 
@@ -240,7 +225,13 @@ const Inscricoes = () => {
         <div className="flex justify-center my-6">
           <UniversalSearchBar
             searchFunction={searchSubscriptions}
-            config={searchConfig}
+            config={{
+              searchTypes: ["inscription"],
+              placeholder: "Buscar inscrições por equipe ou campeonato...",
+              maxResults: 6,
+              minQueryLength: 1,
+              debounceMs: 300,
+            }}
             onResultClick={handleSearchResultClick}
             className="max-w-xl"
           />
