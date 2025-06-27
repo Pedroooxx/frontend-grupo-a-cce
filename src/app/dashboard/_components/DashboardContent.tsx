@@ -7,11 +7,14 @@ import { useSession } from "next-auth/react";
 import { useAllPlayersSummary, useAllTeamsSummary } from "@/hooks/useStatistics";
 import { championshipParticipations } from "@/data/data-mock";
 import { CardHeader } from "@/components/ui/CardHeader";
+import { useGetMatchesByStatus } from '@/services/matchService';
+import { Badge } from "@/components/ui/badge";
 
 export function DashboardContent() {
   const { data: session } = useSession();
   const { data: players = [], isLoading: isLoadingPlayers } = useAllPlayersSummary();
   const { data: teams = [], isLoading: isLoadingTeams } = useAllTeamsSummary();
+  const { data: recentMatches = [], isLoading: isLoadingMatches } = useGetMatchesByStatus('Finalizada', true);
   
   // Calculate statistics based on data from API
   const totalTeams = teams.length;
@@ -165,10 +168,44 @@ export function DashboardContent() {
             iconColorClass="text-blue-500"
           />
           <div className="space-y-4">
-            <div className="text-center text-gray-500">
-              Carregando dados de partidas recentes...
-            </div>
-            {/* Will be populated when Match API is available */}
+            {isLoadingMatches ? (
+              <div className="text-center text-gray-500">Carregando dados de partidas recentes...</div>
+            ) : (
+              recentMatches.filter(match => match.status === 'Finalizada')
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .slice(0, 4).length > 0 ? (
+                recentMatches
+                  .filter(match => match.status === 'Finalizada')
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .slice(0, 4)
+                  .map(match => (
+                    <div key={match.match_id} className="bg-gray-800/50 p-4 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-white font-medium">
+                            {match.TeamA.name} vs {match.TeamB.name}
+                          </p>
+                          <p className="dashboard-text-muted text-sm">
+                            {match.map} • {new Date(match.date).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-white mb-2">
+                            {match.score ? `${match.score.teamA} - ${match.score.teamB}` : 'N/A'}
+                          </div>
+                          <div className="text-xs">
+                            <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                              Finalizada
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                <div className="text-center text-gray-500">Nenhuma partida finalizada encontrada.</div>
+              )
+            )}
           </div>
         </Card>
       </div>
