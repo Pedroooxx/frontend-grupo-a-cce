@@ -46,7 +46,7 @@ interface ChampionshipHistoryEntry {
 const TeamStatistics = () => {
   const params = useParams();
   const teamId = parseInt(params?.id as string) || 1;
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'players' | 'championships' | 'performance'>('overview');
+  const [selectedTab, setSelectedTab] = useState<'overview' | 'players'>('overview');
   // Remove 'championships' and 'performance' tabs from the navigation
   const tabs = [
     { key: 'overview', label: 'Visão Geral' },
