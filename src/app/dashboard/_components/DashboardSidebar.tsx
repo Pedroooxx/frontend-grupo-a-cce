@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut, useSession } from 'next-auth/react';
-import { 
-  LayoutDashboard, 
-  Trophy, 
-  UserPlus, 
-  Users, 
-  User, 
+import {
+  LayoutDashboard,
+  Trophy,
+  UserPlus,
+  Users,
+  User,
   Calendar,
   BarChart3,
   ArrowLeft
@@ -70,14 +70,14 @@ export function DashboardSidebar({ className }: SidebarProps) {
     if (href === '/dashboard') {
       return pathname === '/dashboard';
     }
-    return pathname.startsWith(href);
+    return pathname ? pathname.startsWith(href) : false;
   };
 
   return (
     <div className={cn("w-64 dashboard-sidebar border-r dashboard-border flex flex-col", className)}>
-      {/* Logo/Header */}      <div className="p-6 border-b dashboard-border">        <Link href="/dashboard" className="flex items-center">
-          <img src="/images/logo.png" alt="Esports League" className="h-8" />
-        </Link>
+      {/* Logo/Header */}      <div className="p-6 border-b dashboard-border">        <Link href="/" className="flex items-center">
+        <img src="/images/logo.png" alt="Esports League" className="h-8" />
+      </Link>
       </div>
 
       {/* Navigation Menu */}
@@ -104,7 +104,7 @@ export function DashboardSidebar({ className }: SidebarProps) {
 
       {/* Bottom Action */}
       <div className="p-4 border-t dashboard-border">
-        <button 
+        <button
           onClick={handleSignOut}
           className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors w-full"
         >

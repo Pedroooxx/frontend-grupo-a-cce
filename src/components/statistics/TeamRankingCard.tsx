@@ -45,7 +45,6 @@ export const TeamRankingCard = ({ teams }: TeamRankingCardProps) => {
             </div>
             <div className="text-right">
               <p className="text-white font-medium">{Math.round(team.avg_match_score)} pts</p>
-              <p className="text-green-400 text-sm">{team.win_rate}% Taxa de vitória</p>
             </div>
           </div>
         ))}

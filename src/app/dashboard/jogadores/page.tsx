@@ -24,6 +24,8 @@ export default function GerenciarJogadores() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
   const [deleteItemName, setDeleteItemName] = useState<string>("");
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Fetch participants and teams via service hooks
   const {
@@ -205,37 +207,49 @@ export default function GerenciarJogadores() {
    * @param players - Array of player data
    * @returns Array of search results
    */
-  const searchPlayers = (
-    query: string,
-    types: string[],
-    players: DetailedPlayerStats[] = []
-  ): SearchResult[] => {
-    if (!query.trim() || !types.includes("player")) return [];
-    
+  const searchPlayers = (query: string, types: string[] = ['player'], jogadores: DetailedPlayerStats[] = [], teams: Team[] = []): SearchResult[] => {
+    if (!query.trim() || !types.includes('player') || !Array.isArray(jogadores) || !Array.isArray(teams)) return [];
+
     const searchQuery = query.toLowerCase();
-    
-    return players
-      .filter(player =>
-        player.name.toLowerCase().includes(searchQuery) ||
-        player.nickname.toLowerCase().includes(searchQuery) ||
-        player.team_name.toLowerCase().includes(searchQuery) ||
-        player.phone.toLowerCase().includes(searchQuery)
-      )
-      .map(player => ({
-        id: player.participant_id,
-        name: player.nickname,
-        type: "player",
-        subtitle: `${player.name} - ${player.team_name || 'Sem equipe'}`,
-        metadata: {
-          fullName: player.name,
-          teamId: player.team_id,
-          teamName: player.team_name,
-          isCoach: player.is_coach,
-          kda: player.kda_ratio.toFixed(2),
-          matches: player.total_matches,
-        },
-      }));
+
+    return jogadores
+      .filter((player) => {
+        const team = teams.find(t => t.team_id === player.team_id);
+        return (
+          player.name.toLowerCase().includes(searchQuery) ||
+          player.nickname.toLowerCase().includes(searchQuery) ||
+          (team && team.name.toLowerCase().includes(searchQuery))
+        );
+      })
+      .map((player) => {
+        const team = teams.find(t => t.team_id === player.team_id);
+        return {
+          id: player.participant_id,
+          name: player.name,
+          type: 'player',
+          subtitle: team ? team.name : 'Unknown Team',
+          metadata: {
+            team_id: player.team_id,
+            is_coach: player.is_coach,
+          },
+        };
+      });
   };
+
+  // Filter jogadores by search query and selected team using searchPlayers
+  const filteredJogadores = useMemo(() => {
+    let filtered = jogadores;
+    if (selectedTeamId) {
+      filtered = filtered.filter(j => j.team_id === selectedTeamId);
+    }
+    if (searchQuery.trim()) {
+      // Use searchPlayers to filter by name or team
+      const results = searchPlayers(searchQuery, ["player", "team"], filtered, teams);
+      const ids = new Set(results.map(r => r.id));
+      filtered = filtered.filter(j => ids.has(j.participant_id));
+    }
+    return filtered;
+  }, [jogadores, selectedTeamId, searchQuery, teams]);
 
   return (
     <DashboardLayout
@@ -250,18 +264,20 @@ export default function GerenciarJogadores() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-white">Gerenciar Jogadores</h1>
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline" 
-              className="border-gray-600 text-gray-300 flex items-center gap-2"
-              onClick={() => {
-                // This would be implemented with a dropdown or popover
-                alert('Funcionalidade de filtro será implementada em breve.');
-              }}
-            >
-              <Filter className="w-4 h-4" />
-              Filtrar por Equipe
-            </Button>
+          <div className="flex space-x-2 items-center">
+            <div>
+              <select
+                value={selectedTeamId ?? ''}
+                onChange={e => setSelectedTeamId(e.target.value ? Number(e.target.value) : null)}
+                className="border border-gray-600 bg-gray-800 text-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                aria-label="Filtrar por equipe"
+              >
+                <option value="">Todas as Equipes</option>
+                {teams.map((team: Team) => (
+                  <option key={team.team_id} value={team.team_id}>{team.name}</option>
+                ))}
+              </select>
+            </div>
             <Button onClick={openAdd} className="bg-red-500 hover:bg-red-600 text-white">
               Adicionar Jogador
             </Button>
@@ -270,10 +286,10 @@ export default function GerenciarJogadores() {
 
         {/* Search */}
         <UniversalSearchBar
-          searchFunction={(query, types) => searchPlayers(query, types, jogadores)}
+          searchFunction={(query, types) => searchPlayers(query, types, jogadores, teams)}
           config={{
-            searchTypes: ["player"],
-            placeholder: "Buscar jogadores por nome, nickname, equipe ou telefone...",
+            searchTypes: ['player', 'team'],
+            placeholder: 'Buscar jogadores ou equipes...',
             maxResults: 6,
             minQueryLength: 1,
             debounceMs: 300,
@@ -304,7 +320,7 @@ export default function GerenciarJogadores() {
                 <p className="text-white">Carregando jogadores e estatísticas...</p>
               </div>
             </div>
-          ) : jogadores.length === 0 ? (
+          ) : filteredJogadores.length === 0 ? (
             <div className="col-span-2 flex items-center justify-center p-8">
               <div className="flex flex-col items-center">
                 <User className="w-12 h-12 text-gray-500 mb-3" />
@@ -314,7 +330,7 @@ export default function GerenciarJogadores() {
             </div>
           ) : (
             // Render participant cards with unique keys
-            jogadores.map((p: DetailedPlayerStats) => (
+            filteredJogadores.map((p: DetailedPlayerStats) => (
               <ParticipantCard key={`player-${p.participant_id}`}
                 player={p}
                 onEdit={handleEdit}
@@ -376,7 +392,7 @@ export default function GerenciarJogadores() {
         </div>
         
         {/* Detailed Stats Rankings */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           {!isLoadingGet && !isParticipantsError && jogadores.length > 0 && (
             <>
               {/* Top KDA */}
@@ -430,29 +446,6 @@ export default function GerenciarJogadores() {
               </Card>
               
               {/* Win Rate */}
-              <Card className="bg-slate-800 border-slate-700 shadow-md overflow-hidden">
-                <div className="p-5 flex flex-col space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-700 pb-3">
-                    <h3 className="text-lg font-bold text-white">Top Win Rate</h3>
-                    <User className="w-5 h-5 text-red-500" />
-                  </div>
-                  <div className="space-y-3">
-                    {jogadores
-                      .filter(p => p.total_matches > 0)
-                      .sort((a, b) => b.win_rate - a.win_rate)
-                      .slice(0, 5)
-                      .map((player, idx) => (
-                        <div key={`top-winrate-${player.participant_id}`} className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-slate-400 w-5 text-right">{idx + 1}</span>
-                            <span className="text-white font-medium">{player.nickname}</span>
-                          </div>
-                          <span className="text-red-400 font-bold">{(player.win_rate * 100).toFixed(0)}%</span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </Card>
             </>
           )}
         </div>

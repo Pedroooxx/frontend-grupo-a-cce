@@ -5,9 +5,8 @@ import { DashboardLayout } from '../_components/DashboardLayout';
 import { StatCard } from '@/components/statistics/StatCard';
 import { TopPlayersCard } from '@/components/statistics/TopPlayersCard';
 import { TeamRankingCard } from '@/components/statistics/TeamRankingCard';
-import { MapPerformanceCard } from '@/components/statistics/MapPerformanceCard';
 import { UniversalSearchBar } from '@/components/common/UniversalSearchBar';
-import { SearchResult, SearchConfig } from '@/hooks/useSearch';
+import { SearchResult } from '@/hooks/useSearch';
 import { 
   useAllPlayersSummary, 
   useAllTeamsSummary
@@ -17,12 +16,11 @@ import { MapData } from '@/types/data-types';
 import { useEffect, useState, useMemo } from 'react';
 import { useGetAllChampionships } from '@/services/championshipService';
 import { useGetAllSubscriptions } from '@/services/subscriptionService';
-import { useGetAllMatches } from '@/services/matchService';
+import { useGetAllMatches, type Match as ServiceMatch } from '@/services/matchService';
 import { useGetAllTeams, useGetAllParticipants, type TeamParticipant, type Team } from '@/services/teamService';
 import { Calendar, Crown, MapPin, Target, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import type { Championship } from '@/types/championship';
-import type { Match } from '@/types/match';
 
 /**
  * Search function using real API data (same as public page)
@@ -39,7 +37,7 @@ const searchWithRealData = (
   types: string[], 
   championshipsData: Championship[] = [], 
   teamsData: Team[] = [], 
-  matchesData: Match[] = [],
+  matchesData: ServiceMatch[] = [],
   participantsData: TeamParticipant[] = []
 ): SearchResult[] => {
   if (!query.trim()) return [];
@@ -162,6 +160,20 @@ const Estatisticas = () => {
     isError: isMatchesError,
   } = useGetAllMatches();
 
+  // Fetch participants data for search
+  const {
+    data: participantsData = [],
+    isLoading: isLoadingParticipants,
+    isError: isParticipantsError,
+  } = useGetAllParticipants();
+
+  // Fetch teams data for search
+  const {
+    data: teamsData = [],
+    isLoading: isLoadingTeamsData,
+    isError: isTeamsDataError,
+  } = useGetAllTeams();
+
   /**
    * Count teams for a specific championship using subscription data
    */
@@ -200,9 +212,9 @@ const Estatisticas = () => {
     .filter((player, index, self) => 
       // Only keep first occurrence of each player
       index === self.findIndex(p => p.participant_id === player.participant_id))
-    .sort((a, b) => (b.kda_ratio || 0) - (a.kda_ratio || 0))
+    .sort((a, b) => (Number(b.kda_ratio) || 0) - (Number(a.kda_ratio) || 0))
     .slice(0, 5);
-  const topTeams = [...teams].sort((a, b) => (b.win_rate || 0) - (a.win_rate || 0)).slice(0, 5);
+  const topTeams = [...teams].sort((a, b) => (Number(b.win_rate) || 0) - (Number(a.win_rate) || 0)).slice(0, 5);
 
   // Generate general statistics from API data
   const generalStats = [
@@ -226,16 +238,7 @@ const Estatisticas = () => {
         valor: players.reduce((acc, player) => acc + player.mvp_count, 0).toString(),
         crescimento: "+12%"
       }
-    },
-    {
-      stat: {
-        label: "Taxa de Vitória Média",
-        valor: teams.length > 0 
-          ? `${Math.round(teams.reduce((acc, team) => acc + team.win_rate, 0) / teams.length)}%` 
-          : "0%",
-        crescimento: "+5%"
-      }
-    },
+    }
   ];
 
   useEffect(() => {
@@ -321,31 +324,17 @@ const Estatisticas = () => {
         <div className="mb-8">
           <UniversalSearchBar 
             searchFunction={(query, types) => 
-              searchWithRealData(query, types, championshipsData as any, teams as any, matchesData as any, players as any)
+              searchWithRealData(query, types, championshipsData, teamsData, matchesData, participantsData)
             }
             config={{
-              placeholder: "Busque por jogadores, equipes, campeonatos ou partidas...",
-              searchTypes: ['player', 'team', 'championship', 'match'],
+              placeholder: "Busque por jogadores, equipes ou campeonatos...",
+              searchTypes: ['player', 'team', 'championship'],
               minQueryLength: 2,
               maxResults: 10,
             }}
             onQueryChange={setSearchQuery}
             onResultClick={handleSearchResultClick}
           />
-        </div>
-
-        {/* Status filter */}
-        <div className="flex justify-end mb-4">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="py-2 px-4 bg-slate-800 border border-slate-700 rounded-md text-white focus:outline-none focus:ring-2 focus-ring-blue-500"
-          >
-            <option value="all">Todos os Status</option>
-            <option value="Planejado">Planejados</option>
-            <option value="Ativo">Ativos</option>
-            <option value="Finalizado">Finalizados</option>
-          </select>
         </div>
 
         {/* General Statistics */}
@@ -401,22 +390,21 @@ const Estatisticas = () => {
           )}
         </div>
 
-        {/* Map Statistics */}
-        {isLoadingMapData ? (
-          <Card className="dashboard-card border-gray-700 p-6 animate-pulse">
-            <div className="h-6 bg-gray-700 rounded w-1/2 mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-40 bg-gray-700 rounded w-full"></div>
-              ))}
-            </div>
-          </Card>
-        ) : (
-          <MapPerformanceCard maps={mapData} />
-        )}
-
         {/* Recent Championships */}
         <div className="mt-8">
+          {/* Status filter */}
+        <div className="flex justify-end mb-4">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="py-2 px-4 bg-slate-800 border border-slate-700 rounded-md text-white focus:outline-none focus:ring-2 focus-ring-blue-500"
+          >
+            <option value="all">Todos os Status</option>
+            <option value="Planejado">Planejados</option>
+            <option value="Ativo">Ativos</option>
+            <option value="Finalizado">Finalizados</option>
+          </select>
+        </div>
           <h2 className="text-xl font-semibold text-white mb-4">Campeonatos Recentes</h2>
           
           {isLoadingChampionships ? (
